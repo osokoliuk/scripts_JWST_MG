@@ -3,10 +3,18 @@ import scipy.constants as SPC
 import numpy as np
 import matplotlib.pyplot as plt
 import math
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+from classy import Class
+from scipy.optimize import fsolve
+import math
+import scipy
 
 H0 = 67.66
 Omegam0 = (0.02242/(H0/100)**2+0.11933/(H0/100)**2)
 Omegar0 = 8.493e-5
+c = 299792.45800000057
 
 def H_f(a):
     if model_H == 'LCDM':
@@ -15,8 +23,16 @@ def H_f(a):
         return H0*np.sqrt((1-Omegam0-Omegar0)*a**(-3*(1+wL))+Omegam0*a**(-3)+Omegar0*a**(-4))
     elif model_H == 'nDGP':
         Omegarc = 1/(4*H0**2*rc**2)
-        OmegaLambda0 = 1 - Omegam0 - Omegar0
-        return H0*np.sqrt(Omegam0*a**(-3)+Omegar0*a**(-4)+Omegarc+OmegaLambda0)-H0*np.sqrt(Omegarc)
+        OmegaLambda0 = 1 - Omegam0 - Omegar0 + 2*np.sqrt(Omegarc)
+        return H0*np.sqrt(Omegam0*a**(-3)+Omegar0*a**(-4)+Omegarc + OmegaLambda0)-H0*np.sqrt(Omegarc)
+    elif model_H == 'kmouflage':
+        Omegaphi0 = 1 - Omegam0 - Omegar0
+        e2 = a*beta/(1+a*beta)
+        A = 1 + beta*phi
+        K = -1 + chi + K0*chi0**2
+        rhophi = M**4/A**4*(2*chi*Kprime-K)
+        rhophi0 = M**4*(2*chi0*Kprime-K)
+        return H0*A*(1-e2)*np.sqrt(Omegam0*a**(-3)+Omegar0*a**(-4)+Omegaphi0*rhophi/rhophi0)
 
 def dH_f(a):
     if model_H == 'LCDM':
@@ -25,8 +41,8 @@ def dH_f(a):
         return (a**(-5 - 3*wL)*(3*a*H0*(1 + wL)*(-1 + Omegam0 + Omegar0) - a**(3*wL)*H0*(3*a*Omegam0 + 4*Omegar0)))/(2*np.sqrt((Omegar0 + a*(Omegam0 - (-1 + Omegam0 + Omegar0)/a**(3*wL)))/a**4))
     elif model_H == 'nDGP':
         Omegarc = 1/(4*H0**2*rc**2)
-        OmegaLambda0 = 1 - Omegam0 - Omegar0
-        return -0.5*(H0*(3*a*Omegam0 + 4*Omegar0))/(a**5*np.sqrt((a*Omegam0 + Omegar0)/a**4 + Omegarc + OmegaLambda0))
+        OmegaLambda0 = 1 - Omegam0 - Omegar0 + 2*np.sqrt(Omegarc)
+        return  (H0*((-3*Omegam0)/a**4 - (4*Omegar0)/a**5))/(2.*np.sqrt(OmegaLambda0 + Omegam0/a**3 + Omegar0/a**4 + Omegarc))
         
 def mu(par1, par2, a):
     H = H_f(a)
@@ -47,9 +63,7 @@ def mu(par1, par2, a):
     elif model == 'wCDM':
         return 2/3*OmegaM**(gamma-1)*(OmegaM**gamma+2-3*gamma+3*(gamma-1/2)*(OmegaM+(1+wL)*OmegaL))
     elif model == 'nDGP':
-        OmegaLambda0 = 1 - Omegam0 - Omegar0
-        Omegarc = 1/(4*H0**2*par1**2)
-        beta = 1 + (Omegam0*a**(-3)+Omegar0*a**(-4)+2*OmegaLambda0)/(2*np.sqrt(Omegarc*(Omegam0*a**(-3)+Omegar0*a**(-4)+OmegaLambda0)))
+        beta = 1 + 2*H/c*par1*(1+dHdt/(3*H**2))
         return 1 + 1/(3*beta)
         
 def delta_nl_ODE(a, y, par1, par2):
