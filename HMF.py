@@ -6,7 +6,19 @@ from scipy.interpolate import interp1d
 
 import classy
 from classy import Class
-
+from scipy.integrate import ode, odeint
+import scipy.constants as SPC
+import numpy as np
+import matplotlib.pyplot as plt
+import math
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+from classy import Class
+from scipy.optimize import fsolve
+import math
+import scipy
+from tqdm import tqdm 
 
 common_settings = {'A_s':2.101e-9,
           'n_s':0.9665,
@@ -36,8 +48,11 @@ M.set(common_settings)
 M.compute()
 
 kvec = np.logspace(np.log10(0.0001),np.log10(1.0),1000)
-twopi = 2.*math.pi
 
+H0 = 67.66
+Omegam0 = (0.02242/(H0/100)**2+0.11933/(H0/100)**2)
+Omegar0 = 8.493e-5
+c = 299792.45800000057
 Tcmb = 2.72e6
 h = 0.6766
 c = 3.3
@@ -181,7 +196,7 @@ def sigma_M(k,Pk,M):
 def dsigma_M(k,Pk,M):
     sigma_arr = np.array([sigma_M(k, Pk, m) for m in M])
     dx = np.gradient(np.log(M))
-    dy = np.gradient(sigma_arr)
+    dy = np.gradient(np.log(sigma_arr))
     return dy/dx
 
 def nu(pars1, pars2, k, Pk, M):
