@@ -182,7 +182,7 @@ def sigma(k,Pk,R):
     h1    = 1e-12
     hmin  = 0.0
     beta = 4.8
-    W   = (1+(k*R)**beta)**(-1)
+    W   = 3.0*(np.sin(k*R) - k*R*np.cos(k*R))/(k*R)**3
     Pk1 = Pk*W**2*k**2/(2.0*np.pi**2)
     
     return np.sqrt(IL.odeint(yinit, k[0],k[-1], eps,
@@ -201,7 +201,7 @@ def dsigma_M(k,Pk,M):
 
 def nu(pars1, pars2, k, Pk, M):
     deltac = linear(find_deltai(1,pars1, pars2),1,pars1, pars2)[-1,1]
-    return deltac**2/sigma_M(np.array(k),np.array(Pk),M)**2
+    return deltac/sigma_M(np.array(k),np.array(Pk),M)
     
 def fnu(pars1, pars2, k, Pk, M):
     A = 0.3222
