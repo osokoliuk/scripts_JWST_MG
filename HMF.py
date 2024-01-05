@@ -20,8 +20,8 @@ import math
 import scipy
 from tqdm import tqdm 
 
-common_settings = {'A_s':2.101e-9,
-          'n_s':0.9665,
+common_settings = {'n_s':0.9665,
+          'sigma8':0.811,
           'tau_reio':0.0561,
           'omega_b':0.02242,
           'omega_cdm':0.11933,
@@ -33,7 +33,7 @@ common_settings = {'A_s':2.101e-9,
           'mg_z_init': 10.000,
           'l_logstep': 1.025,
           'l_linstep':15,
-          'P_k_max_1/Mpc':3.0,
+          'P_k_max_1/Mpc':1500.0,
           'l_switch_limber':9,
           'perturb_sampling_stepsize': 0.05,
           'output':'tCl,pCl,lCl,mPk',
@@ -47,7 +47,7 @@ M = Class()
 M.set(common_settings)
 M.compute()
 
-kvec = np.logspace(np.log10(0.0001),np.log10(1.0),1000)
+kvec = np.logspace(np.log10(0.00001),np.log10(1000.0),10000)
 
 H0 = 67.66
 Omegam0 = (0.02242/(H0/100)**2+0.11933/(H0/100)**2)
@@ -58,6 +58,8 @@ h = 0.6766
 c = 3.3
 GN = 4.301*10**(-9)
 rho = 3*H0**2*Omegam0/(8*np.pi*GN)
+rhocr = 2.77536627e11
+rhom = rhocr*Omegam0
 
 Pk = []
 for k in kvec:
@@ -181,7 +183,6 @@ def sigma(k,Pk,R):
     eps   = 1e-13  #change this for higher/lower accuracy
     h1    = 1e-12
     hmin  = 0.0
-    beta = 4.8
     W   = 3.0*(np.sin(k*R) - k*R*np.cos(k*R))/(k*R)**3
     Pk1 = Pk*W**2*k**2/(2.0*np.pi**2)
     
@@ -189,22 +190,29 @@ def sigma(k,Pk,R):
                              h1, hmin, np.log10(k), Pk1,
                              'sigma', verbose=False)[0])
 
-def sigma_M(k,Pk,M):
-    R =  (M**(1/3)*(3/np.pi)**(1/3))/(2**(2/3)*c*rho**(1/3))
-    return np.array(sigma(k, Pk, R))
+def dSdM(k, Pk, rhoM, M):
 
-def dsigma_M(k,Pk,M):
-    sigma_arr = np.array([sigma_M(k, Pk, m) for m in M])
-    dx = np.gradient(np.log(M))
-    dy = np.gradient(np.log(sigma_arr))
-    return dy/dx
+    R1=(3.0*M/(4.0*np.pi*rhoM))**(1.0/3.0)
+    s1=sigma(k,Pk,R1)
 
-def nu(pars1, pars2, k, Pk, M):
-    deltac = linear(find_deltai(1,pars1, pars2),1,pars1, pars2)[-1,1]
-    return deltac/sigma_M(np.array(k),np.array(Pk),M)
-    
-def fnu(pars1, pars2, k, Pk, M):
-    A = 0.3222
-    p = 0.3
-    nu_v = nu(pars1, pars2, k, Pk, M)
-    return np.array(A*np.sqrt(2*nu_v**2/np.pi)*(1+nu_v**(-2*p))*np.exp(-nu_v**2/2))
+    M2=M*1.0001
+    R2=(3.0*M2/(4.0*np.pi*rhoM))**(1.0/3.0)
+    s2=sigma(k,Pk,R2)
+
+    return (s2-s1)/(M2-M)
+
+
+def ST_mass_function(k, Pk, rhoM, Masses):
+
+    dndM = np.zeros(Masses.shape[0], dtype=np.float64)
+        
+    for i,M in enumerate(Masses):
+        R   = (3.0*M/(4.0*np.pi*rhoM))**(1.0/3.0)
+        nu  = (1.686/sigma(k,Pk,R))**2
+        nup = 0.707*nu
+
+        dndM[i]=-2.0*(rhoM/M)*dSdM(k,Pk,rhoM,M)/sigma(k,Pk,R)
+        dndM[i]*=0.3222*(1.0+1.0/nup**0.3)*np.sqrt(0.5*nup)
+        dndM[i]*=np.exp(-0.5*nup)/np.sqrt(np.pi)
+
+    return dndM
