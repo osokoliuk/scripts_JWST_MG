@@ -183,7 +183,8 @@ def sigma(k,Pk,R):
     eps   = 1e-13  #change this for higher/lower accuracy
     h1    = 1e-12
     hmin  = 0.0
-    W   = 3.0*(np.sin(k*R) - k*R*np.cos(k*R))/(k*R)**3
+    beta_ST = 4.8
+    W   = (1+(k*R)**beta_ST)**(-1)
     Pk1 = Pk*W**2*k**2/(2.0*np.pi**2)
     
     return np.sqrt(IL.odeint(yinit, k[0],k[-1], eps,
@@ -191,23 +192,23 @@ def sigma(k,Pk,R):
                              'sigma', verbose=False)[0])
 
 def dSdM(k, Pk, rhoM, M):
-
-    R1=(3.0*M/(4.0*np.pi*rhoM))**(1.0/3.0)
+    c_ST = 3.3
+    R1=(3.0*M/(4.0*np.pi*rhoM*c_ST**3))**(1.0/3.0)
     s1=sigma(k,Pk,R1)
 
     M2=M*1.0001
-    R2=(3.0*M2/(4.0*np.pi*rhoM))**(1.0/3.0)
+    R2=(3.0*M2/(4.0*np.pi*rhoM*c_ST**3))**(1.0/3.0)
     s2=sigma(k,Pk,R2)
 
     return (s2-s1)/(M2-M)
 
 
 def ST_mass_function(k, Pk, rhoM, Masses):
-
+    c_ST = 3.3
     dndM = np.zeros(Masses.shape[0], dtype=np.float64)
         
     for i,M in enumerate(Masses):
-        R   = (3.0*M/(4.0*np.pi*rhoM))**(1.0/3.0)
+        R   = (3.0*M/(4.0*np.pi*rhoM*c_ST**3))**(1.0/3.0)
         nu  = (1.686/sigma(k,Pk,R))**2
         nup = 0.707*nu
 
