@@ -172,3 +172,6 @@ def linear(deltai_collapse, a, par1, par2):
     
     data = np.array(data)
     return data
+
+def delta_c_at_ac(ac, par1, par2):
+    return linear(interp_di_ac(ac),ac,par1,par2)[-1,1]
