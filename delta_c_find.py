@@ -132,7 +132,7 @@ def delta_l_ODE(a, y, par1, par2):
 
 def collapse(deltai, par1, par2):
     ai = 1e-5
-    dt = 0.001
+    dt = 0.0001
     ddeltai = deltai/ai
     init = [deltai, ddeltai]
     system = ode(delta_nl_ODE)
@@ -140,7 +140,7 @@ def collapse(deltai, par1, par2):
     system.set_initial_value(init, ai)
     
     data = [0,0]
-    while system.successful() and system.y[0] <= 1e7 and system.t <= 1:
+    while system.successful() and system.y[0] <= 1e7 and system.t <= 1/(1-0.5):
         data = [system.t + dt, system.integrate(system.t + dt)[0]]   
         #plt.scatter(system.t+dt, system.integrate(system.t + dt)[0], c ='tab:blue')
     data = np.array(data)
@@ -148,19 +148,17 @@ def collapse(deltai, par1, par2):
 
     return ac
 
-def find_deltai(ac_input, par1, par2):
-    deltarange = np.logspace(-5,-0,num=1000)
-    deltai_collapse = deltarange[-1]
-    for i in range(len(deltarange)):
-        a_v = collapse(deltarange[i], par1, par2)
-        b_v = ac_input
-        if abs(a_v - b_v)/((a_v+b_v)/2) <= 0.02:
-            deltai_collapse = deltarange[i]
-    return deltai_collapse
+def interpolate_ac(ac, par1, par2):
+    delta_i = np.logspace(-4,-1,1000)
+    arr_di_ac = []
+    for i in tqdm(range(len(delta_i))):
+        arr_di_ac.append([delta_i[i],collapse(delta_i[i],pars1,pars2)])
+    interp_di_ac = scipy.interpolate.interp1d(np.array(arr_di_ac)[:,1],np.array(arr_di_ac)[:,0],fill_value = 'extrapolate')
+    return interp_di_ac(ac)
 
 def linear(deltai_collapse, a, par1, par2):
     ai = 1e-5
-    dt = 0.001
+    dt = 0.0001
     ddeltai = deltai_collapse/ai    
     init = [deltai_collapse, ddeltai]
     system = ode(delta_l_ODE)
@@ -174,11 +172,3 @@ def linear(deltai_collapse, a, par1, par2):
     
     data = np.array(data)
     return data
-
-def interpolate_deltac(a,par1,par2):
-    ac = np.linspace(0.1,1,25)    
-    delta_c = []
-    for i in tqdm(range(len(ac))):
-        delta_c.append(linear(find_deltai(ac[j],par1, par2),ac[j],par1, par2)[-1,1])
-    delta_c_int = scipy.interpolate.interp1d(ac,delta_c,fill_value = 'extrapolate')
-    return delta_c_int(a)
