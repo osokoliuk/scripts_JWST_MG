@@ -42,10 +42,10 @@ dH_arr_kmoufl = [[],[],[]]
 H_int_kmoufl = [[],[],[]]
 dH_int_kmoufl = [[],[],[]]
 
-M = {}
+M_kmoufl = {}
 
 
-common_settings = {'n_s':0.9665,
+common_settings = common_settings_kmoufl =  {'n_s':0.9665,
           'sigma8':0.811,
           'tau_reio':0.0561,
           'omega_b':0.02242,
@@ -102,16 +102,16 @@ def Pk(a, model, par1, par2):
 
 for i in range(len(K0)):
     for j in tqdm(range(len(beta))):
-        common_settings['mg_ansatz'] = 'kmoufl'
-        common_settings['beta_kmfl'] = beta[j]
-        common_settings['k0_kmfl'] = K0[i]
+        common_settings_kmoufl['mg_ansatz'] = 'kmoufl'
+        common_settings_kmoufl['beta_kmfl'] = beta[j]
+        common_settings_kmoufl['k0_kmfl'] = K0[i]
 
-        M[j] = Class()
-        M[j].set(common_settings)
+        M_kmoufl[j] = Class()
+        M_kmoufl[j].set(common_settings)
         
-        M[j].compute()
+        M_kmoufl[j].compute()
         a = np.logspace(-6,0,10000)
-        H_arr_kmoufl[i].append([M[j].Hubble(1/ai-1)*c for ai in a])
+        H_arr_kmoufl[i].append([M_kmoufl[j].Hubble(1/ai-1)*c for ai in a])
         dH_arr_kmoufl[i].append(np.gradient(H_arr_kmoufl[i][j])/np.gradient(a))
         H_int_kmoufl[i].append(scipy.interpolate.interp1d(a, H_arr_kmoufl[i][j], fill_value = 'extrapolate'))
         dH_int_kmoufl[i].append(scipy.interpolate.interp1d(a, dH_arr_kmoufl[i][j], fill_value = 'extrapolate'))
