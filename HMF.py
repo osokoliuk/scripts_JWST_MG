@@ -45,7 +45,26 @@ dH_int_kmoufl = [[],[],[]]
 M_kmoufl = {}
 
 
-common_settings = common_settings_kmoufl =  {'n_s':0.9665,
+common_settings = {'n_s':0.9665,
+          'sigma8':0.811,
+          'tau_reio':0.0561,
+          'omega_b':0.02242,
+          'omega_cdm':0.11933,
+          'h':0.6766,
+          'YHe':0.2425,
+          'T_cmb':2.7255,
+          'gauge':'newtonian', #FOR MGCLASS TO WORK, GAUGE NEEDS TO BE NEWTONIAN
+          'k_pivot': 0.05,
+          'mg_z_init': 10.000,
+          'l_logstep': 1.025,
+          'l_linstep':15,
+          'P_k_max_1/Mpc':1500.0,
+          'l_switch_limber':9,
+          'perturb_sampling_stepsize': 0.05,
+          'output':'tCl,pCl,lCl,mPk',
+          'l_max_scalars': 3000,
+          'lensing': 'yes'}
+common_settings_kmoufl =  {'n_s':0.9665,
           'sigma8':0.811,
           'tau_reio':0.0561,
           'omega_b':0.02242,
@@ -107,7 +126,7 @@ for i in range(len(K0)):
         common_settings_kmoufl['k0_kmfl'] = K0[i]
 
         M_kmoufl[j] = Class()
-        M_kmoufl[j].set(common_settings)
+        M_kmoufl[j].set(common_settings_kmoufl)
         
         M_kmoufl[j].compute()
         a = np.logspace(-6,0,10000)
