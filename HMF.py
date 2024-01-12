@@ -45,27 +45,8 @@ dH_int_kmoufl = [[],[],[]]
 M_kmoufl = {}
 
 
-common_settings = {'n_s':0.9665,
-          'sigma8':0.811,
-          'tau_reio':0.0561,
-          'omega_b':0.02242,
-          'omega_cdm':0.11933,
-          'h':0.6766,
-          'YHe':0.2425,
-          'T_cmb':2.7255,
-          'gauge':'newtonian', #FOR MGCLASS TO WORK, GAUGE NEEDS TO BE NEWTONIAN
-          'k_pivot': 0.05,
-          'mg_z_init': 10.000,
-          'l_logstep': 1.025,
-          'l_linstep':15,
-          'P_k_max_1/Mpc':1500.0,
-          'l_switch_limber':9,
-          'perturb_sampling_stepsize': 0.05,
-          'output':'tCl,pCl,lCl,mPk',
-          'l_max_scalars': 3000,
-          'lensing': 'yes'}
 common_settings_kmoufl =  {'n_s':0.9665,
-          'sigma8':0.811,
+          'A_s':2.101e-9,
           'tau_reio':0.0561,
           'omega_b':0.02242,
           'omega_cdm':0.11933,
@@ -82,9 +63,30 @@ common_settings_kmoufl =  {'n_s':0.9665,
           'perturb_sampling_stepsize': 0.05,
           'output':'tCl,pCl,lCl,mPk',
           'l_max_scalars': 3000,
-          'lensing': 'yes'}
+          'lensing': 'yes',
+          'z_max_pk': 99}
 
 def Pk(a, model, par1, par2):
+    common_settings = {'n_s':0.9665,
+          'A_s':2.101e-9,
+          'tau_reio':0.0561,
+          'omega_b':0.02242,
+          'omega_cdm':0.11933,
+          'h':0.6766,
+          'YHe':0.2425,
+          'T_cmb':2.7255,
+          'gauge':'newtonian', #FOR MGCLASS TO WORK, GAUGE NEEDS TO BE NEWTONIAN
+          'k_pivot': 0.05,
+          'mg_z_init': 10.000,
+          'l_logstep': 1.025,
+          'l_linstep':15,
+          'P_k_max_1/Mpc':1500.0,
+          'l_switch_limber':9,
+          'perturb_sampling_stepsize': 0.05,
+          'output':'tCl,pCl,lCl,mPk',
+          'l_max_scalars': 3000,
+          'lensing': 'yes',
+          'z_max_pk': 99}
     common_settings['mg_ansatz'] = model
     if model == 'plk_late':
         common_settings['mg_E11'] = par1
@@ -142,7 +144,7 @@ def H_f(model_H,a, par1, par2):
         par1 = wL
         return H0*np.sqrt((1-Omegam0-Omegar0)*a**(-3*(1+wL))+Omegam0*a**(-3)+Omegar0*a**(-4))
     elif model_H == 'nDGP':
-        par1 = rc
+        rc = par1
         Omegarc = 1/(4*H0**2*rc**2)
         OmegaLambda0 = 1 - Omegam0 - Omegar0 + 2*np.sqrt(Omegarc)
         return H0*np.sqrt(Omegam0*a**(-3)+Omegar0*a**(-4)+Omegarc + OmegaLambda0)-H0*np.sqrt(Omegarc)
@@ -153,10 +155,10 @@ def dH_f(model_H,a, par1, par2):
     if model_H == 'LCDM':
         return -0.5*(H0*(3*a*Omegam0 + 4*Omegar0))/(a**5*np.sqrt((a*Omegam0 + Omegar0 - a**4*(-1 + Omegam0 + Omegar0))/a**4))
     elif model_H == 'wCDM':
-        par1 = wL
+        wL = par1
         return (a**(-5 - 3*wL)*(3*a*H0*(1 + wL)*(-1 + Omegam0 + Omegar0) - a**(3*wL)*H0*(3*a*Omegam0 + 4*Omegar0)))/(2*np.sqrt((Omegar0 + a*(Omegam0 - (-1 + Omegam0 + Omegar0)/a**(3*wL)))/a**4))
     elif model_H == 'nDGP':
-        par1 = rc
+        rc = par1
         Omegarc = 1/(4*H0**2*rc**2)
         OmegaLambda0 = 1 - Omegam0 - Omegar0 + 2*np.sqrt(Omegarc)
         return  (H0*((-3*Omegam0)/a**4 - (4*Omegar0)/a**5))/(2.*np.sqrt(OmegaLambda0 + Omegam0/a**3 + Omegar0/a**4 + Omegarc))
