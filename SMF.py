@@ -24,12 +24,34 @@ import matplotlib.pylab as pl
 import matplotlib as mpl
 from matplotlib.colors import LogNorm
 
+import integration_library as IL
+%matplotlib inline
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.interpolate import interp1d
+
+import classy
+from classy import Class
+from scipy.integrate import ode, odeint
+import scipy.constants as SPC
+import numpy as np
+import matplotlib.pyplot as plt
+import math
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+from classy import Class
+from scipy.optimize import fsolve
+import math
+import scipy
+from tqdm import tqdm 
+
 # Defs
 
 kvec = np.logspace(np.log10(0.00001),np.log10(1000.0),10000)
 H0 = 67.66
-Omegab0 = 0.02242/(H0/100)**2
 Omegam0 = (0.02242/(H0/100)**2+0.11933/(H0/100)**2)
+Omegab0 = 0.02242/(H0/100)**2
 Omegar0 = 8.493e-5
 c = 299792.45800000057
 Tcmb = 2.72e6
@@ -60,7 +82,7 @@ common_settings_kmoufl =  {'n_s':0.9665,
           'T_cmb':2.7255,
           'gauge':'newtonian', #FOR MGCLASS TO WORK, GAUGE NEEDS TO BE NEWTONIAN
           'k_pivot': 0.05,
-          'mg_z_init': 111110.000,
+          'mg_z_init': 10.000,
           'l_logstep': 1.025,
           'l_linstep':15,
           'P_k_max_1/Mpc':1500.0,
@@ -82,7 +104,7 @@ def Pk(a, model, par1, par2):
           'T_cmb':2.7255,
           'gauge':'newtonian', #FOR MGCLASS TO WORK, GAUGE NEEDS TO BE NEWTONIAN
           'k_pivot': 0.05,
-          'mg_z_init': 111110.000,
+          'mg_z_init': 10.000,
           'l_logstep': 1.025,
           'l_linstep':15,
           'P_k_max_1/Mpc':1500.0,
@@ -126,23 +148,6 @@ def Pk(a, model, par1, par2):
     
     return Pk
 
-"""
-for i in range(len(K0)):
-    for j in tqdm(range(len(beta))):
-        common_settings_kmoufl['mg_ansatz'] = 'kmoufl'
-        common_settings_kmoufl['beta_kmfl'] = beta[j]
-        common_settings_kmoufl['k0_kmfl'] = K0[i]
-
-        M_kmoufl[j] = Class()
-        M_kmoufl[j].set(common_settings_kmoufl)
-        
-        M_kmoufl[j].compute()
-        a = np.logspace(-6,0,10000)
-        H_arr_kmoufl[i].append([M_kmoufl[j].Hubble(1/ai-1)*c for ai in a])
-        dH_arr_kmoufl[i].append(np.gradient(H_arr_kmoufl[i][j])/np.gradient(a))
-        H_int_kmoufl[i].append(scipy.interpolate.interp1d(a, H_arr_kmoufl[i][j], fill_value = 'extrapolate'))
-        dH_int_kmoufl[i].append(scipy.interpolate.interp1d(a, dH_arr_kmoufl[i][j], fill_value = 'extrapolate'))
-"""
 
 def H_f(model_H,a, par1, par2):
     if model_H == 'LCDM':
@@ -205,8 +210,6 @@ def mu(model_H, model, par1, par2, a):
         epsl1_kmfl = 2.0*par1**2/k_prime_mfl    
         X_kmfl_dot = 0.5 * A_kmfl**2/((1-Omegam0-Omegar0)*H0**2)*2.0*H*a*(H*H*a+dHdt*a)
         return 1.+ epsl1_kmfl
-    else:
-        sys.exit("Check whether the mu(a) model is correctly chosen")
 
 def delta_nl_ODE(a, y, model_H, model, par1, par2):
     delta,ddeltada = y
@@ -319,7 +322,10 @@ def func_SFR(x,a):
 def Mstar(Mh, model_SFR, a):
     z = 1/a-1
     if model_SFR == 'phenomenological_regular':
-        epstar = 0.32
+        if z<10:
+            epstar = 0.15 - 0.03*(z-6)
+        else:
+            epstar = 0.03
         Mg = Omegab0/Omegam0*Mh        
         Mstar = epstar*Mg
     elif model_SFR == 'phenomenological_extreme':
@@ -332,43 +338,67 @@ def Mstar(Mh, model_SFR, a):
         log10Mstar = log10eps + log10M1 + func_SFR(np.log10(Mh)-log10M1,a)-func_SFR(0,a)
         Mstar = 10**log10Mstar
     elif model_SFR == 'double_power':
-        Mg = Omegab0/Omegam0*Mh
-        Mp = 10**12.1
-        A = 10**(-1.69)
-        gamma = 1.32
-        delta = 0.43
-        epstar = A*Mh/((Mh/Mp)**(-gamma)+(Mh/Mp)**delta)
+        Mp = 2.8*10**11
+        epstarp = 0.05
+        gamma_lo = 0.49
+        gamma_hi = -0.61
+        epstar = epstarp/((Mh/Mp)**gamma_lo+(Mh/Mp)**gamma_hi)
         Mstar = epstar*Mh
     else:
         sys.exit("Incorrect SFR model is being used")
     return Mstar
 
+def varepsilon(Mh, model_SFR, a):
+    if model_SFR == 'phenomenological_extreme' or model_SFR == 'phenomenological_regular':
+        varepsilon = 1
+    elif model_SFR == 'Behroozi':
+        nu = np.exp(-4*a**2)
+        z = 1/a-1
+        log10M1 = 11.514+(-1.793*(a-1)+(-0.251)*z)*nu
+        log10eps = -1.777+(-0.006*(a-1)+(-0.000)*z)*nu-0.119*(a-1)
+        log10Mstar = log10eps + log10M1 + func_SFR(np.log10(Mh)-log10M1,a)-func_SFR(0,a)
+        alpha_SFR = -1.412+0.731*(a-1)*nu
+        Delta_SFR = 3.508 + (2.608*(a-1)-0.043*z)*nu
+        gamma_SFR = 0.316+(1.319*(a-1)+0.279*z)*nu
+        varepsilon = -((Mh**alpha_SFR*alpha_SFR)/(10**(log10M1*alpha_SFR) + Mh**alpha_SFR))+ (np.log(1 + Mh**(1/np.log(10))/np.e**log10M1)**(-1 + gamma_SFR)*Delta_SFR*(10**log10M1*np.exp(10**log10M1/Mh)*(np.e**log10M1 + Mh**(1/np.log(10)))*np.log(10)*np.log(1 + Mh**(1/np.log(10))/np.e**log10M1) + (1 + np.exp(10**log10M1/Mh))*Mh**(1 + 1/np.log(10))*gamma_SFR))/((1 + np.exp(10**log10M1/Mh))**2*Mh*(np.e**log10M1 + Mh**(1/np.log(10)))*np.log(10)**gamma_SFR) 
+    elif model_SFR == 'double_power':
+        Mp = 2.8*10**11
+        epstarp = 0.05
+        gamma_lo = 0.49
+        gamma_hi = -0.61
+        varepsilon =  -gamma_lo + ((Mh/Mp)**gamma_hi* (-gamma_hi + gamma_lo))/((Mh/Mp)**gamma_hi + (Mh/Mp)**gamma_lo)
+    return varepsilon
+
+
 def SMF(Mstar_var,k, Pk, rhoM, a, model_H, model,model_SFR, par1, par2):
     Mh_arr = np.logspace(6.5,16,1000)
     Mstar_arr = Mstar(Mh_arr, model_SFR, a)
-    SMF = scipy.interpolate.interp1d(Mstar_arr,ST_mass_function(k,Pk,rhoM,Mh_arr,a,model_H,model,par1,par2)*Mh_arr*np.gradient(np.log10(Mh_arr))/np.gradient(np.log10(Mstar_arr)), fill_value="extrapolate")
+    SMF = varepsilon(Mh_arr*h,model_SFR,a)*ST_mass_function(k/h, np.array(Pk)*h**3, rhoM, Mh_arr*h, a, model_H, model, par1, par2)*Mh_arr*h**3
+    SMF = scipy.interpolate.interp1d(Mstar_arr/h**2,SMF, fill_value="extrapolate")
     return SMF(Mstar_var)
 
-Masses = np.logspace(6.5,15,50)
-model_H = 'LCDM'
-model = 'plk_late'
-model_SFR = 'Behroozi'
-par1 = 0
-par2 = 0
-a = 1
-z = 1/a-1
-Masses_star = Mstar(Masses, model_SFR, 1/(1+z)) 
-#varepsilon = -1.777+(-0.006*(a-1)+(-0.000)*z)*nu-0.119*(a-1)
-plt.plot(Masses_star,h**(-3)*np.gradient(np.log10(Masses_star),np.log10(Masses))*ST_mass_function(kvec/h, np.array(Pk(a, model, par1, par2))*h**3, rhom, Masses, a, model_H, model, par1, par2)*Masses*np.log(10), color = "tab:blue")
-#plt.plot(Masses, Masses_star)
-x = np.loadtxt('Downloads/z0pt1.dat')[:,0] #https://github.com/bmoster/emerge/blob/master/data/smf.dat
-y = np.loadtxt('Downloads/z0pt1.dat')[:,1]
-plt.scatter(10**x,10**y)
-#y = scipy.interpolate.interp1d(10**x,10**y, fill_value='extrapolate')
-#plt.plot(Masses_star,np.gradient(np.log10(Masses_star),np.log10(Masses))*ST_mass_function(kvec/h, np.array(Pk(a, model, par1, par2))*h**3, rhom, Masses, a, model_H, model, par1, par2)*Masses*np.log(10)/y(Masses_star), color = "tab:blue")
-#
-plt.xscale('log')
-plt.yscale('log')
-plt.xlim(10**8,10**12)
-#plt.ylim(0,6)
-plt.savefig('SMF.pdf', bbox_inches = 'tight')
+def number_density(k, Pk, rhoM, Masses, a, model_H, model, par1, par2):
+    eps   = 1e-13  #change this for higher/lower accuracy
+    h1    = 1e-12
+    hmin  = 0.0
+    yinit = np.array([0.0], dtype=np.float64)
+    number_density = np.zeros(Masses.shape[0], dtype=np.float64)
+
+    for i,M in enumerate(Masses):
+        Mass_array = np.logspace(M, 10**20,100)
+        integrand = ST_mass_function(k, Pk, rhoM, Mass_array, a, model_H, model, par1, par2)
+        number_density[i] = IL.odeint(yinit, Mass_array[0],Mass_array[-1], eps,
+                             h1, hmin, np.log10(Mass_array), integrand)[0]
+    return number_density
+
+def SMD():
+    yinit = np.array([0.0], dtype=np.float64)
+    eps   = 1e-13  #change this for higher/lower accuracy
+    h1    = 1e-12
+    hmin  = 0.0
+    W   = (1+(k*R)**beta_ST)**(-1)
+    Pk1 = Pk*W**2*k**2/(2.0*np.pi**2)
+    Masses_array = 1
+    IL.odeint(yinit, Masses,10**20, eps,
+                             h1, hmin, np.log10(k), Pk1,
+                             'sigma', verbose=False)[0]
