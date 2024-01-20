@@ -23,7 +23,7 @@ from numpy import diff
 import matplotlib.pylab as pl
 import matplotlib as mpl
 from matplotlib.colors import LogNorm
-
+from multiprocessing import Pool
 import integration_library as IL
 %matplotlib inline
 import numpy as np
@@ -283,6 +283,10 @@ def sigma(k,Pk,R):
     return np.sqrt(IL.odeint(yinit, k[0],k[-1], eps,
                              h1, hmin, np.log10(k), Pk1,
                              'sigma', verbose=False)[0])
+def sigma_M(k,Pk,rhoM,M):
+    c_ST = 3.3
+    R=(3.0*M/(4.0*np.pi*rhoM*c_ST**3))**(1.0/3.0)
+    return sigma(k,Pk,R)
 
 def dSdM(k, Pk, rhoM, M):
     c_ST = 3.3
@@ -319,34 +323,32 @@ def func_SFR(x,a):
     gamma_SFR = 0.316+(1.319*(a-1)+0.279*z)*nu
     return -np.log10(10**(alpha_SFR*x)+1)+Delta_SFR*(np.log10(1+np.exp(x)))**gamma_SFR/(1+np.exp(10**(-x)))
 
-def Mstar(Mh, model_SFR, a):
+def epsilon(Mh, model_SFR, a):
     z = 1/a-1
     if model_SFR == 'phenomenological_regular':
         if z<10:
             epstar = 0.15 - 0.03*(z-6)
         else:
             epstar = 0.03
-        Mg = Omegab0/Omegam0*Mh        
-        Mstar = epstar*Mg
     elif model_SFR == 'phenomenological_extreme':
-        Mg = Omegab0/Omegam0*Mh
-        Mstar = Mg
+        epstar = 1
     elif model_SFR == 'Behroozi':
         nu = np.exp(-4*a**2)
         log10M1 = 11.514+(-1.793*(a-1)+(-0.251)*z)*nu
         log10eps = -1.777+(-0.006*(a-1)+(-0.000)*z)*nu-0.119*(a-1)
         log10Mstar = log10eps + log10M1 + func_SFR(np.log10(Mh)-log10M1,a)-func_SFR(0,a)
         Mstar = 10**log10Mstar
+        epstar = (Mstar/Mh)/(Omegab0/Omegam0)
     elif model_SFR == 'double_power':
         Mp = 2.8*10**11
         epstarp = 0.05
         gamma_lo = 0.49
         gamma_hi = -0.61
         epstar = epstarp/((Mh/Mp)**gamma_lo+(Mh/Mp)**gamma_hi)
-        Mstar = epstar*Mh
+        epstar = epstar/(Omegab0/Omegam0)
     else:
         sys.exit("Incorrect SFR model is being used")
-    return Mstar
+    return epstar
 
 def varepsilon(Mh, model_SFR, a):
     if model_SFR == 'phenomenological_extreme' or model_SFR == 'phenomenological_regular':
@@ -371,34 +373,99 @@ def varepsilon(Mh, model_SFR, a):
 
 
 def SMF(Mstar_var,k, Pk, rhoM, a, model_H, model,model_SFR, par1, par2):
-    Mh_arr = np.logspace(6.5,16,1000)
-    Mstar_arr = Mstar(Mh_arr, model_SFR, a)
+    Mh_arr = np.logspace(6.5,17,1000)
+    Mstar_arr = epsilon(Mh_arr, model_SFR, a)*Omegab0/Omegab0*Mh_arr
     SMF = varepsilon(Mh_arr*h,model_SFR,a)*ST_mass_function(k/h, np.array(Pk)*h**3, rhoM, Mh_arr*h, a, model_H, model, par1, par2)*Mh_arr*h**3
     SMF = scipy.interpolate.interp1d(Mstar_arr/h**2,SMF, fill_value="extrapolate")
     return SMF(Mstar_var)
 
-def number_density(k, Pk, rhoM, Masses, a, model_H, model, par1, par2):
+
+def SMD(k, Pk, rhoM, Masses, Masses_star, a, model_H, model, par1, par2):
     eps   = 1e-13  #change this for higher/lower accuracy
     h1    = 1e-12
     hmin  = 0.0
     yinit = np.array([0.0], dtype=np.float64)
-    number_density = np.zeros(Masses.shape[0], dtype=np.float64)
+    SMD = np.zeros(Masses_star.shape[0], dtype=np.float64)
 
-    for i,M in enumerate(Masses):
-        Mass_array = np.logspace(M, 10**20,100)
-        integrand = ST_mass_function(k, Pk, rhoM, Mass_array, a, model_H, model, par1, par2)
-        number_density[i] = IL.odeint(yinit, Mass_array[0],Mass_array[-1], eps,
-                             h1, hmin, np.log10(Mass_array), integrand)[0]
-    return number_density
+    for i in range(len(Masses_star)):
+        Mass_array = np.logspace(np.log10(Masses_star[i]), 18,100)
+        integrand = ST_mass_function(k, Pk, rhoM, Mass_array, a, model_H, model, par1, par2)*Mass_array
+        SMD[i] = Masses_star[i]/Masses[i]*IL.odeint(yinit, Mass_array[0],Mass_array[-1], eps,
+                             h1, hmin, np.log10(Mass_array), integrand,
+                             'log', verbose=False)[0]
+    return SMD
 
-def SMD():
-    yinit = np.array([0.0], dtype=np.float64)
-    eps   = 1e-13  #change this for higher/lower accuracy
-    h1    = 1e-12
-    hmin  = 0.0
-    W   = (1+(k*R)**beta_ST)**(-1)
-    Pk1 = Pk*W**2*k**2/(2.0*np.pi**2)
-    Masses_array = 1
-    IL.odeint(yinit, Masses,10**20, eps,
-                             h1, hmin, np.log10(k), Pk1,
-                             'sigma', verbose=False)[0]
+
+def Mh_EPS(z, k, Pk, rhoM, Mh0):
+    q = 2.2
+    func_EPS = 1/(np.sqrt(sigma_M(k,Pk,rhoM,Mh0/q)-sigma_M(k,Pk,rhoM,Mh0)))
+    return Mh0*np.exp(-func_EPS*z)
+   
+def MAH(z, k, rhoM, Mh0, model_H, model, par1, par2):
+    z_arr = np.linspace(4,20,100)
+    H = H_f(model_H,1/(1+z_arr), par1, par2)
+    MAH = -(1+z_arr)*H*np.gradient(Mh_EPS(z_arr, k/h, np.array(Pk(1, model, par1, par2))*h**3, rhoM, Mh0))/np.gradient(z_arr)
+    MAH = scipy.interpolate.interp1d(z_arr, MAH, fill_value = 'extrapolate')
+    return MAH(z)
+
+from scipy.optimize import fsolve
+model_H = 'nDGP'
+model = 'nDGP'
+pars1 = [100,250,500,1000,5000,10000,20000,30000,50000,100000]
+pars2 = [100,250,500,1000,5000,10000,20000,30000,50000,100000]
+colors = plt.cm.Blues(np.linspace(0,1,len(pars1)))
+z_arr = np.linspace(0,8,10)
+a_arr = 1/(1+z_arr)
+#z = 9.1
+#a  = 1/(1+z)
+#for i in range(len(pars1)):
+#    par1 = pars1[i]
+#    par2 = pars2[i]
+#    plt.plot(z, MAH(z, kvec, rhom, 1e13, model_H, model, par1, par2)/1e13)
+    #plt.plot(z, Mh_EPS(z, kvec/h, np.array(Pk(1, model, par1, par2))*h**3, rhom, 1e9)/1e9)
+
+par1 = 1000
+par2 = 1
+
+
+for i in range(len(z_arr)):
+    z = z_arr[i]
+    a = a_arr[i]
+    model_SFR = 'phenomenological_regular'
+    Masses = np.array(fsolve(lambda Mh: 1e8 - epsilon(Mh, model_SFR, a)*Omegab0/Omegab0*Mh, 1e11))
+    Masses_star =  np.array([1e8])
+    plt.scatter(z, h**3*SMD(kvec/h, np.array(Pk(a, model, par1, par2))*h**3, rhom, Masses, Masses_star, 1/(1+z), model_H, model, par1, par2), c = 'tab:blue')
+
+x = [4, 5, 6, 7]
+y = [10**7.36, 10**7.17, 10**6.76, 10**6.64]
+zz = [10**0.06, 10**0.075, 10**0.115, 10**0.7]
+plt.errorbar(x,y,yerr = zz, ls = 'None', c = 'tab:orange', marker = 's', capsize = 3)
+#model_SFR = 'Behroozi'
+#Masses_star = Mstar(Masses, model_SFR, a) 
+#plt.scatter(Masses_star, SMD(kvec/h, np.array(Pk(a, model, par1, par2))*h**3, rhom, Masses, Masses_star, 1/(1+z), model_H, model, par1, par2), c = 'tab:blue')
+
+
+#plt.plot(z, 24.1*(1e13/1e12)**1.094*(1+1.75*z)*np.sqrt(Omegam0*(1+z)**3+1-Omegam0), ls = ':', c = 'k')
+#for i in range(len(pars1)):
+#    par1 = pars1[i]
+#    par2 = pars2[i]
+#    plt.plot(Masses_star,SMF(Masses_star,kvec, Pk(a, model, par1, par2), rhom, a, model_H, model,model_SFR, par1, par2), color = colors[i])
+
+#plt.plot(Masses, number_density(kvec/h, np.array(Pk(a, model, par1, par2))*h**3, rhom, Masses, a, model_H, model, par1, par2))
+
+#x = np.loadtxt('Downloads/z0pt1.dat')[:,0] #https://github.com/bmoster/emerge/blob/master/data/smf.dat
+#y = np.loadtxt('Downloads/z0pt1.dat')[:,1]
+#zz = np.loadtxt('Downloads/z0pt1.dat')[:,2]
+#plt.errorbar(10**x, 10**y, yerr = (abs(10**(y)-10**zz))*2, color = 'tab:grey', ecolor = 'tab:grey' ,ls = 'None', marker = '.')
+
+from colossus.cosmology import cosmology
+cosmology.setCosmology('planck18');
+from colossus.lss import mass_function
+mfunc = mass_function.massFunction(Masses, 0, mdef = 'fof', model = 'sheth99', q_out = 'dndlnM', sigma_args = {'filt': 'tophat'})
+#plt.plot(Masses_star, h**3*np.gradient(np.log10(Masses_star),np.log10(Masses))*mfunc*np.log(10), c = 'tab:blue', ls = ':')
+ 
+#plt.xscale('log')
+plt.yscale('log')
+#plt.xlim(10**8,10**12)
+#plt.ylim(0,6)
+plt.savefig('SMF.pdf', bbox_inches = 'tight')
