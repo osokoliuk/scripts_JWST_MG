@@ -323,7 +323,7 @@ def func_SFR(x,a):
     gamma_SFR = 0.316+(1.319*(a-1)+0.279*z)*nu
     return -np.log10(10**(alpha_SFR*x)+1)+Delta_SFR*(np.log10(1+np.exp(x)))**gamma_SFR/(1+np.exp(10**(-x)))
 
-def epsilon(Mh, model_SFR, a):
+def epsilon(Mh, model_SFR, a, f0):
     z = 1/a-1
     if model_SFR == 'phenomenological_regular':
         if z<10:
@@ -341,21 +341,19 @@ def epsilon(Mh, model_SFR, a):
         epstar = (Mstar/Mh)/(Omegab0/Omegam0)
     elif model_SFR == 'double_power':
         Mp = 2.8*10**11
-        epstarp = 0.05
-        gamma_lo = 0.49
-        gamma_hi = -0.61
-        epstar = epstarp/((Mh/Mp)**gamma_lo+(Mh/Mp)**gamma_hi)
-        epstar = epstar/(Omegab0/Omegam0)
+        alo = 0.49
+        ahi = -0.61
+        epstar = 2*f0/((Mh/Mp)**alo + (Mh/Mp)**ahi)
     else:
         sys.exit("Incorrect SFR model is being used")
     return epstar
 
 def varepsilon(Mh, model_SFR, a):
+    z = 1/a-1
     if model_SFR == 'phenomenological_extreme' or model_SFR == 'phenomenological_regular':
         varepsilon = 1
     elif model_SFR == 'Behroozi':
         nu = np.exp(-4*a**2)
-        z = 1/a-1
         log10M1 = 11.514+(-1.793*(a-1)+(-0.251)*z)*nu
         log10eps = -1.777+(-0.006*(a-1)+(-0.000)*z)*nu-0.119*(a-1)
         log10Mstar = log10eps + log10M1 + func_SFR(np.log10(Mh)-log10M1,a)-func_SFR(0,a)
@@ -364,24 +362,50 @@ def varepsilon(Mh, model_SFR, a):
         gamma_SFR = 0.316+(1.319*(a-1)+0.279*z)*nu
         varepsilon = -((Mh**alpha_SFR*alpha_SFR)/(10**(log10M1*alpha_SFR) + Mh**alpha_SFR))+ (np.log(1 + Mh**(1/np.log(10))/np.e**log10M1)**(-1 + gamma_SFR)*Delta_SFR*(10**log10M1*np.exp(10**log10M1/Mh)*(np.e**log10M1 + Mh**(1/np.log(10)))*np.log(10)*np.log(1 + Mh**(1/np.log(10))/np.e**log10M1) + (1 + np.exp(10**log10M1/Mh))*Mh**(1 + 1/np.log(10))*gamma_SFR))/((1 + np.exp(10**log10M1/Mh))**2*Mh*(np.e**log10M1 + Mh**(1/np.log(10)))*np.log(10)**gamma_SFR) 
     elif model_SFR == 'double_power':
-        Mp = 2.8*10**11
-        epstarp = 0.05
-        gamma_lo = 0.49
-        gamma_hi = -0.61
-        varepsilon =  -gamma_lo + ((Mh/Mp)**gamma_hi* (-gamma_hi + gamma_lo))/((Mh/Mp)**gamma_hi + (Mh/Mp)**gamma_lo)
+        z_interpolate = np.linspace(0,10,11)
+        A_int = np.array([-1.69,-1.72,-1.72,-1.27,-1.61,-1.11,-0.8,-1.2,-0.92,-1.34,-1.63])
+        delta = 0.43
+        Mc = 10**12.3
+        gamma_int = np.array([1.32,1.45,1.4,0.61,0.89,1.16,0.88,1.25,1.12,1.52,1.02])
+        A = scipy.interpolate.interp1d(z_interpolate,A_int,fill_value='extrapolate')
+        gamma = scipy.interpolate.interp1d(z_interpolate,gamma_int,fill_value='extrapolate')
+        A = 10**A(z)
+        gamma = gamma(z)
+        varepsilon = 1- ((-gamma*(Mh/Mc)**(-gamma)+delta*(Mh/Mc)**(delta))/((Mh/Mc)**(-gamma)+(Mh/Mc)**(delta)))
     return varepsilon
 
+def sigma_P(z):
+    sigma0 = 0.07
+    sigmaz = 0.05
+    return sigma0 + sigmaz*z
 
-def SMF(Masses, rhoM, a, model_H, model,model_SFR, par1, par2):
-    Mh_arr = np.logspace(6.5,17,1000)
-    HMF = np.log(10)*Mh_arr*h**(-3)*ST_mass_function(kvec/h, np.array(Pk(a, model, par1, par2))*h**3, rhom, Mh_arr, a, model_H, model, par1, par2)
+def f_passive_obs(Masses_star, a):
+    z = 1/a-1
+    return ((Masses_star/(10**(10.2+0.5*z)))**(-1.3)+1)**(-1)
+    
+def SMF_obs(Masses_star, rhoM, a, model_H, model,model_SFR, par1, par2):
+    Mh_arr = np.logspace(6.5,18,1000)
+    HMF = h**(-3)*np.log(10)*Mh_arr*ST_mass_function(kvec/h, np.array(Pk(a, model, par1, par2))*h**3, rhom, Mh_arr, a, model_H, model, par1, par2)
     Mh_arr = Mh_arr*h
     Mstar_arr = epsilon(Mh_arr, model_SFR, a)*Omegab0/Omegab0*Mh_arr
-    SMF = varepsilon(Mh_arr,model_SFR,a)*HMF
-    SMF = scipy.interpolate.interp1d(Mh_arr,SMF, fill_value="extrapolate")
-    return SMF(Masses)
-
-
+    mu_SMF = -0.020+0.081*(a-1)
+    kappa_SMF = 0.045 + (-0.155)*(a-1)
+    ci = 0.273*(1+np.exp(1.077-z))**(-1)
+    ci1 = 0.273*(1+np.exp(1.077-1))**(-1)
+    if z<1:
+        c = 1
+    else:
+        c = ci + (1-ci_1)
+        
+    SMF = HMF*np.gradient(np.log10(Mh_arr))/np.gradient(np.log10(Mstar_arr)) #varepsilon(Mh_arr,model_SFR,a)
+    SMF = 10**(sigma_P(z)**2/2*np.log(10)*(np.gradient(np.log10(SMF))/np.gradient(np.log10(Mstar_arr)))**2)*SMF
+    SMF = scipy.interpolate.interp1d(Mstar_arr,SMF, fill_value="extrapolate")
+    SMF = f_passive_obs(Masses_star,a)*SMF(Masses_star*10**(-mu_SMF))+SMF(Masses_star*10**(-mu_SMF))*(1-f_passive_obs(Masses_star*10**(-kappa_SMF),a))
+    SMF = c*SMF
+    
+    return SMF
+    
+    
 def SMD(k, Pk, rhoM, Masses, Masses_star, a, model_H, model, par1, par2):
     eps   = 1e-13  #change this for higher/lower accuracy
     h1    = 1e-12
