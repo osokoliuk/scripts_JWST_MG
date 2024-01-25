@@ -383,11 +383,14 @@ def f_passive_obs(Masses_star, a):
     z = 1/a-1
     return ((Masses_star/(10**(10.2+0.5*z)))**(-1.3)+1)**(-1)
     
-def SMF_obs(Masses_star, rhoM, a, model_H, model,model_SFR, par1, par2):
-    Mh_arr = np.logspace(6.5,18,1000)
-    HMF = h**(-3)*np.log(10)*Mh_arr*ST_mass_function(kvec/h, np.array(Pk(a, model, par1, par2))*h**3, rhom, Mh_arr, a, model_H, model, par1, par2)
-    Mh_arr = Mh_arr*h
-    Mstar_arr = epsilon(Mh_arr, model_SFR, a)*Omegab0/Omegab0*Mh_arr
+def SMF_obs(Masses, rhoM, a, model_H, model,model_SFR, par1, par2):
+    #Mh_arr = np.logspace(6.5,18,1000)
+    HMF = np.log(10)*Masses*ST_mass_function(kvec/h, np.array(Pk(a, model, par1, par2))*h**3, rhom, Masses, a, model_H, model, par1, par2)/h**3
+    Masses = Masses*h
+    Masses_star = epsilon(Masses, model_SFR, a, f0)*Omegab0/Omegab0*Masses
+    SMF = HMF*np.gradient(np.log10(Masses))/np.gradient(np.log10(Masses_star)) #varepsilon(Mh_arr,model_SFR,a)
+
+    """
     mu_SMF = -0.020+0.081*(a-1)
     kappa_SMF = 0.045 + (-0.155)*(a-1)
     ci = 0.273*(1+np.exp(1.077-z))**(-1)
@@ -395,14 +398,14 @@ def SMF_obs(Masses_star, rhoM, a, model_H, model,model_SFR, par1, par2):
     if z<1:
         c = 1
     else:
-        c = ci + (1-ci_1)
+        c = ci + (1-ci1)
         
     SMF = HMF*np.gradient(np.log10(Mh_arr))/np.gradient(np.log10(Mstar_arr)) #varepsilon(Mh_arr,model_SFR,a)
     SMF = 10**(sigma_P(z)**2/2*np.log(10)*(np.gradient(np.log10(SMF))/np.gradient(np.log10(Mstar_arr)))**2)*SMF
     SMF = scipy.interpolate.interp1d(Mstar_arr,SMF, fill_value="extrapolate")
     SMF = f_passive_obs(Masses_star,a)*SMF(Masses_star*10**(-mu_SMF))+SMF(Masses_star*10**(-mu_SMF))*(1-f_passive_obs(Masses_star*10**(-kappa_SMF),a))
     SMF = c*SMF
-    
+    """
     return SMF
     
     
