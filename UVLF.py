@@ -493,34 +493,19 @@ def Mh_EPS(z, k, Pk, rhoM, model_H, model, par1, par2, Mh0):
     dlineardz0 = dlineardz_interp(0)
     alpha = (deltac*np.sqrt(2/np.pi)*dlineardz0+1)*func_EPS
     beta = -func_EPS
-    return 1.58*Mh0*np.exp(beta*z)
+    H = H_f(model_H,1/(1+z), par1, par2)
+    Mh_EPS = Mh0*(1+z)**alpha*np.exp(beta*z)
+    return [Mh_EPS, 71.6*(Mh_EPS/1e12)*(h/0.7)*func_EPS*((1+z)-alpha/func_EPS)*H/(h*100)] #[EPS Mass, EPS Mass temporal derivative]
 
-def Mh_EPS_test(z, k, Pk, rhoM, model_H, model, par1, par2, Mh0):
-    zf = -0.0064*(np.log10(Mh0))**2+0.0237*np.log10(Mh0) + 1.8837
-    q = 4.137*zf**(-0.9476)
-    c_ST = 3.3
-    R_M0 = (3.0*Mh0/(4.0*np.pi*rhoM*c_ST**3))**(1.0/3.0)
-    R_M0q = (3.0*(Mh0/q)/(4.0*np.pi*rhoM*c_ST**3))**(1.0/3.0)
-
-    func_EPS = 1/(np.sqrt(sigma(k,Pk,R_M0q)**2-sigma(k,Pk,R_M0)**2))
-    deltac = delta_c_at_ac(model_H, model, 1, par1, par2)
-    lineardelta_z0 = linear(1e-5, 1, model_H, model, par1, par2)[-1,1]
-    lineardelta = scipy.interpolate.interp1d(linear(1e-5, 1, model_H, model, par1, par2)[:,0],linear(1e-5, 1, model_H, model, par1, par2)[:,1]/lineardelta_z0, fill_value = 'extrapolate')
-    z_arr = np.linspace(0,1,50)
-    dlineardz = np.gradient(lineardelta(1/(1+z_arr)))/np.gradient(z_arr)
-    dlineardz_interp = scipy.interpolate.interp1d(z_arr, dlineardz, fill_value = 'extrapolate')
-    dlineardz0 = dlineardz_interp(0)
-    alpha = (deltac*np.sqrt(2/np.pi)*dlineardz0+1)*func_EPS
-    beta = -func_EPS
-    return Mh0*(1+z)**alpha*np.exp(beta*z)
-    
-def MAH(z, k, rhoM, Mh0, model_H, model, par1, par2):
-    z_arr = np.linspace(4,20,100)
+"""    
+def MAH(z, rhoM, model_H, model, par1, par2, Mh0):
+    z_arr = np.linspace(0,20,100)
     H = H_f(model_H,1/(1+z_arr), par1, par2)
-    MAH = -(1+z_arr)*H*np.gradient(Mh_EPS(z_arr, k/h, np.array(Pk(1, model, par1, par2))*h**3, rhoM, Mh0))/np.gradient(z_arr)
+    MAH = -(1+z_arr)*H*np.gradient(Mh_EPS(z_arr, kvec/h, np.array(Pk(1, model, par1, par2))*h**3, rhoM, model_H, model, par1, par2, Mh0))/np.gradient(z_arr)
+    #MAH = np.gradient(np.log(Mh_EPS(z_arr, kvec/h, np.array(Pk(1, model, par1, par2))*h**3, rhoM, model_H, model, par1, par2, Mh0)))/np.gradient(z_arr)
     MAH = scipy.interpolate.interp1d(z_arr, MAH, fill_value = 'extrapolate')
     return MAH(z)
-
+"""
 
 def convert_sfr_to_Muv(sfr, model_Muv):
     if model_Muv == 'Kennicutt2012':
@@ -554,4 +539,5 @@ def dust_attenuation(muv, dust_norm = "fixed"):
         muv_obs = muv + Auv
         #return muv_obs * (muv_obs >= muv) + muv * (muv_obs < muv)
         return 1/k_softplus * np.log(1 + np.exp( k_softplus *( muv_obs - muv) )) + muv    
+
 
