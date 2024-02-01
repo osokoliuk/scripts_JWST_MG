@@ -6,21 +6,18 @@ class HMF:
     ########################################################################
     # Initialize a class
     # float a - scale factor value (related to redshift via a = 1/(1+z))
+    # array of floats k - wavenumber in units of 1/Mpc
     # string model - model of MG for the derivation of mu parameter
     # string model_H - model of MG for H(a)
     # float par1, par2 - corresponding MG parameters
     ########################################################################
     
-    def __init__(self, a, model, model_H, par1, par2):
+    def __init__(self, a, k, model, model_H, par1, par2):
         self.a = a
         self.model = model
         self.model_H = model_H
         self.par1 = par1
         self.par2 = par2
-
-    # For simplicity and units sake, define wavenumber as
-    k = kvec/h
-
 
     def Pk(a, model, par1, par2):
         common_settings = {'n_s':0.9665,
@@ -120,16 +117,18 @@ class HMF:
         return (s2-s1)/(M2-M)
 
 
-    def ST_mass_function(self, k, Pk, rhoM, Masses, a, model_H, model, par1, par2):
+    def ST_mass_function(self, k, rhoM, Masses, a, model_H, model, par1, par2):
         c_ST = 3.3
         dndM = np.zeros(Masses.shape[0], dtype=np.float64)
-        deltac = delta_c.delta_c_at_ac(a, model, model_H, par1, par2):
-        
+        deltac = delta_c(a, model, model_H, par1, par2)
+        deltac = deltac.delta_c_at_ac(a, model, model_H, par1, par2)
+        Pk = np.array(self.Pk(a,model,par1,par2))*h**3
+
         for i,M in enumerate(Masses):
             R   = (3.0*M/(4.0*np.pi*rhoM*c_ST**3))**(1.0/3.0)
-            nu  = (deltac/sigma(k,Pk,R))**2
+            nu  = (delta_c/self.sigma(k,Pk,R))**2
 
-            dndM[i]=-(rhoM/M)*dSdM(k,Pk,rhoM,M)/sigma(k,Pk,R)
+            dndM[i]=-(rhoM/M)*self.dSdM(k,Pk,rhoM,M)/self.sigma(k,Pk,R)
             dndM[i]*=0.3222*np.sqrt(2*nu/np.pi)*(1+1/(nu**0.3))
             dndM[i]*=np.exp(-0.5*nu)
 
