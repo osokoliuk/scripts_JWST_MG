@@ -110,15 +110,22 @@ class cosmological_library:
         if model_H == 'LCDM':
             return -0.5*(H0*(3*a*Omegam0 + 4*Omegar0))/(a**5*np.sqrt((a*Omegam0 + Omegar0 - a**4*(-1 + Omegam0 + Omegar0))/a**4))
         elif model_H == 'wCDM':
+            wL = par1
             return (a**(-5 - 3*wL)*(3*a*H0*(1 + wL)*(-1 + Omegam0 + Omegar0) - a**(3*wL)*H0*(3*a*Omegam0 + 4*Omegar0)))/(2*np.sqrt((Omegar0 + a*(Omegam0 - (-1 + Omegam0 + Omegar0)/a**(3*wL)))/a**4))
         elif model_H == 'nDGP':
+            rc = par1
             Omegarc = 1/(4*H0**2*rc**2)
             OmegaLambda0 = 1 - Omegam0 - Omegar0 + 2*np.sqrt(Omegarc)
             return  (H0*((-3*Omegam0)/a**4 - (4*Omegar0)/a**5))/(2.*np.sqrt(OmegaLambda0 + Omegam0/a**3 + Omegar0/a**4 + Omegarc))
         elif model_H == 'kmoufl':
             return dH_int_kmoufl[i_kmoufl][j_kmoufl](a)
             
-    def mu(par1, par2, a):
+    def mu(self, model, par1, par2):
+        self.a = a
+        self.model_H = model_H
+        self.par1 = par1
+        self.par2 = par2
+
         H = H_f(a)
         dHda = dH_f(a)
         dHdt = a*H*dHda
