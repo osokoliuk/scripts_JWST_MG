@@ -1,11 +1,13 @@
-from JWST_MG.cosmological_functions import cosmological_library
+
+from JWST_MG.delta_c import delta_c
 model = 'nDGP'
 model_H = 'nDGP'
 
-par1 = 15000
+par1 = 150000
 par2 = 1
 
-library = cosmological_library(1, model, model_H, par1, par2)
-z = 2
-print(library.dH_f(1/(1+z), model_H, par1, par2))
+delta_c_at_a1 = delta_c(1, model, model_H, par1, par2)
+z = 15
+print(delta_c_at_a1.delta_c_at_ac(1/(1+z),model, model_H, par1, par2))
 
+#delta_c_at_ac(self, ac, model, model_H, par1, par2):

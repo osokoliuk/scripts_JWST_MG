@@ -1,4 +1,6 @@
-import constants
+# Import some constants that are shared between all files
+# Namely H0, Omegam0, Omegar0 etc.
+from JWST_MG.constants import *
 
 class cosmological_library:
 
@@ -17,7 +19,7 @@ class cosmological_library:
         self.par1 = par1
         self.par2 = par2
     
-
+    """
     for i in range(len(K0)):
         for j in tqdm(range(len(beta))):
             common_settings['beta_kmfl'] = beta[j]
@@ -32,13 +34,9 @@ class cosmological_library:
             dH_arr_kmoufl[i].append(np.gradient(H_arr_kmoufl[i][j])/np.gradient(a))
             H_int_kmoufl[i].append(scipy.interpolate.interp1d(a, H_arr_kmoufl[i][j], fill_value = 'extrapolate'))
             dH_int_kmoufl[i].append(scipy.interpolate.interp1d(a, dH_arr_kmoufl[i][j], fill_value = 'extrapolate'))
-            
-    def H_f(self, a, model_H, par1, par2):
-        self.a = a
-        self.model_H = model_H
-        self.par1 = par1
-        self.par2 = par2
+    """
 
+    def H_f(self, a, model_H, par1, par2):
         if model_H == 'LCDM':
             return H0*np.sqrt(1-Omegam0-Omegar0+Omegam0*a**(-3)+Omegar0*a**(-4))
         elif model_H == 'wCDM':
@@ -71,14 +69,9 @@ class cosmological_library:
         elif model_H == 'kmoufl':
             return dH_int_kmoufl[i_kmoufl][j_kmoufl](a)
             
-    def mu(self, model, par1, par2):
-        self.a = a
-        self.model_H = model_H
-        self.par1 = par1
-        self.par2 = par2
-
-        H = H_f(a)
-        dHda = dH_f(a)
+    def mu(self, a, model, model_H, par1, par2):
+        H = cosmological_library.H_f(self, a, model_H, par1, par2)
+        dHda = cosmological_library.dH_f(self, a, model_H, par1, par2)
         dHdt = a*H*dHda
         rhom = 3*H0**2*Omegam0*a**(-3)
         rhor = 3*H0**2*Omegar0*a**(-4)

@@ -25,7 +25,6 @@ import matplotlib as mpl
 from matplotlib.colors import LogNorm
 from multiprocessing import Pool
 import integration_library as IL
-%matplotlib inline
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
