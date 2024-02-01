@@ -120,7 +120,7 @@ class cosmological_library:
         elif model_H == 'kmoufl':
             return dH_int_kmoufl[i_kmoufl][j_kmoufl](a)
             
-    def mu(self, model, par1, par2):
+    def mu(self, a, model, par1, par2):
         self.a = a
         self.model_H = model_H
         self.par1 = par1
