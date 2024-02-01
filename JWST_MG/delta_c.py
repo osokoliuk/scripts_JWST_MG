@@ -7,6 +7,8 @@ class delta_c:
     # string model - model of MG for the derivation of mu parameter
     # string model_H - model of MG for H(a)
     # float par1, par2 - corresponding MG parameters
+    # float delta_i - initial linear/non-linear overdensity at a = 1e-5
+    # float ac - scale factor, at which spherical collapse happens
     ########################################################################
     
     def __init__(self, a, model, model_H, par1, par2):
