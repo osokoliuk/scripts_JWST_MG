@@ -495,17 +495,8 @@ def Mh_EPS(z, k, Pk, rhoM, model_H, model, par1, par2, Mh0):
     beta = -func_EPS
     H = H_f(model_H,1/(1+z), par1, par2)
     Mh_EPS = Mh0*(1+z)**alpha*np.exp(beta*z)
-    return [Mh_EPS, 71.6*(Mh_EPS/1e12)*(h/0.7)*func_EPS*((1+z)-alpha/func_EPS)*H/(h*100)] #[EPS Mass, EPS Mass temporal derivative]
+    return [Mh_EPS, 71.6*(Mh0/1e12)*(h/0.7)*func_EPS*((1+z)-alpha/func_EPS)*H/(h*100)] #[EPS Mass, EPS Mass temporal derivative]
 
-"""    
-def MAH(z, rhoM, model_H, model, par1, par2, Mh0):
-    z_arr = np.linspace(0,20,100)
-    H = H_f(model_H,1/(1+z_arr), par1, par2)
-    MAH = -(1+z_arr)*H*np.gradient(Mh_EPS(z_arr, kvec/h, np.array(Pk(1, model, par1, par2))*h**3, rhoM, model_H, model, par1, par2, Mh0))/np.gradient(z_arr)
-    #MAH = np.gradient(np.log(Mh_EPS(z_arr, kvec/h, np.array(Pk(1, model, par1, par2))*h**3, rhoM, model_H, model, par1, par2, Mh0)))/np.gradient(z_arr)
-    MAH = scipy.interpolate.interp1d(z_arr, MAH, fill_value = 'extrapolate')
-    return MAH(z)
-"""
 
 def convert_sfr_to_Muv(sfr, model_Muv):
     if model_Muv == 'Kennicutt2012':
@@ -539,5 +530,4 @@ def dust_attenuation(muv, dust_norm = "fixed"):
         muv_obs = muv + Auv
         #return muv_obs * (muv_obs >= muv) + muv * (muv_obs < muv)
         return 1/k_softplus * np.log(1 + np.exp( k_softplus *( muv_obs - muv) )) + muv    
-
 
