@@ -95,11 +95,9 @@ class SMF:
         
     def SMF_obs(self, Masses, rhoM, a, model_H, model,model_SFR, par1, par2, f0):
         #Mh_arr = np.logspace(6.5,18,1000)
-        HMF_fid = HMF(a, kvec/h, model, model_H, par1, par2, Masses)
-        HMF_fid = HMF_fid.ST_mass_function(kvec/h, rhoM, Masses, a, model_H, model, par1, par2)
-
-        HMF_fid = np.log(10)*Masses*HMF_fid/h**3
-        Masses = Masses*h
+        HMF_library = HMF(a, model, model_H, par1, par2, Masses/h)
+        HMF_fid = HMF_library.ST_mass_function(rhoM, Masses/h, a, model_H, model, par1, par2)
+        HMF_fid = np.log(10)*Masses/h*HMF_fid/h**3
         Masses_star = self.epsilon(Masses, model_SFR, a, f0)*Omegam0/Omegab0*Masses
         SMF = HMF_fid*np.gradient(np.log10(Masses))/np.gradient(np.log10(Masses_star)) #varepsilon(Mh_arr,model_SFR,a)
 

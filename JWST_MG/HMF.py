@@ -13,7 +13,7 @@ class HMF:
     # Masses - array of CDM halo masses
     ########################################################################
     
-    def __init__(self, a, k, model, model_H, par1, par2, Masses):
+    def __init__(self, a, model, model_H, par1, par2, Masses):
         self.a = a
         self.model = model
         self.model_H = model_H
@@ -120,18 +120,28 @@ class HMF:
 
         return (s2-s1)/(M2-M)
 
-
-    def ST_mass_function(self, k, rhoM, Masses, a, model_H, model, par1, par2):
+    # Taken from https://pylians3.readthedocs.io/en/master/mass_function.html 
+    # And properly modified to incorporate MG theories with varying delta_c
+    def ST_mass_function(self, rhoM, Masses, a, model_H, model, par1, par2):
         c_ST = 3.3
-        dndM = np.zeros(Masses.shape[0], dtype=np.float64)
         deltac = delta_c(a, model, model_H, par1, par2)
         deltac = deltac.delta_c_at_ac(a, model, model_H, par1, par2)
         Pk = np.array(self.Pk(a,model,par1,par2))*h**3
-        for i,M in enumerate(Masses):
-            R   = (3.0*M/(4.0*np.pi*rhoM*c_ST**3))**(1.0/3.0)
+        k = kvec/h
+        if hasattr(Masses, '__len__') and (not isinstance(Masses, str)):
+            dndM = np.zeros(Masses.shape[0], dtype=np.float64)
+            for i,M in enumerate(Masses):
+                R   = (3.0*M/(4.0*np.pi*rhoM*c_ST**3))**(1.0/3.0)
+                nu  = (deltac/self.sigma(k,Pk,R))**2
+                dndM[i]=-(rhoM/M)*self.dSdM(k,Pk,rhoM,M)/self.sigma(k,Pk,R)
+                dndM[i]*=0.3222*np.sqrt(2*nu/np.pi)*(1+1/(nu**0.3))
+                dndM[i]*=np.exp(-0.5*nu)
+        else:
+            R   = (3.0*Masses/(4.0*np.pi*rhoM*c_ST**3))**(1.0/3.0)
             nu  = (deltac/self.sigma(k,Pk,R))**2
-            dndM[i]=-(rhoM/M)*self.dSdM(k,Pk,rhoM,M)/self.sigma(k,Pk,R)
-            dndM[i]*=0.3222*np.sqrt(2*nu/np.pi)*(1+1/(nu**0.3))
-            dndM[i]*=np.exp(-0.5*nu)
+
+            dndM=-(rhoM/Masses)*self.dSdM(k,Pk,rhoM,Masses)/self.sigma(k,Pk,R)
+            dndM*=0.3222*np.sqrt(2*nu/np.pi)*(1+1/(nu**0.3))
+            dndM*=np.exp(-0.5*nu)
 
         return dndM

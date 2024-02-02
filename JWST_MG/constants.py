@@ -14,6 +14,9 @@ import integration_library as IL
 from scipy.interpolate import interp1d
 import classy
 import sys
+from scipy.interpolate import InterpolatedUnivariateSpline as spline
+import pandas as pd
+import scipy.integrate as intg
 
 """
 common_settings = {'A_s':2.101e-9,
