@@ -86,8 +86,10 @@ class SMD:
     def SMD(self, Masses, rhoM, a, model_H, model,model_SFR, par1, par2, f0):
         HMF_library = HMF(a, model, model_H, par1, par2, Masses/h)
         HMF_fid = HMF_library.ST_mass_function(rhoM, Masses/h, a, model_H, model, par1, par2)
+        HMF_fid = np.array(HMF_fid)
         SMF_library = SMF(a, model, model_H, model_SFR, par1, par2, Masses, f0)
         fstar = SMF_library.epsilon(Masses, model_SFR, a, f0)*Omegab0/Omegam0
         print(fstar)
         SMD_fid = fstar*self.hmf_integral_gtm(Masses, HMF_fid, mass_density = True)
+        print(SMD_fid)
         return fstar*Masses, SMD_fid
