@@ -10,16 +10,18 @@ class HMF:
     # string model - model of MG for the derivation of mu parameter
     # string model_H - model of MG for H(a)
     # float par1, par2 - corresponding MG parameters
+    # Masses - array of CDM halo masses
     ########################################################################
     
-    def __init__(self, a, k, model, model_H, par1, par2):
+    def __init__(self, a, k, model, model_H, par1, par2, Masses):
         self.a = a
         self.model = model
         self.model_H = model_H
         self.par1 = par1
         self.par2 = par2
+        self.Masses = Masses
 
-    def Pk(a, model, par1, par2):
+    def Pk(self, a, model, par1, par2):
         common_settings = {'n_s':0.9665,
             'A_s':2.101e-9,
             'tau_reio':0.0561,
@@ -60,9 +62,11 @@ class HMF:
             common_settings['gamGI'] = par2
         elif model == 'nDGP':
             common_settings['rc'] = par1
-        else:
+        elif model == 'kmoufl':
             common_settings['beta_kmfl'] = par1
             common_settings['k0_kmfl'] = par2
+        else:
+            sys.exit("The chosen model is not recognised")
             
         M = Class()
         M.set(common_settings)
@@ -92,7 +96,7 @@ class HMF:
             dH_int_kmoufl[i].append(scipy.interpolate.interp1d(a, dH_arr_kmoufl[i][j], fill_value = 'extrapolate'))
     """
 
-    def sigma(k,Pk,R):
+    def sigma(self, k,Pk,R):
         yinit = np.array([0.0], dtype=np.float64)
         eps   = 1e-13  #change this for higher/lower accuracy
         h1    = 1e-12
@@ -105,14 +109,14 @@ class HMF:
                                 h1, hmin, np.log10(k), Pk1,
                                 'sigma', verbose=False)[0])
 
-    def dSdM(k, Pk, rhoM, M):
+    def dSdM(self, k, Pk, rhoM, M):
         c_ST = 3.3
         R1=(3.0*M/(4.0*np.pi*rhoM*c_ST**3))**(1.0/3.0)
-        s1=sigma(k,Pk,R1)
+        s1=self.sigma(k,Pk,R1)
 
         M2=M*1.0001
         R2=(3.0*M2/(4.0*np.pi*rhoM*c_ST**3))**(1.0/3.0)
-        s2=sigma(k,Pk,R2)
+        s2=self.sigma(k,Pk,R2)
 
         return (s2-s1)/(M2-M)
 
@@ -123,11 +127,9 @@ class HMF:
         deltac = delta_c(a, model, model_H, par1, par2)
         deltac = deltac.delta_c_at_ac(a, model, model_H, par1, par2)
         Pk = np.array(self.Pk(a,model,par1,par2))*h**3
-
         for i,M in enumerate(Masses):
             R   = (3.0*M/(4.0*np.pi*rhoM*c_ST**3))**(1.0/3.0)
-            nu  = (delta_c/self.sigma(k,Pk,R))**2
-
+            nu  = (deltac/self.sigma(k,Pk,R))**2
             dndM[i]=-(rhoM/M)*self.dSdM(k,Pk,rhoM,M)/self.sigma(k,Pk,R)
             dndM[i]*=0.3222*np.sqrt(2*nu/np.pi)*(1+1/(nu**0.3))
             dndM[i]*=np.exp(-0.5*nu)

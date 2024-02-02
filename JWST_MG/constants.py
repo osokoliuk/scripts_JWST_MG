@@ -13,9 +13,9 @@ from tqdm import tqdm
 import integration_library as IL
 from scipy.interpolate import interp1d
 import classy
+import sys
 
-
-
+"""
 common_settings = {'A_s':2.101e-9,
 'n_s':0.9665,
 'tau_reio':0.0561,
@@ -36,19 +36,15 @@ common_settings = {'A_s':2.101e-9,
 'l_max_scalars': 3000,
 'lensing': 'yes',
 'mg_ansatz':'kmoufl'}
-
+"""
 
 H0 = 67.66
 Omegam0 = (0.02242/(H0/100)**2+0.11933/(H0/100)**2)
 Omegar0 = 8.493e-5
 c = 299792.45800000057
 H0 = 67.66
-Omegam0 = (0.02242/(H0/100)**2+0.11933/(H0/100)**2)
-Omegar0 = 8.493e-5
-c = 299792.45800000057
 Tcmb = 2.72e6
-h = 0.6766
-c = 3.3
+h = H0/100
 GN = 4.301*10**(-9)
 rho = 3*H0**2*Omegam0/(8*np.pi*GN)
 rhocr = 2.77536627e11
