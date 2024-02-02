@@ -18,3 +18,4 @@ Masses_star, SMF_obs = SMF_fid.SMF_obs(Masses, rhom, 1, model_H, model,model_SFR
 plt.loglog(Masses_star, SMF_obs)
 plt.savefig('HMF.pdf')
 #delta_c_at_ac(self, ac, model, model_H, par1, par2):
+a
