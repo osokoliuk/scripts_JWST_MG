@@ -496,7 +496,7 @@ def Mh_EPS(z, k, Pk, rhoM, model_H, model, par1, par2, Mh0):
     Mh_EPS = Mh0*(1+z)**alpha*np.exp(beta*z)
     return [Mh_EPS, 71.6*(Mh0/1e12)*(h/0.7)*func_EPS*((1+z)-alpha/func_EPS)*H/(h*100)] #[EPS Mass, EPS Mass temporal derivative]
 
-
+# SFR to MUV confertion, taken from https://github.com/XuejianShen/highz-empirical-variability
 def convert_sfr_to_Muv(sfr, model_Muv):
     if model_Muv == 'Kennicutt2012':
         logCx = 43.35 # Kennicutt & Evans 2012 (assuming Kroupa IMF; using STARBURST99; solar metallicity)
@@ -508,7 +508,7 @@ def convert_sfr_to_Muv(sfr, model_Muv):
         Muv = -2.5 * np.log10(fnu) - 48.6 # AB mag
     return Muv
 
-# dust attenuation models
+# dust attenuation models, taken from https://github.com/XuejianShen/highz-empirical-variability 
 def dust_attenuation(muv, dust_norm = "fixed"):
     # muv: intrinsic UV magnitude
     k_softplus = 10
