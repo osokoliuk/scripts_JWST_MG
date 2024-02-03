@@ -15,7 +15,7 @@ f0 = 0.05
 ######################################################################
 
 
-z = np.array([10])
+z = 10
 Masses = np.logspace(6.5,17,100)
 a = 1/(1+z)
 SMD_obs = UVLF(a, model, model_H, model_SFR, par1, par2, Masses, f0)
