@@ -56,8 +56,16 @@ class UVLF:
         Mh_EPS = Mh0*(1+z)**alpha*np.exp(beta*z)
         return [Mh_EPS, 71.6*(Mh0/1e12)*(h/0.7)*func_EPS*((1+z)-alpha/func_EPS)*H/(h*100)] #[EPS Mass, EPS Mass temporal derivative]
 
-    # SFR to MUV confertion, taken from https://github.com/XuejianShen/highz-empirical-variability
-    def convert_sfr_to_Muv(sfr, model_Muv):
+    def SFR(self, a, rhoM, model, model_H, model_SFR, par1, par2, Mh0, f0):
+        M, dMdt = self.Mh_EPS(a, rhoM, model_H, model, par1, par2, Mh0) 
+        SMF_library = SMF(a, model, model_H, model_SFR, par1, par2, M, f0)
+        fstar = SMF_library.epsilon(M, model_SFR, a, f0)*Omegab0/Omegam0
+        SFR = fstar*dMdt
+        return SFR
+
+    # SFR to MUV confertion
+    # Taken from https://github.com/XuejianShen/highz-empirical-variability 
+    def convert_sfr_to_Muv(self, sfr, model_Muv):
         if model_Muv == 'Kennicutt2012':
             logCx = 43.35 # Kennicutt & Evans 2012 (assuming Kroupa IMF; using STARBURST99; solar metallicity)
             logLx = np.log10(sfr) + logCx  # log Lx in erg/s
@@ -68,8 +76,9 @@ class UVLF:
             Muv = -2.5 * np.log10(fnu) - 48.6 # AB mag
         return Muv
 
-    # dust attenuation models, taken from https://github.com/XuejianShen/highz-empirical-variability 
-    def dust_attenuation(muv, dust_norm = "fixed"):
+    # Account for dust attenuation in MUV
+    # Taken from https://github.com/XuejianShen/highz-empirical-variability 
+    def dust_attenuation(self, muv, dust_norm = "fixed"):
         # muv: intrinsic UV magnitude
         k_softplus = 10
         if dust_norm == "fixed":
@@ -90,3 +99,64 @@ class UVLF:
             #return muv_obs * (muv_obs >= muv) + muv * (muv_obs < muv)
             return 1/k_softplus * np.log(1 + np.exp( k_softplus *( muv_obs - muv) )) + muv    
 
+    # Map SFR to MUV with dust correction
+    # Taken from https://github.com/XuejianShen/highz-empirical-variability 
+    def mapfunc_mhalo_to_muv(self, a, rhoM, model, model_H, model_SFR, par1, par2, Mh0, f0, dust_norm = "fixed", include_dust=True):
+        '''
+        mapping from halo mass to UV magnitude (without scatter)
+        muv: UV magnitude
+        log_mhalo: log10 of halo mass in Msun
+        '''
+        sfr = self.SFR(self, a, rhoM, model, model_H, model_SFR, par1, par2, Mh0, f0)
+
+        muv_raw = self.convert_sfr_to_Muv(sfr)
+        if include_dust:
+            muv = self.dust_attenuation(muv_raw, dust_norm=dust_norm)
+        else:
+            muv = muv_raw
+        return muv
+
+
+    # Derive factor dMUV/dlogMh
+    # Taken from https://github.com/XuejianShen/highz-empirical-variability 
+    def mapfunc_jacobian_numeric(self, a, rhoM, model, model_H, model_SFR, par1, par2, Mh0, f0, dust_norm = "fixed", include_dust=True):
+        dlogm=0.001
+        log_mhalo = np.log10(Mh0)
+        muv_plus = self.mapfunc_mhalo_to_muv(a, rhoM, model, model_H, model_SFR, par1, par2, log_mhalo + dlogm, f0, dust_norm = "fixed", include_dust=True)
+        muv_minus = self.mapfunc_mhalo_to_muv(a, rhoM, model, model_H, model_SFR, par1, par2, log_mhalo - dlogm, f0, dust_norm = "fixed", include_dust=True)
+        dmuv_dlogm = (muv_plus - muv_minus) / (2*dlogm)
+        return np.abs(dmuv_dlogm)
+
+    # Convolve MUV with Gaussian kernel of width sigma_uv
+    # This takes into account scatter that may arise from different factors,
+    # For example from the SMHR uncertainties and HMF choice
+    # Taken from https://github.com/XuejianShen/highz-empirical-variability 
+    def convolve_on_grid(input_grid, input_weight, sigma_uv):
+        grid_binsize  = input_grid[1] - input_grid[0]
+        minimum_sigma = grid_binsize/4. # set to the binsize divided by a constant
+        sigma_uv = max(sigma_uv, minimum_sigma) # regulate the miminum sigma to be of order the binsize (~ 0.01 dex)
+
+        output_weight = np.zeros(len(input_grid))
+        for i, mapfrom in enumerate(input_grid):
+            raw_output    = np.zeros(len(input_grid))
+            for j, mapto in enumerate(input_grid):
+                raw_output[j] += 1./np.sqrt(2*np.pi*sigma_uv**2) * np.exp( -0.5 * (mapto - mapfrom)**2 / sigma_uv**2 )
+            sum_raw_output = np.sum(raw_output)
+            if sum_raw_output > 0:
+                raw_output = raw_output/sum_raw_output
+            else:
+                raw_output = np.zeros(len(input_grid))
+            output_weight += input_weight[i] * raw_output
+        return output_weight
+
+    # Finally compute UVLF by using all of the previously defined functions in this class
+    # Taken from https://github.com/XuejianShen/highz-empirical-variability 
+    def compute_uv_luminosity_function(self, a, rhoM, model, model_H, model_SFR, par1, par2, Masses, f0, dust_norm = "fixed", include_dust=True):
+        HMF_library = HMF(a, model, model_H, par1, par2, Masses)
+        phi_halo_arr = HMF_library.ST_mass_function(rhoM, Masses, a, model_H, model, par1, par2)
+        muv_arr    = self.mapfunc_mhalo_to_muv(a, rhoM, model, model_H, model_SFR, par1, par2, Masses, f0, dust_norm, include_dust)
+        dmuv_dlogm = self.mapfunc_jacobian_numeric(a, rhoM, model, model_H, model_SFR, par1, par2, Masses, f0, dust_norm, include_dust)
+        if sigma_uv > 0: phi_uv_arr = self.convolve_on_grid(muv_arr, phi_halo_arr/dmuv_dlogm , sigma_uv = sigma_uv)
+        else:            phi_uv_arr = phi_halo_arr/dmuv_dlogm
+        #print(phi_uv_arr)
+        return muv_arr, phi_uv_arr

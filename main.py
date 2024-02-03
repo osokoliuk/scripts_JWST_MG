@@ -15,16 +15,12 @@ f0 = 0.05
 ######################################################################
 
 
-z = np.array([0,1,2,3,4,5,6,7,8])
-Masses = 1e8
+z = np.array([10])
+Masses = np.logspace(6.5,17,100)
 a = 1/(1+z)
 SMD_obs = UVLF(a, model, model_H, model_SFR, par1, par2, Masses, f0)
-Mh, dMhdt = SMD_obs.Mh_EPS(a, rhom, model_H, model, par1, par2, Mh0)
-plt.plot(z, dMhdt) 
-
-dMhdt_mean = 25.3*(Mh0/1e12)**1.1*(1+1.65*z)*np.sqrt(Omegam0*(1+z)**3+1-Omegam0)
-plt.plot(z, dMhdt_mean) 
-
+SFR = SMD_obs.compute_uv_luminosity_function(a, rhom, model, model_H, model_SFR, par1, par2, Masses, f0)
+plt.plot(z, SFR) 
 
 
 my_xlims=np.r_[1e8, 1e12]
