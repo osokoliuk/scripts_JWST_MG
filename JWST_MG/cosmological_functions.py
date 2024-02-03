@@ -2,10 +2,10 @@
 # Namely H0, Omegam0, Omegar0 etc.
 from JWST_MG.constants import *
 
-class cosmological_library:
+class cosmological_functions:
 
     ########################################################################
-    # Initialize a class
+    # Initialize a class cosmological_functions
     # float a - scale factor value (related to redshift via a = 1/(1+z))
     # string model - model of MG for the derivation of mu parameter
     # string model_H - model of MG for H(a)
@@ -70,8 +70,8 @@ class cosmological_library:
             return dH_int_kmoufl[i_kmoufl][j_kmoufl](a)
             
     def mu(self, a, model, model_H, par1, par2):
-        H = cosmological_library.H_f(self, a, model_H, par1, par2)
-        dHda = cosmological_library.dH_f(self, a, model_H, par1, par2)
+        H = self.H_f(a, model_H, par1, par2)
+        dHda = self.dH_f(a, model_H, par1, par2)
         dHdt = a*H*dHda
         rhom = 3*H0**2*Omegam0*a**(-3)
         rhor = 3*H0**2*Omegar0*a**(-4)

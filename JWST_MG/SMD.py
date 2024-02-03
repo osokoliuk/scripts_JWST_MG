@@ -1,5 +1,5 @@
 from JWST_MG.constants import *
-from JWST_MG.cosmological_functions import cosmological_library
+from JWST_MG.cosmological_functions import cosmological_functions
 from JWST_MG.delta_c import delta_c
 from JWST_MG.HMF import HMF
 from JWST_MG.SMF import SMF
@@ -11,7 +11,7 @@ class NaNException(Exception):
 
 class SMD:
    ########################################################################
-    # Initialize a class
+    # Initialize a class SMD (Stellar Mass Density)
     # float a - scale factor value (related to redshift via a = 1/(1+z))
     # string model - model of MG for the derivation of mu parameter
     # string model_H - model of MG for H(a)

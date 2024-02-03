@@ -1,5 +1,5 @@
 
-from JWST_MG.SMD import SMD
+from JWST_MG.UVLF import UVLF
 from JWST_MG.constants import *
 
 model = 'nDGP'
@@ -9,28 +9,26 @@ model_SFR = 'phenomenological_extreme'
 par1 = 150000
 par2 = 1
 
-Masses = np.logspace(7,16,50)
+Mh0 = 1e12
 f0 = 0.05
 
 ######################################################################
 
-x = np.loadtxt("/home/oleksii/smd_lcdm.txt")[:,0]
-y = np.loadtxt("/home/oleksii/smd_lcdm.txt")[:,1]
-plt.loglog(x,y)
-z_arr = np.array([9.1])
-for i in range(len(z_arr)):
-    z = z_arr[i]
-    a = 1/(1+z)
-    SMD_obs = SMD(a, model, model_H, model_SFR, par1, par2, Masses, f0)
-    Masses_star, SMD_obs = SMD_obs.SMD(Masses, rhom, a, model_H, model,model_SFR, par1, par2, f0)
-    plt.loglog(Masses_star, SMD_obs) 
+
+z = np.array([0,1,2,3,4,5,6,7,8])
+Masses = 1e8
+a = 1/(1+z)
+SMD_obs = UVLF(a, model, model_H, model_SFR, par1, par2, Masses, f0)
+Mh, dMhdt = SMD_obs.Mh_EPS(a, rhom, model_H, model, par1, par2, Mh0)
+plt.plot(z, dMhdt) 
 
 
 
 my_xlims=np.r_[1e8, 1e12]
 my_ylims=np.r_[1e2, 1e8]
-plt.xlim(*my_xlims)
-plt.ylim(*my_ylims)
+#plt.xlim(*my_xlims)
+#plt.ylim(*my_ylims)
+plt.yscale('log')
 
 plt.savefig('HMF.pdf')
 #delta_c_at_ac(self, ac, model, model_H, par1, par2):
