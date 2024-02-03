@@ -8,15 +8,16 @@ model_SFR = 'phenomenological_regular'
 par1 = 150000
 par2 = 1
 
-Masses = np.logspace(7,16,50)
+Masses = np.logspace(6,13,50)
 f0 = 0.05
 
-z_arr = np.array([0])
+z_arr = np.array([9.1])
 for i in range(len(z_arr)):
     z = z_arr[i]
     a = 1/(1+z)
-    HMF_library = HMF(a, model, model_H, par1, par2, Masses/h)
-    HMF_fid = HMF_library.ST_mass_function(rhom, Masses/h, a, model_H, model, par1, par2)
+    HMF_library = HMF(a, model, model_H, par1, par2, Masses)
+    HMF_fid = HMF_library.ST_mass_function(rhom, Masses, a, model_H, model, par1, par2)
+    HMF_fid = HMF_fid
     plt.loglog(Masses, HMF_fid)
 
 
@@ -29,10 +30,10 @@ from scipy.interpolate import UnivariateSpline as US
 import hmf
 from astropy.cosmology import FlatLambdaCDM
 
-h0=0.6732
-om0=0.3158
-ob0h2=0.022383
-ob0=ob0h2/h0**2
+h0=h
+om0=Omegam0
+ob0h2=Omegab0*h**2
+ob0=ob0h2/h**2
 ns=0.96605
 sig8=0.8120
 t_cmb=2.7255
@@ -42,7 +43,7 @@ fbary=ob0h2/h0**2/om0
 
 # set up cosmological model:
 planck2020_model=FlatLambdaCDM(H0 = 100*h0, Om0=om0, Tcmb0 = t_cmb, Ob0 = ob0)
-mf = MassFunction(Mmin= 7, Mmax = 16, hmf_model='SMT', z = 0,
+mf = MassFunction(Mmin= 6, Mmax = 13, hmf_model='SMT', z = 9.1,
                        cosmo_model=planck2020_model,
                        sigma_8=sig8, n=ns,
                        transfer_model=hmf.density_field.transfer_models.CAMB,
@@ -51,6 +52,16 @@ mf = MassFunction(Mmin= 7, Mmax = 16, hmf_model='SMT', z = 0,
 Masses= mf.m/h0
 HMF = mf.dndm*h0**4
 plt.loglog(Masses, HMF)
+
+Masses = np.logspace(6,13,50)
+
+from colossus.cosmology import cosmology
+model_SFR = 'double_power'    
+cosmology.setCosmology('planck18');
+from colossus.lss import mass_function
+mfunc = mass_function.massFunction(Masses, z, mdef = 'fof', model = 'sheth99', q_out = 'dndlnM', sigma_args = {'filt': 'tophat'})
+
+plt.plot(Masses/h,(mfunc/Masses)*h**4)
 
 #my_xlims=np.r_[1e8, 1e12]
 #my_ylims=np.r_[1e2, 1e8]
