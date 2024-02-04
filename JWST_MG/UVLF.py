@@ -27,7 +27,7 @@ class UVLF:
         self.Masses = Masses
         self.f0 = f0
 
-    def Mh_EPS(self, a, rhoM, model_H, model, par1, par2, Mh0):
+    def calculate_alphabeta(self, a, rhoM, model_H, model, par1, par2, Mass):
         Pk_library = HMF(a, model, model_H, par1, par2, self.Masses)
         cosmological_library = cosmological_functions(a, model, model_H, par1, par2)
         deltac_library = delta_c(a, model, model_H, par1, par2)
@@ -35,13 +35,6 @@ class UVLF:
         z = 1/a-1
         c_ST = 3.3
         k = kvec/h
-        zf = -0.0064*(np.log10(Mh0))**2+0.0237*np.log10(Mh0) + 1.8837
-        q = 4.137*zf**(-0.9476)
-        R_M0 = (3.0*Mh0/(4.0*np.pi*rhoM*c_ST**3))**(1.0/3.0)
-        R_M0q = (3.0*(Mh0/q)/(4.0*np.pi*rhoM*c_ST**3))**(1.0/3.0)
-
-        Pk = np.array(Pk_library.Pk(1,model,par1,par2))*h**3
-        func_EPS = 1/(np.sqrt(Pk_library.sigma(k,Pk,R_M0q)**2-Pk_library.sigma(k,Pk,R_M0)**2))
         deltac = deltac_library.delta_c_at_ac(1, model, model_H, par1, par2)
         lineardelta_z0 = deltac_library.linear(1e-5, 1, model_H, model, par1, par2)[-1,1]
         lineardelta = scipy.interpolate.interp1d(deltac_library.linear(1e-5, 1, model_H, model, par1, par2)[:,0],deltac_library.linear(1e-5, 1, model_H, model, par1, par2)[:,1]/lineardelta_z0, fill_value = 'extrapolate')
@@ -49,19 +42,52 @@ class UVLF:
         dlineardz = np.gradient(lineardelta(1/(1+z_arr)))/np.gradient(z_arr)
         dlineardz_interp = scipy.interpolate.interp1d(z_arr, dlineardz, fill_value = 'extrapolate')
         dlineardz0 = dlineardz_interp(0)
+        alpha = []
+        beta = []
+        Masses = np.logspace(8,16,500)
+        Pk = np.array(Pk_library.Pk(1,model,par1,par2))*h**3
+
+        for Mh0 in Masses:
+            zf = -0.0064*(np.log10(Mh0))**2+0.0237*np.log10(Mh0) + 1.8837
+            q = 4.137*zf**(-0.9476)
+            R_M0 = (3.0*Mh0/(4.0*np.pi*rhoM*c_ST**3))**(1.0/3.0)
+            R_M0q = (3.0*(Mh0/q)/(4.0*np.pi*rhoM*c_ST**3))**(1.0/3.0)
+
+            func_EPS = 1/(np.sqrt(Pk_library.sigma(k,Pk,R_M0q)**2-Pk_library.sigma(k,Pk,R_M0)**2))
+            
+            alpha.append((deltac*np.sqrt(2/np.pi)*dlineardz0+1)*func_EPS)
+            beta.append(-func_EPS)
+
+        alpha = scipy.interpolate.interp1d(Masses,alpha)
+        beta = scipy.interpolate.interp1d(Masses,beta)
+        return alpha(Mass), beta(Mass) 
+
+    def MAR(self, a, rhoM, model_H, model, par1, par2, Masses):
+        z = 1/a-1
+        Pk_library = HMF(a, model, model_H, par1, par2, Masses)
+        cosmological_library = cosmological_functions(a, model, model_H, par1, par2)
+        deltac_library = delta_c(a, model, model_H, par1, par2)
+
+        alpha, beta = self.calculate_alphabeta(a, rhoM, model_H, model, par1, par2, Masses)
         
-        alpha = (deltac*np.sqrt(2/np.pi)*dlineardz0+1)*func_EPS
-        beta = -func_EPS
-        H = cosmological_library.H_f(a, model_H, par1, par2)
-        alpha = 0.24
-        beta = -0.75
-        Mh_EPS = Mh0*(1+z)**alpha*np.exp(beta*z)
-        return [Mh_EPS, 71.6*(Mh0/1e12)*(h/0.7)*(-alpha-beta*(1+z))*H/(h*100)] #[EPS Mass, EPS Mass temporal derivative]
+        if hasattr(a, '__len__') and (not isinstance(a, str)):
+            dMh_EPS = []
+            for ai in a:
+                zi = 1/ai-1
+                H = cosmological_library.H_f(ai, model_H, par1, par2)
+                Mh_EPS = Masses*(1+zi)**alpha*np.exp(beta*zi)
+                dMh_EPS.append(71.6*(Masses/1e12)*(h/0.7)*(-alpha-beta*(1+zi))*H/(h*100))
+        else:
+            H = cosmological_library.H_f(a, model_H, par1, par2)
+            Mh_EPS = Masses*(1+z)**alpha*np.exp(beta*z)
+            dMh_EPS = 71.6*(Masses/1e12)*(h/0.7)*(-alpha-beta*(1+z))*H/(h*100)
+
+        return dMh_EPS
     
-    def SFR(self, a, rhoM, model, model_H, model_SFR, par1, par2, Mh0, f0):
-        M, dMdt = self.Mh_EPS(a, rhoM, model_H, model, par1, par2, Mh0) 
-        SMF_library = SMF(a, model, model_H, model_SFR, par1, par2, M, f0)
-        fstar = SMF_library.epsilon(M, model_SFR, a, f0)*Omegab0/Omegam0
+    def SFR(self, a, rhoM, model, model_H, model_SFR, par1, par2, Masses, f0):
+        dMdt = self.MAR(a, rhoM, model_H, model, par1, par2, Masses)
+        SMF_library = SMF(a, model, model_H, model_SFR, par1, par2, Masses, f0)
+        fstar = SMF_library.epsilon(Masses, model_SFR, a, f0)*Omegab0/Omegam0
         SFR = fstar*dMdt
         return SFR
 
