@@ -64,8 +64,10 @@ class UVLF:
             alpha.append((deltac*np.sqrt(2/np.pi)*dlineardz0+1)*func_EPS)
             beta.append(-func_EPS)
 
-        alpha = scipy.interpolate.interp1d(Masses, alpha, fill_value = 'extrapolate')
-        beta = scipy.interpolate.interp1d(Masses, beta, fill_value = 'extrapolate')
+        alpha = scipy.interpolate.interp1d(
+            Masses, alpha, fill_value='extrapolate')
+        beta = scipy.interpolate.interp1d(
+            Masses, beta, fill_value='extrapolate')
         return alpha(Mass), beta(Mass)
 
     def MAR(self, a, rhoM, model_H, model, par1, par2, Masses):
@@ -177,7 +179,7 @@ class UVLF:
     # This takes into account scatter that may arise from different factors,
     # For example from the SMHR uncertainties and HMF choice
     # Taken from https://github.com/XuejianShen/highz-empirical-variability
-    def convolve_on_grid(input_grid, input_weight, sigma_uv):
+    def convolve_on_grid(self, input_grid, input_weight, sigma_uv):
         grid_binsize = input_grid[1] - input_grid[0]
         minimum_sigma = grid_binsize/4.  # set to the binsize divided by a constant
         # regulate the miminum sigma to be of order the binsize (~ 0.01 dex)
@@ -199,7 +201,7 @@ class UVLF:
 
     # Finally compute UVLF by using all of the previously defined functions in this class
     # Taken from https://github.com/XuejianShen/highz-empirical-variability
-    def compute_uv_luminosity_function(self, a, rhoM, model, model_H, model_SFR, par1, par2, Masses, f0, dust_norm="fixed", include_dust=True, sigma_uv):
+    def compute_uv_luminosity_function(self, a, rhoM, model, model_H, model_SFR, par1, par2, Masses, f0, sigma_uv, dust_norm="fixed", include_dust=True):
         HMF_library = HMF(a, model, model_H, par1, par2, Masses)
         phi_halo_arr = HMF_library.ST_mass_function(
             rhoM, Masses, a, model_H, model, par1, par2)
