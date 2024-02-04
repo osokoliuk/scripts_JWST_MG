@@ -2,6 +2,7 @@
 # Namely H0, Omegam0, Omegar0 etc.
 from JWST_MG.constants import *
 
+
 class cosmological_functions:
 
     ########################################################################
@@ -11,14 +12,14 @@ class cosmological_functions:
     # string model_H - model of MG for H(a)
     # float par1, par2 - corresponding MG parameters
     ########################################################################
-    
+
     def __init__(self, a, model, model_H, par1, par2):
         self.a = a
         self.model = model
         self.model_H = model_H
         self.par1 = par1
         self.par2 = par2
-    
+
     """
     for i in range(len(K0)):
         for j in tqdm(range(len(beta))):
@@ -65,10 +66,10 @@ class cosmological_functions:
             rc = par1
             Omegarc = 1/(4*H0**2*rc**2)
             OmegaLambda0 = 1 - Omegam0 - Omegar0 + 2*np.sqrt(Omegarc)
-            return  (H0*((-3*Omegam0)/a**4 - (4*Omegar0)/a**5))/(2.*np.sqrt(OmegaLambda0 + Omegam0/a**3 + Omegar0/a**4 + Omegarc))
+            return (H0*((-3*Omegam0)/a**4 - (4*Omegar0)/a**5))/(2.*np.sqrt(OmegaLambda0 + Omegam0/a**3 + Omegar0/a**4 + Omegarc))
         elif model_H == 'kmoufl':
             return dH_int_kmoufl[i_kmoufl][j_kmoufl](a)
-            
+
     def mu(self, a, model, model_H, par1, par2):
         H = self.H_f(a, model_H, par1, par2)
         dHda = self.dH_f(a, model_H, par1, par2)
@@ -81,8 +82,8 @@ class cosmological_functions:
         if model == 'E11':
             f1 = par1*OmegaL
             return 1 + f1
-        elif model =='gmu':
-            return 1+ par1*(1-a)**1 - par1*(1-a)**2
+        elif model == 'gmu':
+            return 1 + par1*(1-a)**1 - par1*(1-a)**2
         elif model == 'DES':
             return 1 + par1*OmegaL + par2*OmegaL**2
         elif model == 'wCDM':
@@ -94,6 +95,7 @@ class cosmological_functions:
             A_kmfl = 1.0 + par1*a
             X_kmfl = 0.5 * A_kmfl**2*(H*a)**2/((1-Omegam0-Omegar0)*H0**2)
             k_prime_mfl = 1.0 + 2.0*par2*X_kmfl
-            epsl1_kmfl = 2.0*par1**2/k_prime_mfl    
-            X_kmfl_dot = 0.5 * A_kmfl**2/((1-Omegam0-Omegar0)*H0**2)*2.0*H*a*(H*H*a+dHdt*a)
-            return 1.+ epsl1_kmfl
+            epsl1_kmfl = 2.0*par1**2/k_prime_mfl
+            X_kmfl_dot = 0.5 * A_kmfl**2 / \
+                ((1-Omegam0-Omegar0)*H0**2)*2.0*H*a*(H*H*a+dHdt*a)
+            return 1. + epsl1_kmfl

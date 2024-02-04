@@ -64,8 +64,8 @@ class UVLF:
             alpha.append((deltac*np.sqrt(2/np.pi)*dlineardz0+1)*func_EPS)
             beta.append(-func_EPS)
 
-        alpha = scipy.interpolate.interp1d(Masses, alpha)
-        beta = scipy.interpolate.interp1d(Masses, beta)
+        alpha = scipy.interpolate.interp1d(Masses, alpha, fill_value = 'extrapolate')
+        beta = scipy.interpolate.interp1d(Masses, beta, fill_value = 'extrapolate')
         return alpha(Mass), beta(Mass)
 
     def MAR(self, a, rhoM, model_H, model, par1, par2, Masses):
@@ -165,12 +165,11 @@ class UVLF:
     # Taken from https://github.com/XuejianShen/highz-empirical-variability
 
     def mapfunc_jacobian_numeric(self, a, rhoM, model, model_H, model_SFR, par1, par2, Masses, f0, dust_norm="fixed", include_dust=True):
-        dlogm = 0.001
-        log_mhalo = np.log10(Masses)
+        dlogm = 10**0.001
         muv_plus = self.mapfunc_mhalo_to_muv(
-            a, rhoM, model, model_H, model_SFR, par1, par2, log_mhalo + dlogm, f0, dust_norm="fixed", include_dust=True)
+            a, rhoM, model, model_H, model_SFR, par1, par2, Masses + dlogm, f0, dust_norm="fixed", include_dust=True)
         muv_minus = self.mapfunc_mhalo_to_muv(
-            a, rhoM, model, model_H, model_SFR, par1, par2, log_mhalo - dlogm, f0, dust_norm="fixed", include_dust=True)
+            a, rhoM, model, model_H, model_SFR, par1, par2, Masses - dlogm, f0, dust_norm="fixed", include_dust=True)
         dmuv_dlogm = (muv_plus - muv_minus) / (2*dlogm)
         return np.abs(dmuv_dlogm)
 
@@ -200,7 +199,7 @@ class UVLF:
 
     # Finally compute UVLF by using all of the previously defined functions in this class
     # Taken from https://github.com/XuejianShen/highz-empirical-variability
-    def compute_uv_luminosity_function(self, a, rhoM, model, model_H, model_SFR, par1, par2, Masses, f0, dust_norm="fixed", include_dust=True):
+    def compute_uv_luminosity_function(self, a, rhoM, model, model_H, model_SFR, par1, par2, Masses, f0, dust_norm="fixed", include_dust=True, sigma_uv):
         HMF_library = HMF(a, model, model_H, par1, par2, Masses)
         phi_halo_arr = HMF_library.ST_mass_function(
             rhoM, Masses, a, model_H, model, par1, par2)

@@ -9,7 +9,7 @@ from classy import Class
 from scipy.optimize import fsolve
 import math
 import scipy
-from tqdm import tqdm 
+from tqdm import tqdm
 import integration_library as IL
 from scipy.interpolate import interp1d
 import classy
@@ -56,12 +56,12 @@ rho = 3*H0**2*Omegam0/(8*np.pi*GN)
 rhocr = 2.77536627e11
 rhom = rhocr*Omegam0
 
-kvec = np.logspace(np.log10(0.00001),np.log10(1000.0),10000)
-beta = np.linspace(0,0.5,10)
+kvec = np.logspace(np.log10(0.00001), np.log10(1000.0), 10000)
+beta = np.linspace(0, 0.5, 10)
 K0 = [0, 0.5, 1]
-H_arr_kmoufl = [[],[],[]]
-dH_arr_kmoufl = [[],[],[]]
-H_int_kmoufl = [[],[],[]]
-dH_int_kmoufl = [[],[],[]]
+H_arr_kmoufl = [[], [], []]
+dH_arr_kmoufl = [[], [], []]
+H_int_kmoufl = [[], [], []]
+dH_int_kmoufl = [[], [], []]
 
 M = {}
