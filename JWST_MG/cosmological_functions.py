@@ -50,6 +50,8 @@ class cosmological_functions:
             return H0*np.sqrt(Omegam0*a**(-3)+Omegar0*a**(-4)+Omegarc + OmegaLambda0)-H0*np.sqrt(Omegarc)
         elif model_H == 'kmoufl':
             return H_int_kmoufl[i_kmoufl][j_kmoufl](a)
+        else:
+            raise Exception("Incorrect model specified.")
 
     def dH_f(self, a, model_H, par1, par2):
         self.a = a
@@ -69,6 +71,8 @@ class cosmological_functions:
             return (H0*((-3*Omegam0)/a**4 - (4*Omegar0)/a**5))/(2.*np.sqrt(OmegaLambda0 + Omegam0/a**3 + Omegar0/a**4 + Omegarc))
         elif model_H == 'kmoufl':
             return dH_int_kmoufl[i_kmoufl][j_kmoufl](a)
+        else:
+            raise Exception("Incorrect model specified.")
 
     def mu(self, a, model, model_H, par1, par2):
         H = self.H_f(a, model_H, par1, par2)
@@ -99,3 +103,5 @@ class cosmological_functions:
             X_kmfl_dot = 0.5 * A_kmfl**2 / \
                 ((1-Omegam0-Omegar0)*H0**2)*2.0*H*a*(H*H*a+dHdt*a)
             return 1. + epsl1_kmfl
+        else:
+            raise Exception("Incorrect model specified.")

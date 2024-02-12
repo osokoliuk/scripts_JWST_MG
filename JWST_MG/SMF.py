@@ -36,7 +36,9 @@ class SMF:
 
     def epsilon(self, Mh, model_SFR, a, f0):
         z = 1/a-1
-        if model_SFR == 'phenomenological_regular':
+        if model_SFR == 'toy':
+            epstar = f0
+        elif model_SFR == 'phenomenological_regular':
             if z < 10:
                 epstar = 0.15 - 0.03*(z-6)
             else:
@@ -57,7 +59,7 @@ class SMF:
             ahi = -0.61
             epstar = 2*f0/((Mh/Mp)**alo + (Mh/Mp)**ahi)
         else:
-            sys.exit("Incorrect SFR model is being used")
+            raise Exception("Incorrect SFR model used.")
         return epstar
 
     def varepsilon(self, Mh, model_SFR, a):

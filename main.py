@@ -1,5 +1,7 @@
 
 from JWST_MG.UVLF import UVLF
+from JWST_MG.HMF import HMF
+
 from JWST_MG.constants import *
 
 import numpy as np
@@ -9,13 +11,13 @@ import commah
 ax = plt.subplot(111)
 model = 'nDGP'
 model_H = 'nDGP'
-model_SFR = 'double_power'
+model_SFR = 'phenomenological_regular'
 
 par1 = 150000
 par2 = 1
 
 Mh0 = 1e12
-f0 = 0.05
+f0 = 1
 
 ######################################################################
 
@@ -25,12 +27,19 @@ Masses = np.logspace(8, 16, 50)
 a = 1/(1+z)
 SMD_obs = UVLF(a, model, model_H, model_SFR, par1, par2, Masses, f0)
 MUV, UVLF = SMD_obs.compute_uv_luminosity_function(
-    a, rhom, model, model_H, model_SFR, par1, par2, Masses, f0, sigma_uv=0, dust_norm="fixed", include_dust=False)
+    a, rhom, model, model_H, model_SFR, par1, par2, Masses, f0, sigma_uv=0.4, dust_norm="fixed", include_dust=False)
+# mapfunc_mhalo_to_muv(self, a, rhoM, model, model_H, model_SFR, par1, par2, Masses, f0, dust_norm="fixed", include_dust=True):
 
 plt.plot(MUV, np.log10(UVLF))
 # print(alpha, beta)
 
+HMF_library = HMF(a, model, model_H, par1, par2, Masses)
+phi_halo_arr = HMF_library.ST_mass_function(
+    rhom, Masses, a, model_H, model, par1, par2)
 
+plt.plot(MUV, np.log10(phi_halo_arr*Masses*np.log(10)/(2.5*1.1)))
+
+"""
 def halo_accretion_rate(mhalo, redshift):
     # Fakhouri 2010
     # Mhalo in Msun
@@ -47,9 +56,7 @@ def halo_accretion_rate(mhalo, redshift):
 
 
 def load_harikane2023_specz(redshift, type=0):
-    """
-    Load the data from Harikane et al. 2023 
-    """
+    #Load the data from Harikane et al. 2023 
     f = np.genfromtxt(
         'observational_data/Harikane2023_Specz.dat', names=True, delimiter=',')
     select = (f['z'] == redshift) & (f['type'] == type)
@@ -77,9 +84,7 @@ def plot_specz_constraints(redshift, ax=None, **kwargs):
 
 
 def load_harikane_2023_photoz_digit(redshift):
-    """
-    Load the data from Harikane et al. 2023 
-    """
+    #Load the data from Harikane et al. 2023 
     f = np.genfromtxt(
         'observational_data/Harikane2023_Photoz_digit.dat', names=True)
     select = (f['z'] == redshift)
@@ -323,7 +328,12 @@ plt.xlabel(r'$M_{\rm UV}$', fontsize=25)
 plt.ylabel(r"$\log{(\Phi\,[{\rm mag}^{-1}\, {\rm Mpc}^{-3}])}$", fontsize=25)
 
 
+"""
+
+my_ylims = np.r_[-8, -1]
+my_xlims = np.r_[-14, -24]
 plt.xlim(*my_xlims)
 plt.ylim(*my_ylims)
+
 plt.savefig('HMF.pdf')
 # delta_c_at_ac(self, ac, model, model_H, par1, par2):

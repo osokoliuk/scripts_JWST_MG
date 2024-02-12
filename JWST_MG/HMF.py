@@ -67,7 +67,7 @@ class HMF:
             common_settings['beta_kmfl'] = par1
             common_settings['k0_kmfl'] = par2
         else:
-            sys.exit("The chosen model is not recognised")
+            raise Exception("The chosen model is not recognised")
 
         M = Class()
         M.set(common_settings)

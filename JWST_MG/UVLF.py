@@ -167,12 +167,9 @@ class UVLF:
     # Taken from https://github.com/XuejianShen/highz-empirical-variability
 
     def mapfunc_jacobian_numeric(self, a, rhoM, model, model_H, model_SFR, par1, par2, Masses, f0, dust_norm="fixed", include_dust=True):
-        dlogm = 10**0.001
-        muv_plus = self.mapfunc_mhalo_to_muv(
-            a, rhoM, model, model_H, model_SFR, par1, par2, Masses + dlogm, f0, dust_norm="fixed", include_dust=True)
-        muv_minus = self.mapfunc_mhalo_to_muv(
-            a, rhoM, model, model_H, model_SFR, par1, par2, Masses - dlogm, f0, dust_norm="fixed", include_dust=True)
-        dmuv_dlogm = (muv_plus - muv_minus) / (2*dlogm)
+        muv = self.mapfunc_mhalo_to_muv(
+            a, rhoM, model, model_H, model_SFR, par1, par2, Masses, f0, dust_norm="fixed", include_dust=True)
+        dmuv_dlogm = np.gradient(muv)/np.gradient(Masses)
         return np.abs(dmuv_dlogm)
 
     # Convolve MUV with Gaussian kernel of width sigma_uv
