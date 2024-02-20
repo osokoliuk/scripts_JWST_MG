@@ -86,5 +86,23 @@ class delta_c:
         data = np.array(data)
         return data
 
+    def non_linear(self, deltai_collapse, a, model, model_H, par1, par2):
+        ai = 1e-5
+        dt = 0.0001
+        ddeltai = deltai_collapse/ai
+        init = [deltai_collapse, ddeltai]
+        system = ode(self.delta_nl_ODE)
+        system.set_f_params(*[model, model_H, par1, par2])
+        system.set_initial_value(init, ai)
+
+        data = []
+        while system.successful() and system.t <= a:
+            data.append([system.t + dt, system.integrate(system.t + dt)[0]])
+            # plt.scatter(system.t+dt, system.integrate(system.t + dt)[0], c ='tab:orange')
+
+        data = np.array(data)
+        return data
+
+
     def delta_c_at_ac(self, ac, model, model_H, par1, par2):
         return self.linear(self.interpolate_ac(ac, model, model_H, par1, par2), ac, model, model_H, par1, par2)[-1, 1]
