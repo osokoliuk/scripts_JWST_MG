@@ -11,13 +11,13 @@ import commah
 ax = plt.subplot(111)
 model = 'nDGP'
 model_H = 'nDGP'
-model_SFR = 'phenomenological_regular'
+model_SFR = 'toy'
 
 par1 = 150000
 par2 = 1
 
 Mh0 = 1e12
-f0 = 1
+f0 = 0.05
 
 ######################################################################
 
@@ -25,6 +25,13 @@ f0 = 1
 z = 10
 Masses = np.logspace(8, 16, 50)
 a = 1/(1+z)
+
+
+x = np.loadtxt("/home/oleksii/highz-empirical-variability/data.txt")[:, 0]
+y = np.loadtxt("/home/oleksii/highz-empirical-variability/data.txt")[:, 1]
+plt.plot(x, np.log10(y), ls=':')
+
+
 SMD_obs = UVLF(a, model, model_H, model_SFR, par1, par2, Masses, f0)
 MUV, UVLF = SMD_obs.compute_uv_luminosity_function(
     a, rhom, model, model_H, model_SFR, par1, par2, Masses, f0, sigma_uv=0.4, dust_norm="fixed", include_dust=False)
@@ -38,6 +45,7 @@ phi_halo_arr = HMF_library.ST_mass_function(
     rhom, Masses, a, model_H, model, par1, par2)
 
 plt.plot(MUV, np.log10(phi_halo_arr*Masses*np.log(10)/(2.5*1.1)))
+
 
 """
 def halo_accretion_rate(mhalo, redshift):
