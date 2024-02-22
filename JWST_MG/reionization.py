@@ -27,10 +27,20 @@ class reionization:
         H = cosmological_library.H_f(a, model_H, par1, par2)
         dH = cosmological_library.dH_f(a, model_H, par1, par2)
         mu = cosmological_library.mu(a, model, model_H, par1, par2)
+        deltai = deltac_library.interpolate_ac(
+            ac, model, model_H, par1, par2)
+        delta_nl = deltac_library.non_linear(
+            deltai, a, model, model_H, par1, par2)[-1, -1]
         Hdot = a*H*dH
+        G = 1/8*np.pi
         rho_m = 3*H0**2*Omegam0*a**(-3)
-        delta_nl = deltac_library.non_linear(deltac_library.interpolate_ac(
-            ac, model, model_H, par1, par2), a, model, model_H, par1, par2)[-1, -1]
-        ddRda = ((Hdot+H**2-mu*rho_m*delta_nl/6) -
-                 a*(H**2+Hdot)*dRda/R)/(a**2*H**2)
+        ddRda = ((Hdot+H**2-4*np.pi*G*mu*rho_m, *delta_nl/3) -
+                 a*(H**2+Hdot)*dRda)/(a**2*H**2*R)
         return [dRda, ddRda]
+
+    def radius_solve(self, model, model_H, par1, par2):
+        a_arr = np.linspace(1, 1e-5, 1000)
+        R_arr = scipy.integrate.odeint(radius_evolution, [1e-7, 1], a_arr, args=(
+            model, model_H, par1, par2,), tfirst=False)[:, 0]
+
+        return a_arr, R_arr
