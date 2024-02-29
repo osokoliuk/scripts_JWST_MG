@@ -1,5 +1,6 @@
 from JWST_MG.constants import *
 from JWST_MG.cosmological_functions import cosmological_functions
+from JWST_MG.delta_c import delta_c
 
 class reionization:
     ########################################################################
@@ -18,29 +19,29 @@ class reionization:
         self.par1 = par1
         self.par2 = par2
 
-    def radius_evolution(self, a, model, model_H, par1, par2):
-        R, dRda = y
+        global cosmological_library
         cosmological_library = cosmological_functions(
-            a, model, model_H, par1, par2)
-        deltac_library = cosmological_functions(
-            a, model, model_H, par1, par2)
+            a_arr, model, model_H, par1, par2)
+        global deltac_library
+        deltac_library = delta_c(
+            a_arr, model, model_H, par1, par2)
+
+    def radius_evolution(self, y, a, model, model_H, par1, par2, deltai, delta_nl):
+        R, dRda = y
+        delta_nl_a = scipy.interpolate.interp1d(
+            a_arr, delta_nl, fill_value='extrapolate')
+        delta_nl_a = delta_nl_a(a)
         H = cosmological_library.H_f(a, model_H, par1, par2)
         dH = cosmological_library.dH_f(a, model_H, par1, par2)
         mu = cosmological_library.mu(a, model, model_H, par1, par2)
-        deltai = deltac_library.interpolate_ac(
-            ac, model, model_H, par1, par2)
-        delta_nl = deltac_library.non_linear(
-            deltai, a, model, model_H, par1, par2)[-1, -1]
-        Hdot = a*H*dH
-        G = 1/8*np.pi
-        rho_m = 3*H0**2*Omegam0*a**(-3)
-        ddRda = ((Hdot+H**2-4*np.pi*G*mu*rho_m, *delta_nl/3) -
-                 a*(H**2+Hdot)*dRda)/(a**2*H**2*R)
+        ddRda = -dH/H*dRda + (1+dH/H)*R-Omegam0*a**(-3)*H0**2 / (2*H**2) \
+            * mu*delta_nl_a*(R+a/ai)
         return [dRda, ddRda]
 
-    def radius_solve(self, model, model_H, par1, par2):
-        a_arr = np.linspace(1, 1e-5, 1000)
-        R_arr = scipy.integrate.odeint(radius_evolution, [1e-7, 1], a_arr, args=(
-            model, model_H, par1, par2,), tfirst=False)[:, 0]
+    def radius_solve(self, model, model_H, par1, par2, deltai, delta_nl):
+        # Hi = cosmological_library.H_f(ai, model_H, par1, par2)
+        # ddeltai = Hi*deltai
+        R_arr = scipy.integrate.odeint(self.radius_evolution, [0, -deltai/3], a_arr, args=(
+            model, model_H, par1, par2, deltai, delta_nl), tfirst=False)[:, 0]
 
-        return a_arr, R_arr
+        return a_arr, R_arr + a_arr/ai
