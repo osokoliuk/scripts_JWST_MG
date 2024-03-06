@@ -10,12 +10,11 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import commah
 ax = plt.subplot(111)
-model = 'nDGP'
-model_H = 'nDGP'
+model = 'wCDM'
+model_H = 'wCDM'
 model_SFR = 'toy'
 
-par1 = 150000
-par2 = 1
+par2 = 6/11
 
 Mh0 = 1e12
 f0 = 0.05
@@ -26,26 +25,27 @@ plt.cla()
 z = 10
 Masses = np.logspace(8, 16, 50)
 a = 1/(1+z)
-ac = 0.01
+ac = 1
 
-a_arr = np.logspace(np.log10(ai), np.log10(ac), 10000)
-
-reion = reionization(a_arr, model, model_H, par1, par2)
+a_arr = np.linspace(ai, ac, 10000)
+pars1 = np.linspace(-1.2, -0.5, 10)
+for par1 in pars1:
+    reion = reionization(a_arr, model, model_H, par1, par2)
 # a_turn, a_vir = reion.virial_theorem(
 #    model, model_H, par1, par2, a_arr)
 
 
 # delta_vir = (1+deltai)*(ai/a_vir*(R_vir-a/ai)+1)**(-3)-1
-a_vir, Deltavir = reion.Delta_vir(model, model_H, par1, par2, a_arr)
-print(a_vir, Deltavir)
+    a_vir, Deltavir = reion.Delta_vir(model, model_H, par1, par2, a_arr)
+    plt.scatter(par1, Deltavir)
 # print(a_turn, a_vir, a_vir_predict, Deltavir)
 # plt.axvline(a_vir, c='tab:gray')
 # plt.scatter(ac, Deltavir, c='tab:blue')
 # plt.axvline(a_turn, ls=':', c='tab:gray')
 
-plt.axhline(18*np.pi**2, c='tab:gray')
-plt.xlim(ai, ac)
-plt.ylim(150, 350)
+# plt.axhline(18*np.pi**2, c='tab:gray')
+# plt.xlim(ai, ac)
+# plt.ylim(150, 350)
 # plt.ylim(0.1, 1e6)
 """
 def halo_accretion_rate(mhalo, redshift):

@@ -91,6 +91,8 @@ class cosmological_functions:
         elif model == 'DES':
             return 1 + par1*OmegaL + par2*OmegaL**2
         elif model == 'wCDM':
+            wL = par1
+            gamma = par2
             return 2/3*OmegaM**(gamma-1)*(OmegaM**gamma+2-3*gamma+3*(gamma-1/2)*(OmegaM+(1+wL)*OmegaL))
         elif model == 'nDGP':
             beta = 1 + 2*H/c*par1*(1+dHdt/(3*H**2))
