@@ -60,7 +60,7 @@ class delta_c:
         return ac
 
     def interpolate_ac(self, ac, model, model_H, par1, par2):
-        delta_i = np.logspace(-4, -1, 1000)
+        delta_i = np.logspace(-4.5, -1, 100)
         arr_di_ac = []
         for i in tqdm(range(len(delta_i))):
             arr_di_ac.append([delta_i[i], self.collapse(

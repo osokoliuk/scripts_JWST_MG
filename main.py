@@ -1,4 +1,3 @@
-
 from JWST_MG.UVLF import UVLF
 from JWST_MG.HMF import HMF
 from JWST_MG.reionization import reionization
@@ -27,29 +26,26 @@ plt.cla()
 z = 10
 Masses = np.logspace(8, 16, 50)
 a = 1/(1+z)
-ac_arr = np.linspace(0.1, 1, 10)
-deltac_library = delta_c(
-    a_arr, model, model_H, par1, par2)
+ac = 0.01
 
-for ac in ac_arr:
-    reion = reionization(ac, model, model_H, par1, par2)
-    deltai = deltac_library.interpolate_ac(ac, model, model_H, par1, par2)
-    print(deltai)
-    delta_nl = deltac_library.non_linear(
-        deltai, a_arr, model, model_H, par1, par2)
-    a_turn, a_vir, a_vir_predict, R_vir, a_arr, R_arr = reion.virial_theorem(
-        model, model_H, par1, par2, deltai, delta_nl, ac)
-    delta_nl_a = scipy.interpolate.interp1d(
-        a_arr, delta_nl, fill_value='extrapolate')
-    # delta_vir = (1+deltai)*(ai/a_vir*(R_vir-a/ai)+1)**(-3)-1
-    Deltavir = (1+delta_nl_a(a_vir_predict))*(ac/a_vir_predict)**3
+a_arr = np.logspace(np.log10(ai), np.log10(ac), 10000)
 
-    print(a_turn, a_vir_predict, Deltavir)
-    plt.scatter(ac, Deltavir, c='tab:blue')
-    # plt.axvline(a_turn, ls=':', c='tab:gray')
+reion = reionization(a_arr, model, model_H, par1, par2)
+# a_turn, a_vir = reion.virial_theorem(
+#    model, model_H, par1, par2, a_arr)
 
+
+# delta_vir = (1+deltai)*(ai/a_vir*(R_vir-a/ai)+1)**(-3)-1
+a_vir, Deltavir = reion.Delta_vir(model, model_H, par1, par2, a_arr)
+print(a_vir, Deltavir)
+# print(a_turn, a_vir, a_vir_predict, Deltavir)
+# plt.axvline(a_vir, c='tab:gray')
+# plt.scatter(ac, Deltavir, c='tab:blue')
+# plt.axvline(a_turn, ls=':', c='tab:gray')
+
+plt.axhline(18*np.pi**2, c='tab:gray')
 plt.xlim(ai, ac)
-# plt.yscale('log')
+plt.ylim(150, 350)
 # plt.ylim(0.1, 1e6)
 """
 def halo_accretion_rate(mhalo, redshift):
