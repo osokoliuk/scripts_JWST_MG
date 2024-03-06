@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import math
 import matplotlib
 import numpy as np
+from numpy import inf
 from classy import Class
 from scipy.optimize import fsolve
 import math
