@@ -10,8 +10,8 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import commah
 ax = plt.subplot(111)
-model = 'wCDM'
-model_H = 'wCDM'
+model = 'nDGP'
+model_H = 'nDGP'
 model_SFR = 'toy'
 
 par2 = 6/11
@@ -28,7 +28,7 @@ a = 1/(1+z)
 ac = 1
 
 a_arr = np.linspace(ai, ac, 10000)
-pars1 = np.linspace(-1.2, -0.5, 10)
+pars1 = [500]
 for par1 in pars1:
     reion = reionization(a_arr, model, model_H, par1, par2)
 # a_turn, a_vir = reion.virial_theorem(
