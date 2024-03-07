@@ -16,9 +16,10 @@ model_SFR = 'toy'
 par2 = 6/11
 par1 = -0.7
 
-ac_arr = np.linspace(1, 1/(1+2.5), 15)
+z_arr = np.linspace(0, 15, 50)
 
-for ac in ac_arr:
+for z in z_arr:
+    ac = 1/(1+z)
     deltac = delta_c(ac, model, model_H, par1, par2)
     plt.scatter(1/ac-1, deltac.delta_c_at_ac(ac, model,
                 model_H, par1, par2), c='tab:blue')
@@ -31,11 +32,14 @@ model_SFR = 'toy'
 par2 = 6/11
 par1 = -1.3
 
-for ac in ac_arr:
+for z in z_arr:
+    ac = 1/(1+z)
     deltac = delta_c(ac, model, model_H, par1, par2)
     plt.scatter(1/ac-1, deltac.delta_c_at_ac(ac, model,
                 model_H, par1, par2), c='tab:orange')
 
 
 # plt.xscale('log')
+
+plt.axhline(1.686, c='tab:gray')
 plt.savefig('HMF.pdf')

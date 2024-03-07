@@ -42,8 +42,7 @@ class delta_c:
         return [ddeltada, dddeltada]
 
     def collapse(self, deltai, model, model_H, par1, par2):
-        ai = 1e-5
-        dt = 0.0001
+        dt = 0.00005
         ddeltai = deltai/ai
         init = [deltai, ddeltai]
         system = ode(self.delta_nl_ODE)
@@ -59,24 +58,25 @@ class delta_c:
 
         return ac
 
-    def binary_search_di(self, ac, model, model_H, par1, par2, low, high):
+    def binary_search_di(self, ac, model, model_H, par1, par2, low, high, abs_err):
         mid = (low + high)//2
         ac_predict = self.collapse(delta_ini[mid], model, model_H, par1, par2)
         print(ac_predict)
         if high >= low:
-            if abs(ac_predict-ac)/ac_predict <= 0.0005:
+            if abs(ac_predict-ac)/ac_predict <= abs_err:
                 return delta_ini[mid]
             elif ac_predict < ac:
-                return self.binary_search_di(ac, model, model_H, par1, par2, low, mid - 1)
+                return self.binary_search_di(ac, model, model_H, par1, par2, low, mid - 1, abs_err)
             else:
-                return self.binary_search_di(ac, model, model_H, par1, par2, mid + 1, high)
+                return self.binary_search_di(ac, model, model_H, par1, par2, mid + 1, high, abs_err)
         else:
-            return -1
+            low = 0
+            high = len(delta_ini) - 1
+            return self.binary_search_di(ac, model, model_H, par1, par2, low, high, abs_err*2)
 
 
     def linear(self, deltai_collapse, a, model, model_H, par1, par2):
-        ai = 1e-5
-        dt = 0.0001
+        dt = 0.000001
         ddeltai = deltai_collapse/ai
         init = [deltai_collapse, ddeltai]
         system = ode(self.delta_l_ODE)
@@ -114,4 +114,4 @@ class delta_c:
 
 
     def delta_c_at_ac(self, ac, model, model_H, par1, par2):
-        return self.linear(self.binary_search_di(ac, model, model_H, par1, par2, 0, len(delta_ini)), ac, model, model_H, par1, par2)[-1, 1]
+        return self.linear(self.binary_search_di(ac, model, model_H, par1, par2, 0, len(delta_ini), abs_err), ac, model, model_H, par1, par2)[-1, 1]
