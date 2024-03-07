@@ -98,9 +98,11 @@ class reionization:
 
     def Delta_vir(self, model, model_H, par1, par2, a_arr):
         ac = a_arr[-1]
-        a_turn, a_vir = self.virial_theorem(
+
+        if model == "LCDM":
+            a_turn, a_vir = self.virial_theorem(
             model, model_H, par1, par2, a_arr)
-        Deltavir = (1+self.delta_nl_a(a_vir))*(ac/a_vir)**3
+            Deltavir = (1+self.delta_nl_a(a_vir))*(ac/a_vir)**3
 
         return a_vir, Deltavir
 

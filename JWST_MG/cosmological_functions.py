@@ -83,7 +83,9 @@ class cosmological_functions:
         rhoL = 3*H**2-rhom-rhor
         OmegaL = rhoL/(3*H**2)
         OmegaM = rhom/(3*H**2)
-        if model == 'E11':
+        if model == 'LCDM':
+            return 1
+        elif model == 'E11':
             f1 = par1*OmegaL
             return 1 + f1
         elif model == 'gmu':

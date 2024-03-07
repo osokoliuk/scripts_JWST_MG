@@ -66,7 +66,7 @@ model_SFR = 'toy'
 
 par2 = 6/11
 ac_arr = np.linspace(0.1, 1, 10)
-pars1 = np.logspace(2, 5, 50)
+pars1 = np.logspace(2, 5, 25)
 
 n = len(ac_arr)
 colors = pl.cm.Blues(np.linspace(0, 1, n))
@@ -78,6 +78,7 @@ for i in range(len(ac_arr)):
     for par1 in pars1:
         reion = reionization(a_arr, model, model_H, par1, par2)
         a_vir, Deltavir = reion.Delta_vir(model, model_H, par1, par2, a_arr)
+        print(Deltavir)
         Delta.append(Deltavir)
         # print(Deltavir)
     plt.plot(pars1, Delta, c=colors[i])
@@ -90,7 +91,7 @@ cbar.set_label(r'$a_{\rm c}$', fontsize=16)
 plt.ylabel(r'$\Delta_{\rm vir}(a_{\rm c})$', size='16')
 plt.xlabel(r'$r_c\;[\rm Mpc]$', size='16')
 
-# plt.ylim(100, 500)
+plt.ylim(100, 370)
 # plt.xlim(10**(-3),1)
 # plt.legend(loc='best')
 plt.grid(".")
