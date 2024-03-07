@@ -27,7 +27,7 @@ class reionization:
         deltac_library = delta_c(
             a_arr, model, model_H, par1, par2)
         self.deltai = deltac_library.binary_search_di(
-            self.ac, self.model, self.model_H, self.par1, self.par2, 0, len(delta_ini))
+            self.ac, self.model, self.model_H, self.par1, self.par2, 0, len(delta_ini), abs_err)
         self.delta_nl = deltac_library.non_linear(
             self.deltai, self.a_arr, self.model, self.model_H, self.par1, self.par2)
 
