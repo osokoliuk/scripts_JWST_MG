@@ -26,8 +26,8 @@ class reionization:
         global deltac_library
         deltac_library = delta_c(
             a_arr, model, model_H, par1, par2)
-        self.deltai = deltac_library.interpolate_ac(
-            self.ac, model, model_H, par1, par2)
+        self.deltai = deltac_library.binary_search_di(
+            self.ac, self.model, self.model_H, self.par1, self.par2, 0, len(delta_ini))
         self.delta_nl = deltac_library.non_linear(
             self.deltai, self.a_arr, self.model, self.model_H, self.par1, self.par2)
 
@@ -115,5 +115,5 @@ class reionization:
 
         return Mhalo_min
 
-    def n_ion():
-        Nion = 
+    # def n_ion():
+    #    Nion =

@@ -59,15 +59,16 @@ class delta_c:
 
         return ac
 
-    def interpolate_ac(self, ac, model, model_H, par1, par2):
-        delta_i = np.logspace(-4.5, -1, 100)
-        arr_di_ac = []
-        for i in tqdm(range(len(delta_i))):
-            arr_di_ac.append([delta_i[i], self.collapse(
-                delta_i[i], model, model_H, par1, par2)])
-        interp_di_ac = scipy.interpolate.interp1d(
-            np.array(arr_di_ac)[:, 1], np.array(arr_di_ac)[:, 0], fill_value='extrapolate')
-        return interp_di_ac(ac)
+    def binary_search_di(self, ac, model, model_H, par1, par2, low, high):
+        mid = (low + high)//2
+        ac_predict = self.collapse(delta_ini[mid], model, model_H, par1, par2)
+        if abs(ac_predict-ac)/ac_predict <= 0.01:
+            return delta_ini[mid]
+        elif ac_predict < ac:
+            return self.binary_search_di(ac, model, model_H, par1, par2, low, mid - 1)
+        else:
+            return self.binary_search_di(ac, model, model_H, par1, par2, mid + 1, high)
+
 
     def linear(self, deltai_collapse, a, model, model_H, par1, par2):
         ai = 1e-5
@@ -109,4 +110,4 @@ class delta_c:
 
 
     def delta_c_at_ac(self, ac, model, model_H, par1, par2):
-        return self.linear(self.interpolate_ac(ac, model, model_H, par1, par2), ac, model, model_H, par1, par2)[-1, 1]
+        return self.linear(self.binary_search_di(ac, model, model_H, par1, par2, 0, len(delta_ini)), ac, model, model_H, par1, par2)[-1, 1]
