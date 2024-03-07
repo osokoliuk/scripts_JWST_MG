@@ -114,3 +114,6 @@ class reionization:
         Mhalo_min = scipy.optimize.fsolve(Tvir - 4000, 1e6)
 
         return Mhalo_min
+
+    def n_ion():
+        Nion = 
