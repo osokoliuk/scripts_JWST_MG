@@ -103,7 +103,8 @@ class reionization:
             a_turn, a_vir = self.virial_theorem(
             model, model_H, par1, par2, a_arr)
             Deltavir = (1+self.delta_nl_a(a_vir))*(ac/a_vir)**3
-
+        else:
+            raise Exception("Incorrect model specified")
         return a_vir, Deltavir
 
     def minimum_Mhalo(model, model_H, par1, par2, a_arr):

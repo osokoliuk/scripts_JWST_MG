@@ -60,8 +60,8 @@ plt.tick_params(axis='both', which='minor',
                 direction="in", labelsize=11, length=4)
 
 
-model = 'nDGP'
-model_H = 'nDGP'
+model = 'wCDM'
+model_H = 'wCDM'
 model_SFR = 'toy'
 
 par2 = 6/11
