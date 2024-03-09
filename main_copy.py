@@ -43,8 +43,8 @@ class OOMFormatter(matplotlib.ticker.ScalarFormatter):
 plt.cla()
 plt.figure()
 plt.rcParams.update({"text.usetex": True})
-fig = plt.figure(figsize=(4.25*1*.95, 3*1*0.75))
-ax = plt.subplot(1, 1, 1)
+fig = plt.figure(figsize=(4.25*1*.95, 3*2*0.75))
+ax = plt.subplot(2, 1, 1)
 
 ax.xaxis.set_minor_locator(AutoMinorLocator())
 ax.yaxis.set_minor_locator(AutoMinorLocator())
@@ -60,13 +60,13 @@ plt.tick_params(axis='both', which='minor',
                 direction="in", labelsize=11, length=4)
 
 
-model = 'wCDM'
-model_H = 'wCDM'
+model = 'E11'
+model_H = 'LCDM'
 model_SFR = 'toy'
 
 par2 = 6/11
 ac_arr = np.linspace(0.1, 1, 10)
-pars1 = np.logspace(2, 5, 25)
+pars1 = np.linspace(1, -1, 25)
 
 n = len(ac_arr)
 colors = pl.cm.Blues(np.linspace(0, 1, n))
@@ -89,9 +89,8 @@ cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=pl.cm.Blues, norm=norm), ax=ax)
 cbar.set_label(r'$a_{\rm c}$', fontsize=16)
 
 plt.ylabel(r'$\Delta_{\rm vir}(a_{\rm c})$', size='16')
-plt.xlabel(r'$r_c\;[\rm Mpc]$', size='16')
+plt.xlabel(r'$E_{11}$', size='16')
 
-plt.ylim(100, 370)
 # plt.xlim(10**(-3),1)
 # plt.legend(loc='best')
 plt.grid(".")
@@ -102,5 +101,63 @@ kw = dict(ncol=3, loc="lower center",
 leg1 = ax.legend(h[:], l[:], bbox_to_anchor=[0.5, 1.08], **kw)
 ax.add_artist(leg1)
 
-plt.xscale('log')
-plt.savefig('HMF.pdf', bbox_inches='tight')
+
+ax = plt.subplot(2, 1, 2)
+
+ax.xaxis.set_minor_locator(AutoMinorLocator())
+ax.yaxis.set_minor_locator(AutoMinorLocator())
+
+
+plt.tick_params(axis='both', which='major', direction="in",
+                labelsize=14, length=5, top=True, right=True)
+plt.tick_params(axis='both', which='minor', direction="in",
+                labelsize=11, length=4, top=True, right=True)
+plt.tick_params(axis='both', which='major',
+                direction="in", labelsize=14, length=5)
+plt.tick_params(axis='both', which='minor',
+                direction="in", labelsize=11, length=4)
+
+
+model = 'gmu'
+model_H = 'LCDM'
+model_SFR = 'toy'
+
+par2 = 6/11
+ac_arr = np.linspace(0.1, 1, 10)
+pars1 = np.linspace(0, 1, 25)
+
+n = len(ac_arr)
+colors = pl.cm.Blues(np.linspace(0, 1, n))
+
+for i in range(len(ac_arr)):
+    ac = ac_arr[i]
+    a_arr = np.linspace(ai, ac, 10000)
+    Delta = []
+    for par1 in pars1:
+        reion = reionization(a_arr, model, model_H, par1, par2)
+        a_vir, Deltavir = reion.Delta_vir(model, model_H, par1, par2, a_arr)
+        print(Deltavir)
+        Delta.append(Deltavir)
+        # print(Deltavir)
+    plt.plot(pars1, Delta, c=colors[i])
+
+
+norm = plt.Normalize(ac_arr.min(), ac_arr.max())
+cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=pl.cm.Blues, norm=norm), ax=ax)
+cbar.set_label(r'$a_{\rm c}$', fontsize=16)
+
+plt.ylabel(r'$\Delta_{\rm vir}(a_{\rm c})$', size='16')
+plt.xlabel(r'$g_{\mu}$', size='16')
+
+# plt.xlim(10**(-3),1)
+# plt.legend(loc='best')
+plt.grid(".")
+
+h, l = ax.get_legend_handles_labels()
+kw = dict(ncol=3, loc="lower center",
+          fancybox=True, fontsize=11, frameon=False)
+leg1 = ax.legend(h[:], l[:], bbox_to_anchor=[0.5, 1.08], **kw)
+ax.add_artist(leg1)
+
+plt.tight_layout()
+plt.savefig('Delta_vir_pheno.pdf', bbox_inches='tight')

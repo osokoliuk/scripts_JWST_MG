@@ -61,7 +61,6 @@ class delta_c:
     def binary_search_di(self, ac, model, model_H, par1, par2, low, high, abs_err):
         mid = (low + high)//2
         ac_predict = self.collapse(delta_ini[mid], model, model_H, par1, par2)
-        print(ac_predict)
         if high >= low:
             if abs(ac_predict-ac)/ac_predict <= abs_err:
                 return delta_ini[mid]
