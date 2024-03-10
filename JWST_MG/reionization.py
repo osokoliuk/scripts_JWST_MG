@@ -48,15 +48,19 @@ class reionization:
         Hprime = a*dH
         Rprime = a*dRda
 
-        if model_H == "LCDM" or model_H == "wCDM":
+        if model == "LCDM" or "wCDM":
             ddRda = (-Hprime/H*Rprime +
                  (1+Hprime/H)*R - Omegam0*a**(-3)*H0**2 /
                  (2*H**2) * mu*(R+a/ai)*delta_nl - a*dRda)/a**2
-        elif model_H == "nDGP" or "kmoufl":
-            ddRda = 1
-        else:
-            raise ValueError("Unknown cosmology type!")
-
+        elif model == "nDGP":
+            beta = (mu - 1)**(-1)/3
+            rho = 3*H0**2*Omegam0
+            M = 4*np.pi/3*rho*(1+delta_nl)
+            deltaM = delta_nl*M/(1+delta_nl)
+            RRV = (16*G*deltaM*par1**2/(9*beta**2))**(-1/3)
+            ddRda = (-Hprime/H*Rprime +
+                     (1+Hprime/H)*R - Omegam0*a**(-3)*H0**2 /
+                     (2*H**2) * mu*(RRV)*(R+a/ai)*delta_nl - a*dRda)/a**2
         return [dRda, ddRda]
 
     def radius_solve(self, model, model_H, par1, par2, a_arr):
@@ -95,12 +99,15 @@ class reionization:
             virial = T+1/2*U
         elif model_H == "wCDM":
             rho_Lambda = 3*H0**2*(1-Omegam0-Omegar0)*a_arr**(3*(1+par1))
-            U_Lambda = -4/5*np.pi*G*rho_Lambda*M*R**2
-            U_N = -3/5*G*M**2/R
+            U_Lambda = -4/5*np.pi*G*rho_Lambda*M*R_arr**2
+            U_N = -3/5*G*M**2/R_arr
             virial = T+1/2*U_N - U_Lambda
         elif model_H == "nDGP" or model_H == "kmoufl":
-            U = 1
-            virial = U
+            Geff = G*mu_arr
+            DeltaGeff = Geff - G
+            U = -3/5*G*M**2/R_arr - 3/5*DeltaGeff*M * \
+                deltaM/R_arr+3/5*(H_dot+H_arr**2)*M*R_arr**2
+            virial = T+1/2*U
         else:
             raise ValueError("Unknown cosmology type!")
 
@@ -118,12 +125,10 @@ class reionization:
     def Delta_vir(self, model, model_H, par1, par2, a_arr):
         ac = a_arr[-1]
 
-        if model_H == "LCDM":
-            a_turn, a_vir = self.virial_theorem(
+        a_turn, a_vir = self.virial_theorem(
             model, model_H, par1, par2, a_arr)
-            Deltavir = (1+self.delta_nl_a(a_vir))*(ac/a_vir)**3
-        else:
-            raise Exception("Incorrect model specified")
+        Deltavir = (1+self.delta_nl_a(a_vir))*(ac/a_vir)**3
+
         return a_vir, Deltavir
 
     def minimum_Mhalo(model, model_H, par1, par2, a_arr):
