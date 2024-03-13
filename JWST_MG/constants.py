@@ -59,7 +59,7 @@ rhocr = 2.77536627e11
 rhom = rhocr*Omegam0
 
 kvec = np.logspace(np.log10(0.00001), np.log10(1000.0), 10000)
-delta_ini = np.logspace(-4.5, -2.5, 100000)
+delta_ini = np.logspace(-5, -2.5, 100000)
 abs_err = 1e-5
 ai = 1e-6
 beta = np.linspace(0, 0.5, 10)

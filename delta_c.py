@@ -1,15 +1,4 @@
-from JWST_MG.UVLF import UVLF
-from JWST_MG.HMF import HMF
-from JWST_MG.reionization import reionization
-from JWST_MG.delta_c import delta_c
 
-from JWST_MG.constants import *
-
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-
-from matplotlib.lines import Line2D
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy as sp
@@ -26,7 +15,7 @@ from JWST_MG.UVLF import UVLF
 from JWST_MG.HMF import HMF
 from JWST_MG.reionization import reionization
 from JWST_MG.delta_c import delta_c
-
+from matplotlib.lines import Line2D
 from JWST_MG.constants import *
 
 import numpy as np
@@ -55,12 +44,12 @@ plt.cla()
 plt.figure()
 plt.rcParams.update({"text.usetex": True})
 fig = plt.figure(figsize=(4.25*1*.95, 4*2*0.95))
-
+"""
 ax = plt.subplot(4, 1, 1)
 
 
 ax.xaxis.set_ticks([0, 0.25, 0.5, 0.75, 1])
-ax.xaxis.set_ticks([0, 150, 300])
+ax.yaxis.set_ticks([0, 0.5, 1, 1.5])
 
 
 ax.xaxis.set_minor_locator(AutoMinorLocator())
@@ -81,51 +70,54 @@ model = 'E11'
 model_H = 'LCDM'
 model_SFR = 'toy'
 
-pars1 = np.linspace(-1, 1, 10)
-ac_arr = np.linspace(0.05, 1, 20)
-par2 = 0
+par2 = 6/11
+ac = 1
+a_arr = np.linspace(ai, ac, 10000)
+pars1 = np.linspace(1, -1, 2)
 
 n = len(pars1)
 colors = pl.cm.Blues(np.linspace(0, 1, n))
 
 for i in range(len(pars1)):
-    Delta = []
     par1 = pars1[i]
-    for ac in ac_arr:
-        a_arr = np.linspace(ai, ac, 10000)
-        reion = reionization(a_arr, model, model_H, par1, par2)
-        a_vir, Deltavir = reion.Delta_vir(
-            model, model_H, par1, par2, a_arr)
-        print(Deltavir)
-        Delta.append(Deltavir)
-        # print(Deltavir)
-    plt.plot(ac_arr, Delta, c=colors[i], alpha=0.5, lw=1)
+    deltac = delta_c(ac, model, model_H, par1, par2)
+    deltai_collapse = deltac.binary_search_di(
+        ac, model, model_H, par1, par2, 0, len(delta_ini), abs_err)
+    delta = deltac.linear(deltai_collapse, ac,
+                          model, model_H, par1, par2)
+    print("a")
+    # print(Deltavir)
+    plt.plot(delta[:, 0], delta[:, 1], c=colors[i])
 
 
 norm = plt.Normalize(pars1.min(), pars1.max())
 cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=pl.cm.Blues, norm=norm), ax=ax)
 cbar.set_label(r'$E_{11}$', fontsize=16)
 
-plt.ylabel(r'$\Delta_{\rm vir}(a_c)$', size='16')
+plt.ylabel(r'$\delta_{\rm m}(a)$', size='16')
 
 # plt.xlim(10**(-3),1)
 # plt.legend(loc='best')
 plt.grid(".")
 ax.set_xticklabels([])
 
-plt.axhline(18*np.pi**2, c='tab:gray', lw=0.8)
-plt.text(0.72, 195, r'$\Delta_{\rm vir}|_{G_{\rm eff}=1}$',
-         fontsize=11, c='tab:grey')
-ax.fill_between([-0.1, 1.1], 18*np.pi**2-2.5, 18*np.pi**2 +
-                2.5, alpha=0.25, color='tab:gray')
-plt.xlim(0.0, 1.1)
-
+h, l = ax.get_legend_handles_labels()
+kw = dict(ncol=3, loc="lower center",
+          fancybox=True, fontsize=11, frameon=False)
+leg1 = ax.legend(h[:], l[:], bbox_to_anchor=[0.5, 1.08], **kw)
+ax.add_artist(leg1)
+plt.axhline(1.675, c='tab:gray', lw=0.8)
+plt.text(0.1, 1.375, r'$\delta_{\rm c}|_{G_{\rm eff}=1}$',
+         fontsize=13, c='tab:grey')
+ax.fill_between([-0.1, 1.1], 1.675-0.025, 1.675 +
+                0.025, alpha=0.25, color='tab:gray')
+plt.xlim(-0.05, 1.05)
 
 ax = plt.subplot(4, 1, 2)
 
 
 ax.xaxis.set_ticks([0, 0.25, 0.5, 0.75, 1])
-ax.xaxis.set_ticks([0, 150, 300])
+ax.yaxis.set_ticks([0, 0.5, 1, 1.5])
 
 
 ax.xaxis.set_minor_locator(AutoMinorLocator())
@@ -146,48 +138,57 @@ model = 'gmu'
 model_H = 'LCDM'
 model_SFR = 'toy'
 
-pars1 = np.linspace(0, 1, 10)
-ac_arr = np.linspace(0.05, 1, 20)
-par2 = 0
+par2 = 6/11
+ac = 1
+a_arr = np.linspace(ai, ac, 10000)
+pars1 = np.linspace(0, 1, 2)
 
 n = len(pars1)
 colors = pl.cm.Blues(np.linspace(0, 1, n))
 
 for i in range(len(pars1)):
-    Delta = []
     par1 = pars1[i]
-    for ac in ac_arr:
-        a_arr = np.linspace(ai, ac, 10000)
-        reion = reionization(a_arr, model, model_H, par1, par2)
-        a_vir, Deltavir = reion.Delta_vir(
-            model, model_H, par1, par2, a_arr)
-        print(Deltavir)
-        Delta.append(Deltavir)
-        # print(Deltavir)
-    plt.plot(ac_arr, Delta, c=colors[i], alpha=0.5, lw=1)
+    deltac = delta_c(ac, model, model_H, par1, par2)
+    deltai_collapse = deltac.binary_search_di(
+        ac, model, model_H, par1, par2, 0, len(delta_ini), abs_err)
+    delta = deltac.linear(deltai_collapse, ac,
+                          model, model_H, par1, par2)
+    print("a")
+    # print(Deltavir)
+    plt.plot(delta[:, 0], delta[:, 1], c=colors[i])
 
 
 norm = plt.Normalize(pars1.min(), pars1.max())
 cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=pl.cm.Blues, norm=norm), ax=ax)
-cbar.set_label(r'$g_\mu$', fontsize=16)
+cbar.set_label(r'$g_{\mu}$', fontsize=16)
 
-plt.ylabel(r'$\Delta_{\rm vir}(a_c)$', size='16')
+plt.ylabel(r'$\delta_{\rm m}(a)$', size='16')
 
 # plt.xlim(10**(-3),1)
 # plt.legend(loc='best')
 plt.grid(".")
 ax.set_xticklabels([])
 
-plt.axhline(18*np.pi**2, c='tab:gray', lw=0.8)
-plt.text(0.72, 195, r'$\Delta_{\rm vir}|_{G_{\rm eff}=1}$',
-         fontsize=11, c='tab:grey')
-ax.fill_between([-0.1, 1.1], 18*np.pi**2-2.5, 18*np.pi**2 +
-                2.5, alpha=0.25, color='tab:gray')
-plt.xlim(0.0, 1.1)
+h, l = ax.get_legend_handles_labels()
+kw = dict(ncol=3, loc="lower center",
+          fancybox=True, fontsize=11, frameon=False)
+leg1 = ax.legend(h[:], l[:], bbox_to_anchor=[0.5, 1.08], **kw)
+ax.add_artist(leg1)
+plt.axhline(1.675, c='tab:gray', lw=0.8)
+plt.text(0.1, 1.375, r'$\delta_{\rm c}|_{G_{\rm eff}=1}$',
+         fontsize=13, c='tab:grey')
+ax.fill_between([-0.1, 1.1], 1.675-0.025, 1.675 +
+                0.025, alpha=0.25, color='tab:gray')
+plt.xlim(-0.05, 1.05)
+"""
 
-
+"""
 ax = plt.subplot(4, 1, 3)
 
+
+ax.xaxis.set_ticks([0, 0.25, 0.5, 0.75, 1])
+
+ax.yaxis.set_ticks([0, 0.5, 1, 1.5])
 
 ax.xaxis.set_minor_locator(AutoMinorLocator())
 ax.yaxis.set_minor_locator(AutoMinorLocator())
@@ -207,35 +208,34 @@ model = 'DES'
 model_H = 'LCDM'
 model_SFR = 'toy'
 
-pars2 = np.linspace(0, 1, 10)
-ac_arr = np.linspace(0.05, 1, 20)
-pars1 = np.array([0, 1, -1])
+pars2 = np.array([0, 5, -5])
+ac = 1
+a_arr = np.linspace(ai, ac, 10000)
+pars1 = np.linspace(0, 1, 2)
 
-n = len(pars2)
+n = len(pars1)
 colors = np.array([pl.cm.Blues(np.linspace(0, 1, n)), pl.cm.Reds(
     np.linspace(0, 1, n)), pl.cm.Purples(np.linspace(0, 1, n))])
 
-for j in range(len(pars1)):
-    par1 = pars1[j]
-    for i in range(len(pars2)):
-        Delta = []
-        par2 = pars2[i]
-        for ac in ac_arr:
-            a_arr = np.linspace(ai, ac, 10000)
-            reion = reionization(a_arr, model, model_H, par1, par2)
-            a_vir, Deltavir = reion.Delta_vir(
-                model, model_H, par1, par2, a_arr)
-            print(Deltavir)
-            Delta.append(Deltavir)
-            # print(Deltavir)
-        plt.plot(ac_arr, Delta, c=colors[j][i], alpha=0.5, lw=1)
+for j in range(len(pars2)):
+    par2 = pars2[j]
+    for i in range(len(pars1)):
+        par1 = pars1[i]
+        deltac = delta_c(ac, model, model_H, par1, par2)
+        deltai_collapse = deltac.binary_search_di(
+            ac, model, model_H, par1, par2, 0, len(delta_ini), abs_err)
+        delta = deltac.linear(deltai_collapse, ac,
+                              model, model_H, par1, par2)
+        print("a")
+        # print(Deltavir)
+        plt.plot(delta[:, 0], delta[:, 1], c=colors[j][i], alpha=0.3, lw=0.75)
 
 
-norm = plt.Normalize(pars2.min(), pars2.max())
-cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=pl.cm.Grays, norm=norm), ax=ax)
-cbar.set_label(r'$T_1$', fontsize=16)
+norm = plt.Normalize(pars1.min(), pars1.max())
+cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=pl.cm.Blues, norm=norm), ax=ax)
+cbar.set_label(r'$T_{1}$', fontsize=16)
 
-plt.ylabel(r'$\Delta_{\rm vir}(a_c)$', size='16')
+plt.ylabel(r'$\delta_{\rm m}(a)$', size='16')
 
 # plt.xlim(10**(-3),1)
 # plt.legend(loc='best')
@@ -246,23 +246,28 @@ h, l = ax.get_legend_handles_labels()
 
 
 line1 = Line2D([0], [0], label=r'$T_2=0$', color='tab:blue')
-line2 = Line2D([0], [0], label=r'$T_2=1$', color='tab:red')
-line3 = Line2D([0], [0], label=r'$T_2=-1$', color='tab:purple')
+line2 = Line2D([0], [0], label=r'$T_2=5$', color='tab:red')
+line3 = Line2D([0], [0], label=r'$T_2=-5$', color='tab:purple')
 h.extend([line1, line2, line3])
 kw = dict(ncol=1,
           fancybox=True, fontsize=10, frameon=False)
 # leg1 = ax.legend(h[:], l[:], bbox_to_anchor=[0.5, 1.08], **kw)
-ax.legend(handles=h, loc='upper left', **kw)
-plt.axhline(18*np.pi**2, c='tab:gray', lw=0.8)
-plt.text(0.72, 195, r'$\Delta_{\rm vir}|_{G_{\rm eff}=1}$',
-         fontsize=11, c='tab:grey')
-ax.fill_between([-0.1, 1.1], 18*np.pi**2-2.5, 18*np.pi**2 +
-                2.5, alpha=0.25, color='tab:gray')
-plt.xlim(0.0, 1.1)
+ax.legend(handles=h, loc='lower right', **kw)
 
+plt.axhline(1.675, c='tab:gray', lw=0.8)
+plt.text(0.1, 1.375, r'$\delta_{\rm c}|_{G_{\rm eff}=1}$',
+         fontsize=13, c='tab:grey')
+ax.fill_between([-0.1, 1.1], 1.675-0.025, 1.675 +
+                0.025, alpha=0.4, color='tab:gray')
+plt.xlim(-0.05, 1.05)
+"""
 
 ax = plt.subplot(4, 1, 4)
 
+
+ax.xaxis.set_ticks([0, 0.25, 0.5, 0.75, 1])
+
+ax.yaxis.set_ticks([0, 0.5, 1, 1.5])
 
 ax.xaxis.set_minor_locator(AutoMinorLocator())
 ax.yaxis.set_minor_locator(AutoMinorLocator())
@@ -282,116 +287,87 @@ model = 'wCDM'
 model_H = 'wCDM'
 model_SFR = 'toy'
 
-pars2 = np.linspace(0.4, 0.6, 10)
-ac_arr = np.linspace(0.05, 1, 20)
-pars1 = np.array([-1.5, -1, -0.5])
+pars2 = np.array([0.4, 0.5, 0.6])
+ac = 1
+a_arr = np.linspace(ai, ac, 10000)
+pars1 = np.linspace(-1.5, -0.5, 15)
 
-n = len(pars2)
+n = len(pars1)
 colors = np.array([pl.cm.Blues(np.linspace(0, 1, n)), pl.cm.Reds(
     np.linspace(0, 1, n)), pl.cm.Purples(np.linspace(0, 1, n))])
 
-for j in range(len(pars1)):
-    par1 = pars1[j]
-    for i in range(len(pars2)):
-        Delta = []
-        par2 = pars2[i]
-        for ac in ac_arr:
-            a_arr = np.linspace(ai, ac, 10000)
-            reion = reionization(a_arr, model, model_H, par1, par2)
-            a_vir, Deltavir = reion.Delta_vir(
-                model, model_H, par1, par2, a_arr)
-            print(Deltavir)
-            Delta.append(Deltavir)
-            # print(Deltavir)
-        plt.plot(ac_arr, Delta, c=colors[j][i], alpha=0.5, lw=1)
+for j in range(len(pars2)):
+    par2 = pars2[j]
+    for i in range(len(pars1)):
+        par1 = pars1[i]
+        deltac = delta_c(ac, model, model_H, par1, par2)
+        deltai_collapse = deltac.binary_search_di(
+            ac, model, model_H, par1, par2, 0, len(delta_ini), abs_err)
+        delta = deltac.linear(deltai_collapse, ac,
+                              model, model_H, par1, par2)
+        print("a")
+        # print(Deltavir)
+        plt.plot(delta[:, 0], delta[:, 1], c=colors[j][i], alpha=0.3, lw=0.75)
 
 
-norm = plt.Normalize(pars2.min(), pars2.max())
-cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=pl.cm.Grays, norm=norm), ax=ax)
-cbar.set_label(r'$\gamma$', fontsize=16)
+norm = plt.Normalize(pars1.min(), pars1.max())
+cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=pl.cm.Blues, norm=norm), ax=ax)
+cbar.set_label(r'$w_\Lambda$', fontsize=16)
 
-plt.ylabel(r'$\Delta_{\rm vir}(a_c)$', size='16')
-plt.xlabel(r'$a_c$', size=16)
+plt.ylabel(r'$\delta_{\rm m}(a)$', size='16')
+
 # plt.xlim(10**(-3),1)
 # plt.legend(loc='best')
 plt.grid(".")
+ax.set_xticklabels([])
 
 h, l = ax.get_legend_handles_labels()
 
 
-line1 = Line2D([0], [0], label=r'$w_\Lambda=-1.5$', color='tab:blue')
-line2 = Line2D([0], [0], label=r'$w_\Lambda=-1$', color='tab:red')
-line3 = Line2D([0], [0], label=r'$w_\Lambda=-0.5$', color='tab:purple')
+line1 = Line2D([0], [0], label=r'$\gamma=0.4$', color='tab:blue')
+line2 = Line2D([0], [0], label=r'$\gamma=0.5$', color='tab:red')
+line3 = Line2D([0], [0], label=r'$\gamma=0.6$', color='tab:purple')
 h.extend([line1, line2, line3])
 kw = dict(ncol=1,
           fancybox=True, fontsize=10, frameon=False)
 # leg1 = ax.legend(h[:], l[:], bbox_to_anchor=[0.5, 1.08], **kw)
-ax.legend(handles=h, loc='upper left', **kw)
-plt.axhline(18*np.pi**2, c='tab:gray', lw=0.8)
-plt.text(0.72, 195, r'$\Delta_{\rm vir}|_{G_{\rm eff}=1}$',
-         fontsize=11, c='tab:grey')
-ax.fill_between([-0.1, 1.1], 18*np.pi**2-2.5, 18*np.pi**2 +
-                2.5, alpha=0.25, color='tab:gray')
-plt.xlim(0.0, 1.1)
+ax.legend(handles=h, loc='lower right', **kw)
+
+plt.axhline(1.675, c='tab:gray', lw=0.8)
+plt.text(0.1, 1.375, r'$\delta_{\rm c}|_{G_{\rm eff}=1}$',
+         fontsize=13, c='tab:grey')
+ax.fill_between([-0.1, 1.1], 1.675-0.025, 1.675 +
+                0.025, alpha=0.4, color='tab:gray')
+plt.xlim(-0.05, 1.05)
 
 
 """
-par2 = 0.5
-ac_arr = np.array([0.1, 0.5, 0.75, 1])
-pars1 = np.linspace(-1.5, -0.5, 15)
+ax = plt.subplot(2, 1, 2)
 
-n = len(ac_arr)
-colors = pl.cm.Reds(np.linspace(0, 1, n))
+ax.xaxis.set_minor_locator(AutoMinorLocator())
+ax.yaxis.set_minor_locator(AutoMinorLocator())
 
 
-for i in range(len(ac_arr)):
-    Delta = []
-    ac = ac_arr[i]
-    a_arr = np.linspace(ai, ac, 10000)
-    for par1 in pars1:
-        reion = reionization(a_arr, model, model_H, par1, par2)
-        a_vir, Deltavir = reion.Delta_vir(model, model_H, par1, par2, a_arr)
-        print(Deltavir)
-        Delta.append(Deltavir)
-        # print(Deltavir)
-    plt.plot(pars1, Delta, c=color[i][0], ls=line[i])
+plt.tick_params(axis='both', which='major', direction="in",
+                labelsize=14, length=5, top=True, right=True)
+plt.tick_params(axis='both', which='minor', direction="in",
+                labelsize=11, length=4, top=True, right=True)
+plt.tick_params(axis='both', which='major',
+                direction="in", labelsize=14, length=5)
+plt.tick_params(axis='both', which='minor',
+                direction="in", labelsize=11, length=4)
 
 
-par2 = 0.4
-ac_arr = np.array([0.1, 0.5, 0.75, 1])
-pars1 = np.linspace(-1.5, -0.5, 15)
-colors = pl.cm.Purples(np.linspace(0, 1, n))
-
-
-
-for i in range(len(ac_arr)):
-    Delta = []
-    ac = ac_arr[i]
-    a_arr = np.linspace(ai, ac, 10000)
-    for par1 in pars1:
-        reion = reionization(a_arr, model, model_H, par1, par2)
-        a_vir, Deltavir = reion.Delta_vir(model, model_H, par1, par2, a_arr)
-        print(Deltavir)
-        Delta.append(Deltavir)
-        # print(Deltavir)
-    plt.plot(pars1, Delta, c=color[i][0], ls=line[i])
-"""
-
-"""
-ax = plt.subplot(3, 3, 3)
-
-
-model = 'DES'
+model = 'gmu'
 model_H = 'LCDM'
 model_SFR = 'toy'
 
+par2 = 6/11
 ac_arr = np.linspace(0.1, 1, 10)
 pars1 = np.linspace(0, 1, 25)
-par2 = 0
 
 n = len(ac_arr)
-colors = np.array([pl.cm.Blues(np.linspace(0, 1, n)),  pl.cm.Reds(
-    np.linspace(0, 1, n)),  pl.cm.Purples(np.linspace(0, 1, n))])
+colors = pl.cm.Blues(np.linspace(0, 1, n))
 
 for i in range(len(ac_arr)):
     ac = ac_arr[i]
@@ -399,37 +375,34 @@ for i in range(len(ac_arr)):
     Delta = []
     for par1 in pars1:
         reion = reionization(a_arr, model, model_H, par1, par2)
-        a_vir, Deltavir = reion.Delta_vir(
-            model, model_H, par1, par2, a_arr)
+        a_vir, Deltavir = reion.Delta_vir(model, model_H, par1, par2, a_arr)
         print(Deltavir)
         Delta.append(Deltavir)
         # print(Deltavir)
-    plt.plot(pars1, Delta, c=colors[i][0])
+    plt.plot(pars1, Delta, c=colors[i])
 
-plt.title(r"$T_2=0$")
+
 norm = plt.Normalize(ac_arr.min(), ac_arr.max())
 cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=pl.cm.Blues, norm=norm), ax=ax)
 cbar.set_label(r'$a_{\rm c}$', fontsize=16)
 
 plt.ylabel(r'$\Delta_{\rm vir}(a_{\rm c})$', size='16')
-plt.xlabel(r'$T_{1}$', size='16')
+plt.xlabel(r'$g_{\mu}$', size='16')
 
 # plt.xlim(10**(-3),1)
 # plt.legend(loc='best')
 plt.grid(".")
 
 h, l = ax.get_legend_handles_labels()
-line1 = Line2D([0], [0], label=r'$T_2=0$', color='tab:blue')
-line2 = Line2D([0], [0], label=r'$T_2=5$', color='tab:red')
-line3 = Line2D([0], [0], label=r'$T_2=-5$', color='tab:purple')
-h.extend([line1, line2, line3])
+
+line1 = Line2D([0], [0], label=r'$T_2=0$', color='tab:blue', fontsize = 13)
+line1 = Line2D([0], [0], label=r'$T_2=5$', color='tab:blue', fontsize = 13)
+line1 = Line2D([0], [0], label=r'$T_2=-5$', color='tab:blue', fontsize = 13)
+h.extend([patch, line, point])
 kw = dict(ncol=3, loc="lower center",
           fancybox=True, fontsize=11, frameon=False)
 leg1 = ax.legend(h[:], l[:], bbox_to_anchor=[0.5, 1.08], **kw)
-ax.add_artist(leg1)
+ax.add_artist(leg1)"""
 
 plt.tight_layout()
-"""
-plt.tight_layout()
-
 plt.savefig('Delta_vir_pheno.pdf', bbox_inches='tight')

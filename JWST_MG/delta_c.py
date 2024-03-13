@@ -113,4 +113,4 @@ class delta_c:
 
 
     def delta_c_at_ac(self, ac, model, model_H, par1, par2):
-        return self.linear(self.binary_search_di(ac, model, model_H, par1, par2, 0, len(delta_ini), abs_err), ac, model, model_H, par1, par2)[-1, 1]
+        return self.linear(self.binary_search_di(ac, model, model_H, par1, par2, 0, len(delta_ini)-1, abs_err), ac, model, model_H, par1, par2)[-1, 1]

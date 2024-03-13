@@ -94,20 +94,17 @@ class reionization:
         deltaM = delta_nl/(1+delta_nl)*M
         T = 3/10*M*Rdot**2
 
-        if model_H == "LCDM":
+        if model_H == "LCDM" or model_H == "wCDM":
             U = -3/5*G*mu_arr*M*deltaM/R_arr+3/5*(H_dot+H_arr**2)*M*R_arr**2
             virial = T+1/2*U
-        elif model_H == "wCDM":
-            rho_Lambda = 3*H0**2*(1-Omegam0-Omegar0)*a_arr**(3*(1+par1))
-            U_Lambda = -4/5*np.pi*G*rho_Lambda*M*R_arr**2
-            U_N = -3/5*G*M**2/R_arr
-            virial = T+1/2*U_N - U_Lambda
-        elif model_H == "nDGP" or model_H == "kmoufl":
+        elif model_H == "nDGP":
             Geff = G*mu_arr
             DeltaGeff = Geff - G
             U = -3/5*G*M**2/R_arr - 3/5*DeltaGeff*M * \
                 deltaM/R_arr+3/5*(H_dot+H_arr**2)*M*R_arr**2
             virial = T+1/2*U
+        elif model_H == "kmoufl":
+            raise ValueError("Not implemented for kmoufl")
         else:
             raise ValueError("Unknown cosmology type!")
 
