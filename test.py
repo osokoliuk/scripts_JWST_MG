@@ -2,9 +2,10 @@ from JWST_MG.UVLF import UVLF
 from JWST_MG.HMF import HMF
 from JWST_MG.reionization import reionization
 from JWST_MG.delta_c import delta_c
+from multiprocessing import Pool, Queue
 
 from JWST_MG.constants import *
-
+from multiprocessing import Queue, Process, cpu_count
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -54,13 +55,12 @@ class OOMFormatter(matplotlib.ticker.ScalarFormatter):
 plt.cla()
 plt.figure()
 plt.rcParams.update({"text.usetex": True})
-fig = plt.figure(figsize=(4.25*1*.95, 4*2*0.95))
+fig = plt.figure(figsize=(4.25*1*.95, 4*2*1.05))
+
 
 ax = plt.subplot(4, 1, 1)
-
-
 ax.xaxis.set_ticks([0, 0.25, 0.5, 0.75, 1])
-ax.xaxis.set_ticks([0, 150, 300])
+
 
 
 ax.xaxis.set_minor_locator(AutoMinorLocator())
@@ -114,7 +114,7 @@ plt.grid(".")
 ax.set_xticklabels([])
 
 plt.axhline(18*np.pi**2, c='tab:gray', lw=0.8)
-plt.text(0.72, 195, r'$\Delta_{\rm vir}|_{G_{\rm eff}=1}$',
+plt.text(0.72, 189, r'$\Delta_{\rm vir}|_{G_{\rm eff}=1}$',
          fontsize=11, c='tab:grey')
 ax.fill_between([-0.1, 1.1], 18*np.pi**2-2.5, 18*np.pi**2 +
                 2.5, alpha=0.25, color='tab:gray')
@@ -122,10 +122,7 @@ plt.xlim(0.0, 1.1)
 
 
 ax = plt.subplot(4, 1, 2)
-
-
 ax.xaxis.set_ticks([0, 0.25, 0.5, 0.75, 1])
-ax.xaxis.set_ticks([0, 150, 300])
 
 
 ax.xaxis.set_minor_locator(AutoMinorLocator())
@@ -179,7 +176,7 @@ plt.grid(".")
 ax.set_xticklabels([])
 
 plt.axhline(18*np.pi**2, c='tab:gray', lw=0.8)
-plt.text(0.72, 195, r'$\Delta_{\rm vir}|_{G_{\rm eff}=1}$',
+plt.text(0.72, 189, r'$\Delta_{\rm vir}|_{G_{\rm eff}=1}$',
          fontsize=11, c='tab:grey')
 ax.fill_between([-0.1, 1.1], 18*np.pi**2-2.5, 18*np.pi**2 +
                 2.5, alpha=0.25, color='tab:gray')
@@ -187,6 +184,7 @@ plt.xlim(0.0, 1.1)
 
 
 ax = plt.subplot(4, 1, 3)
+ax.xaxis.set_ticks([0, 0.25, 0.5, 0.75, 1])
 
 
 ax.xaxis.set_minor_locator(AutoMinorLocator())
@@ -254,7 +252,7 @@ kw = dict(ncol=1,
 # leg1 = ax.legend(h[:], l[:], bbox_to_anchor=[0.5, 1.08], **kw)
 ax.legend(handles=h, loc='upper left', **kw)
 plt.axhline(18*np.pi**2, c='tab:gray', lw=0.8)
-plt.text(0.72, 195, r'$\Delta_{\rm vir}|_{G_{\rm eff}=1}$',
+plt.text(0.72, 193, r'$\Delta_{\rm vir}|_{G_{\rm eff}=1}$',
          fontsize=11, c='tab:grey')
 ax.fill_between([-0.1, 1.1], 18*np.pi**2-2.5, 18*np.pi**2 +
                 2.5, alpha=0.25, color='tab:gray')
@@ -262,6 +260,7 @@ plt.xlim(0.0, 1.1)
 
 
 ax = plt.subplot(4, 1, 4)
+ax.xaxis.set_ticks([0, 0.25, 0.5, 0.75, 1])
 
 
 ax.xaxis.set_minor_locator(AutoMinorLocator())
@@ -328,7 +327,7 @@ kw = dict(ncol=1,
 # leg1 = ax.legend(h[:], l[:], bbox_to_anchor=[0.5, 1.08], **kw)
 ax.legend(handles=h, loc='upper left', **kw)
 plt.axhline(18*np.pi**2, c='tab:gray', lw=0.8)
-plt.text(0.72, 195, r'$\Delta_{\rm vir}|_{G_{\rm eff}=1}$',
+plt.text(0.72, 192, r'$\Delta_{\rm vir}|_{G_{\rm eff}=1}$',
          fontsize=11, c='tab:grey')
 ax.fill_between([-0.1, 1.1], 18*np.pi**2-2.5, 18*np.pi**2 +
                 2.5, alpha=0.25, color='tab:gray')

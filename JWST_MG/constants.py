@@ -19,9 +19,9 @@ from scipy.interpolate import InterpolatedUnivariateSpline as spline
 import pandas as pd
 import scipy.integrate as intg
 import astropy.constants as con
+import pickle
 
-"""
-common_settings = {'A_s':2.101e-9,
+kmfl_settings = {'A_s': 2.101e-9,
 'n_s':0.9665,
 'tau_reio':0.0561,
 'omega_b':0.02242,
@@ -40,8 +40,7 @@ common_settings = {'A_s':2.101e-9,
 'output':'tCl,pCl,lCl,mPk',
 'l_max_scalars': 3000,
 'lensing': 'yes',
-'mg_ansatz':'kmoufl'}
-"""
+                 'mg_ansatz': 'kmoufl'}
 
 H0 = 67.66
 Omegam0 = (0.02242/(H0/100)**2+0.11933/(H0/100)**2)

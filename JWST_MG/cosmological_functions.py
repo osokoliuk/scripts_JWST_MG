@@ -20,23 +20,6 @@ class cosmological_functions:
         self.par1 = par1
         self.par2 = par2
 
-    """
-    for i in range(len(K0)):
-        for j in tqdm(range(len(beta))):
-            common_settings['beta_kmfl'] = beta[j]
-            common_settings['k0_kmfl'] = K0[i]
-
-            M[j] = Class()
-            M[j].set(common_settings)
-            
-            M[j].compute()
-            a = np.logspace(-6,0,10000)
-            H_arr_kmoufl[i].append([M[j].Hubble(1/ai-1)*c for ai in a])
-            dH_arr_kmoufl[i].append(np.gradient(H_arr_kmoufl[i][j])/np.gradient(a))
-            H_int_kmoufl[i].append(scipy.interpolate.interp1d(a, H_arr_kmoufl[i][j], fill_value = 'extrapolate'))
-            dH_int_kmoufl[i].append(scipy.interpolate.interp1d(a, dH_arr_kmoufl[i][j], fill_value = 'extrapolate'))
-    """
-
     def H_f(self, a, model_H, par1, par2):
         if model_H == 'LCDM':
             return H0*np.sqrt(1-Omegam0-Omegar0+Omegam0*a**(-3)+Omegar0*a**(-4))
@@ -49,7 +32,11 @@ class cosmological_functions:
             OmegaLambda0 = 1 - Omegam0 - Omegar0 + 2*np.sqrt(Omegarc)
             return H0*np.sqrt(Omegam0*a**(-3)+Omegar0*a**(-4)+Omegarc + OmegaLambda0)-H0*np.sqrt(Omegarc)
         elif model_H == 'kmoufl':
-            return H_int_kmoufl[i_kmoufl][j_kmoufl](a)
+            A_kmfl = 1.0 + par1*a
+            X_kmfl = 0.5 * A_kmfl**2*(H*a)**2/((1-Omegam0-Omegar0)*H0**2)
+            k_prime_mfl = 1.0 + 2.0*par2*X_kmfl
+            epsl1_kmfl = 2.0*par1**2/k_prime_mfl(H*H*a+dHdt*a)
+            epsl2_kmfl = a*par1
         else:
             raise Exception("Incorrect model specified.")
 
