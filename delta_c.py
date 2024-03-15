@@ -17,6 +17,7 @@ from JWST_MG.reionization import reionization
 from JWST_MG.delta_c import delta_c
 from matplotlib.lines import Line2D
 from JWST_MG.constants import *
+from JWST_MG.cosmological_functions import cosmological_functions
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -43,7 +44,7 @@ class OOMFormatter(matplotlib.ticker.ScalarFormatter):
 plt.cla()
 plt.figure()
 plt.rcParams.update({"text.usetex": True})
-fig = plt.figure(figsize=(4.25*1*.95, 4*2*0.95))
+fig = plt.figure(figsize=(4.25*1*.95, 1*2*0.95))
 """
 ax = plt.subplot(4, 1, 1)
 
@@ -262,12 +263,11 @@ ax.fill_between([-0.1, 1.1], 1.675-0.025, 1.675 +
 plt.xlim(-0.05, 1.05)
 """
 
-ax = plt.subplot(4, 1, 4)
+
+ax = plt.subplot(1, 1, 1)
 
 
-ax.xaxis.set_ticks([0, 0.25, 0.5, 0.75, 1])
 
-ax.yaxis.set_ticks([0, 0.5, 1, 1.5])
 
 ax.xaxis.set_minor_locator(AutoMinorLocator())
 ax.yaxis.set_minor_locator(AutoMinorLocator())
@@ -283,14 +283,13 @@ plt.tick_params(axis='both', which='minor',
                 direction="in", labelsize=11, length=4)
 
 
-model = 'wCDM'
-model_H = 'wCDM'
+model = 'kmoufl'
+model_H = 'kmoufl'
 model_SFR = 'toy'
 
-pars2 = np.array([0.4, 0.5, 0.6])
-ac = 1
-a_arr = np.linspace(ai, ac, 10000)
-pars1 = np.linspace(-1.5, -0.5, 15)
+pars2 = np.array([0.1, 0.2, 0.3])
+ac_arr = np.linspace(0.1, 1, 5)
+pars1 = np.linspace(0.1, 0.5, 5)
 
 n = len(pars1)
 colors = np.array([pl.cm.Blues(np.linspace(0, 1, n)), pl.cm.Reds(
@@ -298,17 +297,13 @@ colors = np.array([pl.cm.Blues(np.linspace(0, 1, n)), pl.cm.Reds(
 
 for j in range(len(pars2)):
     par2 = pars2[j]
-    for i in range(len(pars1)):
+    for i in tqdm(range(len(pars1))):
         par1 = pars1[i]
-        deltac = delta_c(ac, model, model_H, par1, par2)
-        deltai_collapse = deltac.binary_search_di(
-            ac, model, model_H, par1, par2, 0, len(delta_ini), abs_err)
-        delta = deltac.linear(deltai_collapse, ac,
-                              model, model_H, par1, par2)
-        print("a")
-        # print(Deltavir)
-        plt.plot(delta[:, 0], delta[:, 1], c=colors[j][i], alpha=0.3, lw=0.75)
-
+        for ac in ac_arr:
+            a_arr = np.linspace(ai, ac, 10000)
+            deltac = delta_c(ac, model, model_H, par1, par2)
+            plt.scatter(ac, deltac.delta_c_at_ac(
+                ac, model, model_H, par1, par2), c=colors[j][i], alpha=0.5)
 
 norm = plt.Normalize(pars1.min(), pars1.max())
 cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=pl.cm.Blues, norm=norm), ax=ax)
@@ -319,25 +314,12 @@ plt.ylabel(r'$\delta_{\rm m}(a)$', size='16')
 # plt.xlim(10**(-3),1)
 # plt.legend(loc='best')
 plt.grid(".")
-ax.set_xticklabels([])
 
 h, l = ax.get_legend_handles_labels()
 
 
-line1 = Line2D([0], [0], label=r'$\gamma=0.4$', color='tab:blue')
-line2 = Line2D([0], [0], label=r'$\gamma=0.5$', color='tab:red')
-line3 = Line2D([0], [0], label=r'$\gamma=0.6$', color='tab:purple')
-h.extend([line1, line2, line3])
-kw = dict(ncol=1,
-          fancybox=True, fontsize=10, frameon=False)
-# leg1 = ax.legend(h[:], l[:], bbox_to_anchor=[0.5, 1.08], **kw)
-ax.legend(handles=h, loc='lower right', **kw)
+plt.axhline(1.686, c='tab:gray', lw=0.8)
 
-plt.axhline(1.675, c='tab:gray', lw=0.8)
-plt.text(0.1, 1.375, r'$\delta_{\rm c}|_{G_{\rm eff}=1}$',
-         fontsize=13, c='tab:grey')
-ax.fill_between([-0.1, 1.1], 1.675-0.025, 1.675 +
-                0.025, alpha=0.4, color='tab:gray')
 plt.xlim(-0.05, 1.05)
 
 
@@ -405,4 +387,4 @@ leg1 = ax.legend(h[:], l[:], bbox_to_anchor=[0.5, 1.08], **kw)
 ax.add_artist(leg1)"""
 
 plt.tight_layout()
-plt.savefig('Delta_vir_pheno.pdf', bbox_inches='tight')
+plt.savefig('delta_c.pdf', bbox_inches='tight')

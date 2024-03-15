@@ -20,6 +20,27 @@ class cosmological_functions:
         self.par1 = par1
         self.par2 = par2
 
+    """
+    for i in range(len(K0)):
+        for j in tqdm(range(len(beta))):
+            kmfl_settings['beta_kmfl'] = beta[j]
+            kmfl_settings['k0_kmfl'] = K0[i]
+
+            cosmo_kmfl = Class()
+            cosmo_kmfl.set(kmfl_settings)
+            cosmo_kmfl.compute()
+            a = np.logspace(-6, 0, 10000)
+            H_arr_kmoufl[i, j] = ([cosmo_kmfl.Hubble(1/ai-1)*c for ai in a])
+            dH_arr_kmoufl[i, j] = (np.gradient(H_arr_kmoufl[i][j])/np.gradient(a))
+            H_int_kmoufl[i, j] = (scipy.interpolate.interp1d(
+                a, H_arr_kmoufl[i][j], fill_value='extrapolate'))
+            dH_int_kmoufl[i, j] = (scipy.interpolate.interp1d(
+                a, dH_arr_kmoufl[i][j], fill_value='extrapolate'))
+
+    np.save('kmoufl_H', H_int_kmoufl)
+    np.save('kmoufl_dH', dH_int_kmoufl)
+    """
+
     def H_f(self, a, model_H, par1, par2):
         if model_H == 'LCDM':
             return H0*np.sqrt(1-Omegam0-Omegar0+Omegam0*a**(-3)+Omegar0*a**(-4))
@@ -32,11 +53,9 @@ class cosmological_functions:
             OmegaLambda0 = 1 - Omegam0 - Omegar0 + 2*np.sqrt(Omegarc)
             return H0*np.sqrt(Omegam0*a**(-3)+Omegar0*a**(-4)+Omegarc + OmegaLambda0)-H0*np.sqrt(Omegarc)
         elif model_H == 'kmoufl':
-            A_kmfl = 1.0 + par1*a
-            X_kmfl = 0.5 * A_kmfl**2*(H*a)**2/((1-Omegam0-Omegar0)*H0**2)
-            k_prime_mfl = 1.0 + 2.0*par2*X_kmfl
-            epsl1_kmfl = 2.0*par1**2/k_prime_mfl(H*H*a+dHdt*a)
-            epsl2_kmfl = a*par1
+            closest_beta = (np.absolute(beta_arr-par1)).argmin()
+            closest_K0 = (np.absolute(K0_arr-par2)).argmin()
+            return kmoufl_H[closest_K0, closest_beta](a)
         else:
             raise Exception("Incorrect model specified.")
 
@@ -57,7 +76,9 @@ class cosmological_functions:
             OmegaLambda0 = 1 - Omegam0 - Omegar0 + 2*np.sqrt(Omegarc)
             return (H0*((-3*Omegam0)/a**4 - (4*Omegar0)/a**5))/(2.*np.sqrt(OmegaLambda0 + Omegam0/a**3 + Omegar0/a**4 + Omegarc))
         elif model_H == 'kmoufl':
-            return dH_int_kmoufl[i_kmoufl][j_kmoufl](a)
+            closest_beta = (np.absolute(beta_arr-par1)).argmin()
+            closest_K0 = (np.absolute(K0_arr-par2)).argmin()
+            return kmoufl_dH[closest_K0, closest_beta](a)
         else:
             raise Exception("Incorrect model specified.")
 

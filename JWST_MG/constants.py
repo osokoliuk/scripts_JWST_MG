@@ -20,6 +20,7 @@ import pandas as pd
 import scipy.integrate as intg
 import astropy.constants as con
 import pickle
+import os
 
 kmfl_settings = {'A_s': 2.101e-9,
 'n_s':0.9665,
@@ -61,11 +62,14 @@ kvec = np.logspace(np.log10(0.00001), np.log10(1000.0), 10000)
 delta_ini = np.logspace(-5, -2.5, 100000)
 abs_err = 1e-5
 ai = 1e-6
-beta = np.linspace(0, 0.5, 10)
-K0 = [0, 0.5, 1]
-H_arr_kmoufl = [[], [], []]
-dH_arr_kmoufl = [[], [], []]
-H_int_kmoufl = [[], [], []]
-dH_int_kmoufl = [[], [], []]
+beta_arr = np.linspace(0, 0.5, 15)
+K0_arr = np.linspace(0.1, 1, 15)
+H_arr_kmoufl = np.zeros(shape=(15, 15), dtype=object)
+dH_arr_kmoufl = np.zeros(shape=(15, 15), dtype=object)
+H_int_kmoufl = np.zeros(shape=(15, 15), dtype=object)
+dH_int_kmoufl = np.zeros(shape=(15, 15), dtype=object)
 
 M = {}
+path = os.path.abspath(".")
+kmoufl_H = np.load(path + "/JWST_MG/" + "kmoufl_H.npy", allow_pickle=True)
+kmoufl_dH = np.load(path + "/JWST_MG/" + "kmoufl_dH.npy", allow_pickle=True)
