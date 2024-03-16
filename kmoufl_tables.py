@@ -21,30 +21,6 @@ from JWST_MG.constants import *
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-plt.rcParams.update({"text.usetex": True})
-
-
-class OOMFormatter(matplotlib.ticker.ScalarFormatter):
-    def __init__(self, order=0, fformat="%1.1f", offset=True, mathText=True):
-        self.oom = order
-        self.fformat = fformat
-        matplotlib.ticker.ScalarFormatter.__init__(
-            self, useOffset=offset, useMathText=mathText)
-
-    def _set_order_of_magnitude(self):
-        self.orderOfMagnitude = self.oom
-
-    def _set_format(self, vmin=None, vmax=None):
-        self.format = self.fformat
-        if self._useMathText:
-            self.format = r'$\mathdefault{%s}$' % self.format
-
-
-plt.cla()
-plt.figure()
-plt.rcParams.update({"text.usetex": True})
-fig = plt.figure(figsize=(4.25*1*.95, 3*2*0.75))
-ax = plt.subplot(2, 1, 1)
 
 for i in range(len(K0_arr)):
     for j in tqdm(range(len(beta_arr))):
@@ -64,6 +40,3 @@ for i in range(len(K0_arr)):
 
 np.save('kmoufl_H', H_int_kmoufl)
 np.save('kmoufl_dH', dH_int_kmoufl)
-
-
-# H_arr = np.load('kmoufl_H.npy',  allow_pickle=True)

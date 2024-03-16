@@ -23,24 +23,24 @@ import pickle
 import os
 
 kmfl_settings = {'A_s': 2.101e-9,
-'n_s':0.9665,
-'tau_reio':0.0561,
-'omega_b':0.02242,
-'omega_cdm':0.11933,
-'h':0.6766,
-'YHe':0.2425,
-'T_cmb':2.7255,
-'gauge':'newtonian', #FOR MGCLASS TO WORK, GAUGE NEEDS TO BE NEWTONIAN
-'k_pivot': 0.05,
-'mg_z_init': 111111.000,
-'l_logstep': 1.025,
-'l_linstep':15,
-'P_k_max_1/Mpc':3.0,
-'l_switch_limber':9,
-'perturb_sampling_stepsize': 0.05,
-'output':'tCl,pCl,lCl,mPk',
-'l_max_scalars': 3000,
-'lensing': 'yes',
+                 'n_s': 0.9665,
+                 'tau_reio': 0.0561,
+                 'omega_b': 0.02242,
+                 'omega_cdm': 0.11933,
+                 'h': 0.6766,
+                 'YHe': 0.2425,
+                 'T_cmb': 2.7255,
+                 'gauge': 'newtonian',  # FOR MGCLASS TO WORK, GAUGE NEEDS TO BE NEWTONIAN
+                 'k_pivot': 0.05,
+                 'mg_z_init': 111111.000,
+                 'l_logstep': 1.025,
+                 'l_linstep': 15,
+                 'P_k_max_1/Mpc': 3.0,
+                 'l_switch_limber': 9,
+                 'perturb_sampling_stepsize': 0.05,
+                 'output': 'tCl,pCl,lCl,mPk',
+                 'l_max_scalars': 3000,
+                 'lensing': 'yes',
                  'mg_ansatz': 'kmoufl'}
 
 H0 = 67.66
@@ -59,7 +59,7 @@ rhocr = 2.77536627e11
 rhom = rhocr*Omegam0
 
 kvec = np.logspace(np.log10(0.00001), np.log10(1000.0), 10000)
-delta_ini = np.logspace(-5, -2.5, 100000)
+delta_ini = np.logspace(-5, -1, 100000)
 abs_err = 1e-5
 ai = 1e-6
 beta_arr = np.linspace(0, 0.5, 15)

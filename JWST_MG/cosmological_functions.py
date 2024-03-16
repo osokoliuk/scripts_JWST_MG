@@ -21,26 +21,17 @@ class cosmological_functions:
         self.par2 = par2
 
     """
-    for i in range(len(K0)):
-        for j in tqdm(range(len(beta))):
-            kmfl_settings['beta_kmfl'] = beta[j]
-            kmfl_settings['k0_kmfl'] = K0[i]
+    Calculate the Hubble parameter for different cosmological models.
 
-            cosmo_kmfl = Class()
-            cosmo_kmfl.set(kmfl_settings)
-            cosmo_kmfl.compute()
-            a = np.logspace(-6, 0, 10000)
-            H_arr_kmoufl[i, j] = ([cosmo_kmfl.Hubble(1/ai-1)*c for ai in a])
-            dH_arr_kmoufl[i, j] = (np.gradient(H_arr_kmoufl[i][j])/np.gradient(a))
-            H_int_kmoufl[i, j] = (scipy.interpolate.interp1d(
-                a, H_arr_kmoufl[i][j], fill_value='extrapolate'))
-            dH_int_kmoufl[i, j] = (scipy.interpolate.interp1d(
-                a, dH_arr_kmoufl[i][j], fill_value='extrapolate'))
+    Parameters:
+        a (float): The scale factor.
+        model_H (str): The cosmological model ('LCDM', 'wCDM', 'nDGP', 'kmoufl').
+        par1 (float): Additional parameter depending on the model.
+        par2 (float): Additional parameter depending on the model.
 
-    np.save('kmoufl_H', H_int_kmoufl)
-    np.save('kmoufl_dH', dH_int_kmoufl)
+    Returns:
+        float: The value of the Hubble parameter for the given cosmological model.
     """
-
     def H_f(self, a, model_H, par1, par2):
         if model_H == 'LCDM':
             return H0*np.sqrt(1-Omegam0-Omegar0+Omegam0*a**(-3)+Omegar0*a**(-4))
@@ -48,7 +39,7 @@ class cosmological_functions:
             wL = par1
             return H0*np.sqrt((1-Omegam0-Omegar0)*a**(-3*(1+wL))+Omegam0*a**(-3)+Omegar0*a**(-4))
         elif model_H == 'nDGP':
-            rc = par1
+            rc = par1/c
             Omegarc = 1/(4*H0**2*rc**2)
             OmegaLambda0 = 1 - Omegam0 - Omegar0 + 2*np.sqrt(Omegarc)
             return H0*np.sqrt(Omegam0*a**(-3)+Omegar0*a**(-4)+Omegarc + OmegaLambda0)-H0*np.sqrt(Omegarc)
@@ -58,6 +49,19 @@ class cosmological_functions:
             return kmoufl_H[closest_K0, closest_beta](a)
         else:
             raise Exception("Incorrect model specified.")
+
+    """
+    Calculate the Hubble parameter derivative for different cosmological models.
+
+    Parameters:
+        a (float): The scale factor.
+        model_H (str): The cosmological model ('LCDM', 'wCDM', 'nDGP', 'kmoufl').
+        par1 (float): Additional parameter depending on the model.
+        par2 (float): Additional parameter depending on the model.
+
+    Returns:
+        float: The value of the Hubble parameter derivative for the given cosmological model.
+    """
 
     def dH_f(self, a, model_H, par1, par2):
         self.a = a
@@ -71,7 +75,7 @@ class cosmological_functions:
             wL = par1
             return (a**(-5 - 3*wL)*(3*a*H0*(1 + wL)*(-1 + Omegam0 + Omegar0) - a**(3*wL)*H0*(3*a*Omegam0 + 4*Omegar0)))/(2*np.sqrt((Omegar0 + a*(Omegam0 - (-1 + Omegam0 + Omegar0)/a**(3*wL)))/a**4))
         elif model_H == 'nDGP':
-            rc = par1
+            rc = par1/c
             Omegarc = 1/(4*H0**2*rc**2)
             OmegaLambda0 = 1 - Omegam0 - Omegar0 + 2*np.sqrt(Omegarc)
             return (H0*((-3*Omegam0)/a**4 - (4*Omegar0)/a**5))/(2.*np.sqrt(OmegaLambda0 + Omegam0/a**3 + Omegar0/a**4 + Omegarc))
@@ -82,7 +86,26 @@ class cosmological_functions:
         else:
             raise Exception("Incorrect model specified.")
 
-    def mu(self, a, model, model_H, par1, par2):
+        """
+        Calculate the value of effective gravitational constant based on the given parameters.
+
+        Parameters:
+            a (float): The value of a.
+            model (str): The model to use for the calculation.
+            model_H (str): The model to use for calculating H.
+            par1 (float): The first parameter for the model.
+            par2 (float): The second parameter for the model.
+            type (str, optional): The type of model (only used for nDGP model).
+            x (float, optional): The value of x (only used for nonlinear nDGP model).
+
+        Returns:
+            float: The calculated value of mu.
+
+        Raises:
+            Exception: If an incorrect model is specified.
+        """
+
+    def mu(self, a, model, model_H, par1, par2, type=None, x=None):
         H = self.H_f(a, model_H, par1, par2)
         dHda = self.dH_f(a, model_H, par1, par2)
         dHdt = a*H*dHda
@@ -105,8 +128,14 @@ class cosmological_functions:
             gamma = par2
             return 2/3*OmegaM**(gamma-1)*(OmegaM**gamma+2-3*gamma+3*(gamma-1/2)*(OmegaM+(1+wL)*OmegaL))
         elif model == 'nDGP':
-            beta = 1 + 2*H/c*par1*(1+dHdt/(3*H**2))
-            return 1 + 1/(3*beta)
+            par1 = par1/c
+            beta = 1 + 2*H*par1*(1+dHdt/(3*H**2))
+            if type == 'linear':
+                return 1 + 1/(3*beta)
+            elif type == 'nonlinear':
+                return 1 + 2/(3*beta)*(np.sqrt(1+x**(-3))-1)/(x**(-3))
+            else:
+                raise Exception("Incorrect Geff type!")
         elif model == 'kmoufl':
             A_kmfl = 1.0 + par1*a
             X_kmfl = 0.5 * A_kmfl**2*(H*a)**2/((1-Omegam0-Omegar0)*H0**2)

@@ -283,46 +283,57 @@ plt.tick_params(axis='both', which='minor',
                 direction="in", labelsize=11, length=4)
 
 
-model = 'kmoufl'
-model_H = 'kmoufl'
+model = 'nDGP'
+model_H = 'nDGP'
 model_SFR = 'toy'
 
-pars2 = np.array([0.1, 0.2, 0.3])
-ac_arr = np.linspace(0.1, 1, 5)
-pars1 = np.linspace(0.1, 0.5, 5)
+par2 = 0.3
+ac_arr = np.linspace(0.01, 1, 15)
+par1 = 500
 
-n = len(pars1)
-colors = np.array([pl.cm.Blues(np.linspace(0, 1, n)), pl.cm.Reds(
-    np.linspace(0, 1, n)), pl.cm.Purples(np.linspace(0, 1, n))])
+for ac in ac_arr:
+    deltac = delta_c(ac, model, model_H, par1, par2)
+    dc = deltac.delta_c_at_ac(ac, model, model_H, par1, par2)
+    plt.scatter(ac, dc, c='tab:blue')
 
-for j in range(len(pars2)):
-    par2 = pars2[j]
-    for i in tqdm(range(len(pars1))):
-        par1 = pars1[i]
-        for ac in ac_arr:
-            a_arr = np.linspace(ai, ac, 10000)
-            deltac = delta_c(ac, model, model_H, par1, par2)
-            plt.scatter(ac, deltac.delta_c_at_ac(
-                ac, model, model_H, par1, par2), c=colors[j][i], alpha=0.5)
 
-norm = plt.Normalize(pars1.min(), pars1.max())
-cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=pl.cm.Blues, norm=norm), ax=ax)
-cbar.set_label(r'$w_\Lambda$', fontsize=16)
+"""di = deltac.binary_search_di(1, model, model_H, par1, par2,
+                             0, len(delta_ini)-1, abs_err)
+
+delta = deltac.non_linear(di, ac_arr, model, model_H, par1, par2)
+
+G = 1/(8*np.pi)
+Hdot = ac_arr*H*dH
+beta = 1 + 2*H/c*par1*(1+Hdot/(3*H**2))
+rho = 3*H0**2*Omegam0
+RRV = (64*np.pi*G*delta*rho*par1**2/(9*beta**2))**(-1/3)
+epsilon = 8/(9*beta**2)*(H0*par1)**2*Omegam0*ac_arr**(-3)
+
+mu = cosmological_library.mu(
+    ac_arr, model, model_H, par1, par2, type='nonlinear', x=RRV)"""
+
+"""
+cosmological_library = cosmological_functions(
+    a, model, model_H, par1, par2)
+H = cosmological_library.H_f(a, model_H, par1, par2)
+dH = cosmological_library.dH_f(a, model_H, par1, par2)
+mu = cosmological_library.mu(a, model, model_H, par1, par2)
+G = 1/(8*np.pi)
+Geff = G*mu
+DeltaGeff = Geff - G
+plt.plot(a, mu)
+"""
 
 plt.ylabel(r'$\delta_{\rm m}(a)$', size='16')
+# plt.ylim(1.65, 1.7)
+# plt.axhline(1.686, c='tab:gray')
 
+# plt.axhline(1.672, c='tab:gray', ls=':')
 # plt.xlim(10**(-3),1)
 # plt.legend(loc='best')
 plt.grid(".")
-
-h, l = ax.get_legend_handles_labels()
-
-
-plt.axhline(1.686, c='tab:gray', lw=0.8)
-
 plt.xlim(-0.05, 1.05)
-
-
+plt.yscale('log')
 """
 ax = plt.subplot(2, 1, 2)
 
