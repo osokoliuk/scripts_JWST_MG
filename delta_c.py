@@ -287,31 +287,87 @@ model = 'nDGP'
 model_H = 'nDGP'
 model_SFR = 'toy'
 
+
 par2 = 0.3
 ac_arr = np.linspace(0.01, 1, 15)
-par1 = 500
+par1 = 3000
 
+"""
 for ac in ac_arr:
     deltac = delta_c(ac, model, model_H, par1, par2)
     dc = deltac.delta_c_at_ac(ac, model, model_H, par1, par2)
     plt.scatter(ac, dc, c='tab:blue')
+"""
+deltac = delta_c(ac_arr, model, model_H, par1, par2)
 
 
-"""di = deltac.binary_search_di(1, model, model_H, par1, par2,
+di = deltac.binary_search_di(1, model, model_H, par1, par2,
                              0, len(delta_ini)-1, abs_err)
+print(di)
+delta_nl = deltac.collapse(di, model, model_H, par1, par2)
+delta = delta_nl[:, 1]
+a = delta_nl[:, 0]
+cosmological_library = cosmological_functions(
+    a, model, model_H, par1, par2)
+H = cosmological_library.H_f(a, model_H, par1, par2)
+dH = cosmological_library.dH_f(a, model_H, par1, par2)
 
-delta = deltac.non_linear(di, ac_arr, model, model_H, par1, par2)
 
 G = 1/(8*np.pi)
-Hdot = ac_arr*H*dH
-beta = 1 + 2*H/c*par1*(1+Hdot/(3*H**2))
-rho = 3*H0**2*Omegam0
-RRV = (64*np.pi*G*delta*rho*par1**2/(9*beta**2))**(-1/3)
-epsilon = 8/(9*beta**2)*(H0*par1)**2*Omegam0*ac_arr**(-3)
+Hdot = a*H*dH
+beta = 1 + 2*H*par1/c*(1+Hdot/(3*H**2))
+epsilon = 8/(9*beta**2)*(H0*par1/c)**2*Omegam0*a**(-3)
+RRV = (epsilon*delta)**(-1/3)
+mu = cosmological_library.mu(
+    a, model, model_H, par1, par2, type='nonlinear', x=RRV)
+
+plt.plot(a, RRV**3)
 
 mu = cosmological_library.mu(
-    ac_arr, model, model_H, par1, par2, type='nonlinear', x=RRV)"""
+    a, model, model_H, par1, par2, type='linear', x=RRV)
 
+# plt.plot(a, mu)
+
+
+par1 = 500
+
+"""
+for ac in ac_arr:
+    deltac = delta_c(ac, model, model_H, par1, par2)
+    dc = deltac.delta_c_at_ac(ac, model, model_H, par1, par2)
+    plt.scatter(ac, dc, c='tab:blue')
+"""
+deltac = delta_c(ac_arr, model, model_H, par1, par2)
+
+
+di = deltac.binary_search_di(1, model, model_H, par1, par2,
+                             0, len(delta_ini)-1, abs_err)
+print(di)
+delta_nl = deltac.collapse(di, model, model_H, par1, par2)
+delta = delta_nl[:, 1]
+a = delta_nl[:, 0]
+cosmological_library = cosmological_functions(
+    a, model, model_H, par1, par2)
+H = cosmological_library.H_f(a, model_H, par1, par2)
+dH = cosmological_library.dH_f(a, model_H, par1, par2)
+
+
+G = 1/(8*np.pi)
+Hdot = a*H*dH
+beta = 1 + 2*H*par1/c*(1+Hdot/(3*H**2))
+epsilon = 8/(9*beta**2)*(H0*par1/c)**2*Omegam0*a**(-3)
+RRV = (epsilon*delta)**(-1/3)
+mu = cosmological_library.mu(
+    a, model, model_H, par1, par2, type='nonlinear', x=RRV)
+
+# plt.plot(a, mu, ls=':', c='tab:blue')
+mu = cosmological_library.mu(
+    a, model, model_H, par1, par2, type='linear', x=RRV)
+
+plt.plot(a, RRV**3, ls=':', c='tab:orange')
+
+# plt.xlim(0.2, 1)
+# plt.ylim(1e-3, 1)
 """
 cosmological_library = cosmological_functions(
     a, model, model_H, par1, par2)
@@ -332,8 +388,6 @@ plt.ylabel(r'$\delta_{\rm m}(a)$', size='16')
 # plt.xlim(10**(-3),1)
 # plt.legend(loc='best')
 plt.grid(".")
-plt.xlim(-0.05, 1.05)
-plt.yscale('log')
 """
 ax = plt.subplot(2, 1, 2)
 

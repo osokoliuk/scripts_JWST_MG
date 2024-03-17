@@ -43,15 +43,14 @@ class delta_c:
         if model == 'LCDM' or model == 'wCDM':
             mu = cosmological_library.mu(a, model, model_H, par1, par2)
             dddeltada = -(3/a+dH/H)*ddeltada + (3*Omegam0*mu)/(2*a**5*H **
-                                                           2/H0**2)*delta*(1+delta) + 4*ddeltada**2/(3*(1+delta))
+                                                               2/H0**2)*delta*(1+delta) + 4*ddeltada**2/(3*(1+delta))
         elif model == 'nDGP':
-            par1 = par1/c
             Hdot = a*H*dH
-            beta = 1 + 2*H*par1*(1+Hdot/(3*H**2))
-            epsilon = 8/(9*beta**2)*(H0*par1)**2*Omegam0*a**(-3)
+            beta = 1 + 2*H*par1/c*(1+Hdot/(3*H**2))
+            epsilon = 8/(9*beta**2)*(H0*par1/c)**2*Omegam0*a**(-3)
             RRV = (epsilon*delta)**(-1/3)
             mu = cosmological_library.mu(
-                a, model, model_H, par1, par2, type='linear', x=RRV)
+                a, model, model_H, par1, par2, type='nonlinear', x=RRV)
             dddeltada = -(3/a+dH/H)*ddeltada + (3*Omegam0*mu)/(2*a**5*H **
                                                                2/H0**2)*delta*(1+delta) + 4*ddeltada**2/(3*(1+delta))
         elif model == 'kmoufl':
@@ -87,8 +86,8 @@ class delta_c:
         elif model == 'nDGP':
             mu = cosmological_library.mu(
                 a, model, model_H, par1, par2, type='linear')
-            dddeltada = -(3/a+dH/H)*ddeltada + (3*Omegam0*mu)/(2*a**5*H **
-                                                               2/H0**2)*delta
+            dddeltada = -(3/a+dH/H)*ddeltada + (3*Omegam0*mu) / \
+                (2*a**5*H ** 2/H0**2)*delta
         elif model == 'kmoufl':
             ddeltada = 1
         else:
@@ -117,14 +116,13 @@ class delta_c:
         system.set_f_params(*[model, model_H, par1, par2])
         system.set_initial_value(init, ai)
 
-        data = [0, 0]
+        data = []
         while system.successful() and system.y[0] <= 1e7 and system.t <= 1/(1-0.5):
-            data = [system.t + dt, system.integrate(system.t + dt)[0]]
+            data.append([system.t + dt, system.integrate(system.t + dt)[0]])
             # plt.scatter(system.t+dt, system.integrate(system.t + dt)[0], c ='tab:blue')
-        data = np.array(data)
-        ac = data[0]
 
-        return ac
+        data = np.array(data)
+        return data
 
     """
     Perform a binary search to find the index of the element in delta_ini that is closest to the given ac value within a specified absolute error. 
@@ -145,7 +143,8 @@ class delta_c:
 
     def binary_search_di(self, ac, model, model_H, par1, par2, low, high, abs_err):
         mid = (low + high)//2
-        ac_predict = self.collapse(delta_ini[mid], model, model_H, par1, par2)
+        ac_predict = self.collapse(
+            delta_ini[mid], model, model_H, par1, par2)[-1, 0]
         if high >= low:
             if abs(ac_predict-ac)/ac_predict <= abs_err:
                 return delta_ini[mid]
@@ -200,10 +199,9 @@ class delta_c:
             dddeltada = -(3/a+dH/H)*ddeltada + (3*Omegam0*mu)/(2*a**5*H **
                                                            2/H0**2)*delta*(1+delta) + 4*ddeltada**2/(3*(1+delta))
         elif model == 'nDGP':
-            par1 = par1/c
             Hdot = a*H*dH
-            beta = 1 + 2*H/c*par1*(1+Hdot/(3*H**2))
-            epsilon = 8/(9*beta**2)*(H0*par1)**2*Omegam0*a**(-3)
+            beta = 1 + 2*H*par1/c*(1+Hdot/(3*H**2))
+            epsilon = 8/(9*beta**2)*(H0*par1/c)**2*Omegam0*a**(-3)
             RRV = (epsilon*delta)**(-1/3)
             mu = cosmological_library.mu(
                 a, model, model_H, par1, par2, type='nonlinear', x=RRV)

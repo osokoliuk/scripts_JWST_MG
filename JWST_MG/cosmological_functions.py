@@ -86,24 +86,24 @@ class cosmological_functions:
         else:
             raise Exception("Incorrect model specified.")
 
-        """
-        Calculate the value of effective gravitational constant based on the given parameters.
+    """
+    Calculate the value of effective gravitational constant based on the given parameters.
 
-        Parameters:
-            a (float): The value of a.
-            model (str): The model to use for the calculation.
-            model_H (str): The model to use for calculating H.
-            par1 (float): The first parameter for the model.
-            par2 (float): The second parameter for the model.
-            type (str, optional): The type of model (only used for nDGP model).
-            x (float, optional): The value of x (only used for nonlinear nDGP model).
+    Parameters:
+        a (float): The value of a.
+        model (str): The model to use for the calculation.
+        model_H (str): The model to use for calculating H.
+        par1 (float): The first parameter for the model.
+        par2 (float): The second parameter for the model.
+        type (str, optional): The type of model (only used for nDGP model).
+        x (float, optional): The value of x (only used for nonlinear nDGP model).
 
-        Returns:
-            float: The calculated value of mu.
+    Returns:
+        float: The calculated value of mu.
 
-        Raises:
-            Exception: If an incorrect model is specified.
-        """
+    Raises:
+        Exception: If an incorrect model is specified.
+    """
 
     def mu(self, a, model, model_H, par1, par2, type=None, x=None):
         H = self.H_f(a, model_H, par1, par2)
