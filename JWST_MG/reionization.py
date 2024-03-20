@@ -44,23 +44,24 @@ class reionization:
         delta_nl = self.delta_nl_a(a)
         H = cosmological_library.H_f(a, model_H, par1, par2)
         dH = cosmological_library.dH_f(a, model_H, par1, par2)
-        mu = cosmological_library.mu(a, model, model_H, par1, par2)
         Hprime = a*dH
         Rprime = a*dRda
 
-        if model == "LCDM" or "wCDM":
+        if model == "LCDM" or model == "wCDM":
+            mu = cosmological_library.mu(a, model, model_H, par1, par2)
             ddRda = (-Hprime/H*Rprime +
                  (1+Hprime/H)*R - Omegam0*a**(-3)*H0**2 /
                  (2*H**2) * mu*(R+a/ai)*delta_nl - a*dRda)/a**2
         elif model == "nDGP":
-            beta = (mu - 1)**(-1)/3
-            rho = 3*H0**2*Omegam0
-            M = 4*np.pi/3*rho*(1+delta_nl)
-            deltaM = delta_nl*M/(1+delta_nl)
-            RRV = (16*G*deltaM*par1**2/(9*beta**2))**(-1/3)
+            H_dot = a*H*dH
+            beta = 1 + 2*H*par1/c*(1+H_dot/(3*H**2))
+            epsilon = 8/(9*beta**2)*(H0*par1/c)**2*Omegam0*a**(-3)
+            RRV = (epsilon*delta_nl)**(-1/3)
+            mu = cosmological_library.mu(
+                a, model, model_H, par1, par2, type='nonlinear', x=RRV)
             ddRda = (-Hprime/H*Rprime +
                      (1+Hprime/H)*R - Omegam0*a**(-3)*H0**2 /
-                     (2*H**2) * mu*(RRV)*(R+a/ai)*delta_nl - a*dRda)/a**2
+                     (2*H**2) * mu*(R+a/ai)*delta_nl - a*dRda)/a**2
         return [dRda, ddRda]
 
     def radius_solve(self, model, model_H, par1, par2, a_arr):
@@ -78,7 +79,6 @@ class reionization:
             model, model_H, par1, par2, a_arr)
         H_arr = cosmological_library.H_f(a_arr, model_H, par1, par2)
         dH_arr = cosmological_library.dH_f(a_arr, model_H, par1, par2)
-        mu_arr = cosmological_library.mu(a_arr, model, model_H, par1, par2)
         delta_nl = self.delta_nl_a(a_arr)
 
         R_arr[R_arr == -inf] = 0
@@ -95,9 +95,15 @@ class reionization:
         T = 3/10*M*Rdot**2
 
         if model_H == "LCDM" or model_H == "wCDM":
+            mu_arr = cosmological_library.mu(a_arr, model, model_H, par1, par2)
             U = -3/5*G*mu_arr*M*deltaM/R_arr+3/5*(H_dot+H_arr**2)*M*R_arr**2
             virial = T+1/2*U
         elif model_H == "nDGP":
+            beta = 1 + 2*H_arr*par1/c*(1+H_dot/(3*H_arr**2))
+            epsilon = 8/(9*beta**2)*(H0*par1/c)**2*Omegam0*a_arr**(-3)
+            RRV = (epsilon*delta_nl)**(-1/3)
+            mu_arr = cosmological_library.mu(
+                a_arr, model, model_H, par1, par2, type='nonlinear', x=RRV)
             Geff = G*mu_arr
             DeltaGeff = Geff - G
             U = -3/5*G*M**2/R_arr - 3/5*DeltaGeff*M * \

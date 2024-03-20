@@ -45,14 +45,17 @@ cosmo_kmfl.set(kmfl_settings)
 cosmo_kmfl.compute()
 a = np.logspace(-6, 0, 10000)
 H_arr_kmoufl = [cosmo_kmfl.Hubble(1/ai-1)*c for ai in a]
+dH_arr = np.gradient(H_arr_kmoufl)/np.gradient(a)
 
 par1 = 3000
 par2 = 0
 
 cosmological_library = cosmological_functions(
     a, model, model_H, par1, par2)
-H = cosmological_library.H_f(a, model_H, par1, par2)
+dH = cosmological_library.dH_f(a, model_H, par1, par2)
+Omegarc = 1/(4*H0**2*(par1/c)**2)
+print(Omegarc)
 
 
-plt.plot(a, (H_arr_kmoufl)/H)
+plt.plot(a, dH/dH_arr)
 plt.savefig('delta_c.pdf')

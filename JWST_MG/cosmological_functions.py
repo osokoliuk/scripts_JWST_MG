@@ -135,7 +135,7 @@ class cosmological_functions:
             elif type == 'nonlinear':
                 return 1 + 2/(3*beta)*(np.sqrt(1+x**(-3))-1)/(x**(-3))
             else:
-                raise Exception("Incorrect Geff type!")
+                raise Exception("Incorrect Geff type for nDGP!")
         elif model == 'kmoufl':
             A_kmfl = 1.0 + par1*a
             X_kmfl = 0.5 * A_kmfl**2*(H*a)**2/((1-Omegam0-Omegar0)*H0**2)

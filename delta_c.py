@@ -288,16 +288,129 @@ model_H = 'nDGP'
 model_SFR = 'toy'
 
 
+
+"""
+for ac in ac_arr:
+    deltac = delta_c(ac, model, model_H, par1, par2)
+    dc = deltac.delta_c_at_ac(ac, model, model_H, par1, par2)
+    plt.scatter(ac, dc, c='tab:blue')
+"""
+ac_arr = np.linspace(0.01, 1, 15)
+par1 = 500
+par2 = 0
+deltac = delta_c(ac_arr, model, model_H, par1, par2)
+
+
+di = deltac.binary_search_di(1, model, model_H, par1, par2,
+                             0, len(delta_ini)-1, abs_err)
+print(di)
+delta_nl = deltac.collapse(di, model, model_H, par1, par2)
+delta = delta_nl[:, 1]
+a = delta_nl[:, 0]
+cosmological_library = cosmological_functions(
+    a, model, model_H, par1, par2)
+H = cosmological_library.H_f(a, model_H, par1, par2)
+dH = cosmological_library.dH_f(a, model_H, par1, par2)
+
+
+G = 1/(8*np.pi)
+Hdot = a*H*dH
+beta = 1 + 2*H*par1/c*(1+Hdot/(3*H**2))
+epsilon = 8/(9*beta**2)*(H0*par1/c)**2*Omegam0*a**(-3)
+RRV = (epsilon*delta)**(-1/3)
+mu = cosmological_library.mu(
+    a, model, model_H, par1, par2, type='nonlinear', x=RRV)
+
+plt.plot(a, epsilon*delta)
+
+
+par1 = 3000
+par2 = 0
+deltac = delta_c(ac_arr, model, model_H, par1, par2)
+
+
+di = deltac.binary_search_di(1, model, model_H, par1, par2,
+                             0, len(delta_ini)-1, abs_err)
+print(di)
+delta_nl = deltac.collapse(di, model, model_H, par1, par2)
+delta = delta_nl[:, 1]
+a = delta_nl[:, 0]
+cosmological_library = cosmological_functions(
+    a, model, model_H, par1, par2)
+H = cosmological_library.H_f(a, model_H, par1, par2)
+dH = cosmological_library.dH_f(a, model_H, par1, par2)
+
+
+G = 1/(8*np.pi)
+Hdot = a*H*dH
+beta = 1 + 2*H*par1/c*(1+Hdot/(3*H**2))
+epsilon = 8/(9*beta**2)*(H0*par1/c)**2*Omegam0*a**(-3)
+RRV = (epsilon*delta)**(-1/3)
+mu = cosmological_library.mu(
+    a, model, model_H, par1, par2, type='nonlinear', x=RRV)
+
+plt.plot(a, epsilon*delta)
+plt.xlim(0.3, 1)
+plt.ylim(0.05, 500)
+plt.yscale('log')
+
+# plt.plot(a, mu)
+
+"""
+par1 = 3000
+par2 = 0
+ac_arr = np.linspace(0.01, 1, 15)
+
+for ac in ac_arr:
+    deltac = delta_c(ac, model, model_H, par1, par2)
+    dc = deltac.delta_c_at_ac(ac, model, model_H, par1, par2)
+    plt.scatter(ac, dc, c='tab:blue')
+
+plt.axhline(1.688, c='tab:blue', ls=':')
+
+
+par1 = 500
+par2 = 0
+ac_arr = np.linspace(0.01, 1, 15)
+
+for ac in ac_arr:
+    deltac = delta_c(ac, model, model_H, par1, par2)
+    dc = deltac.delta_c_at_ac(ac, model, model_H, par1, par2)
+    plt.scatter(ac, dc, c='tab:orange')
+
+plt.axhline(1.687, c='tab:orange', ls=':')
+"""
+"""
+model = 'nDGP'
+par2 = 0.5
+ac_arr = np.array([0.1, 0.5, 0.75, 1])
+pars1 = np.logspace(2.69897000434, 5, 10)
+
+n = len(ac_arr)
+colors = pl.cm.Reds(np.linspace(0, 1, 5))
+
+
+for i in range(len(ac_arr)):
+    Delta = []
+    ac = ac_arr[i]
+    a_arr = np.linspace(ai, ac, 10000)
+    for par1 in pars1:
+        reion = reionization(a_arr, model, model_H, par1, par2)
+        a_vir, Deltavir = reion.Delta_vir(model, model_H, par1, par2, a_arr)
+        print(Deltavir)
+        Delta.append(Deltavir)
+        # print(Deltavir)
+    plt.plot(pars1, Delta, c=colors[i+1])
+
+plt.xscale('log')
+
+plt.axhline(18*np.pi**2, ls=':', c='tab:blue')"""
+"""
 par2 = 0.3
 ac_arr = np.linspace(0.01, 1, 15)
 par1 = 3000
 
-"""
-for ac in ac_arr:
-    deltac = delta_c(ac, model, model_H, par1, par2)
-    dc = deltac.delta_c_at_ac(ac, model, model_H, par1, par2)
-    plt.scatter(ac, dc, c='tab:blue')
-"""
+
 deltac = delta_c(ac_arr, model, model_H, par1, par2)
 
 
@@ -321,22 +434,18 @@ RRV = (epsilon*delta)**(-1/3)
 mu = cosmological_library.mu(
     a, model, model_H, par1, par2, type='nonlinear', x=RRV)
 
-plt.plot(a, RRV**3)
-
+plt.plot(a, mu, ls='-', c='tab:orange')
 mu = cosmological_library.mu(
     a, model, model_H, par1, par2, type='linear', x=RRV)
 
-# plt.plot(a, mu)
+plt.plot(a, mu, ls=':', c='tab:orange')
 
 
+par2 = 0.3
+ac_arr = np.linspace(0.01, 1, 15)
 par1 = 500
 
-"""
-for ac in ac_arr:
-    deltac = delta_c(ac, model, model_H, par1, par2)
-    dc = deltac.delta_c_at_ac(ac, model, model_H, par1, par2)
-    plt.scatter(ac, dc, c='tab:blue')
-"""
+
 deltac = delta_c(ac_arr, model, model_H, par1, par2)
 
 
@@ -360,26 +469,18 @@ RRV = (epsilon*delta)**(-1/3)
 mu = cosmological_library.mu(
     a, model, model_H, par1, par2, type='nonlinear', x=RRV)
 
-# plt.plot(a, mu, ls=':', c='tab:blue')
+plt.plot(a, mu, ls='-', c='tab:blue')
 mu = cosmological_library.mu(
     a, model, model_H, par1, par2, type='linear', x=RRV)
 
-plt.plot(a, RRV**3, ls=':', c='tab:orange')
+plt.plot(a, mu, ls=':', c='tab:blue')
 
-# plt.xlim(0.2, 1)
-# plt.ylim(1e-3, 1)
-"""
-cosmological_library = cosmological_functions(
-    a, model, model_H, par1, par2)
-H = cosmological_library.H_f(a, model_H, par1, par2)
-dH = cosmological_library.dH_f(a, model_H, par1, par2)
-mu = cosmological_library.mu(a, model, model_H, par1, par2)
-G = 1/(8*np.pi)
-Geff = G*mu
-DeltaGeff = Geff - G
-plt.plot(a, mu)
-"""
 
+plt.yscale('log')
+plt.xlim(0.2, 1)"""
+# p
+"""
+plt.yscale('log')
 plt.ylabel(r'$\delta_{\rm m}(a)$', size='16')
 # plt.ylim(1.65, 1.7)
 # plt.axhline(1.686, c='tab:gray')
@@ -389,67 +490,7 @@ plt.ylabel(r'$\delta_{\rm m}(a)$', size='16')
 # plt.legend(loc='best')
 plt.grid(".")
 """
-ax = plt.subplot(2, 1, 2)
 
-ax.xaxis.set_minor_locator(AutoMinorLocator())
-ax.yaxis.set_minor_locator(AutoMinorLocator())
-
-
-plt.tick_params(axis='both', which='major', direction="in",
-                labelsize=14, length=5, top=True, right=True)
-plt.tick_params(axis='both', which='minor', direction="in",
-                labelsize=11, length=4, top=True, right=True)
-plt.tick_params(axis='both', which='major',
-                direction="in", labelsize=14, length=5)
-plt.tick_params(axis='both', which='minor',
-                direction="in", labelsize=11, length=4)
-
-
-model = 'gmu'
-model_H = 'LCDM'
-model_SFR = 'toy'
-
-par2 = 6/11
-ac_arr = np.linspace(0.1, 1, 10)
-pars1 = np.linspace(0, 1, 25)
-
-n = len(ac_arr)
-colors = pl.cm.Blues(np.linspace(0, 1, n))
-
-for i in range(len(ac_arr)):
-    ac = ac_arr[i]
-    a_arr = np.linspace(ai, ac, 10000)
-    Delta = []
-    for par1 in pars1:
-        reion = reionization(a_arr, model, model_H, par1, par2)
-        a_vir, Deltavir = reion.Delta_vir(model, model_H, par1, par2, a_arr)
-        print(Deltavir)
-        Delta.append(Deltavir)
-        # print(Deltavir)
-    plt.plot(pars1, Delta, c=colors[i])
-
-
-norm = plt.Normalize(ac_arr.min(), ac_arr.max())
-cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=pl.cm.Blues, norm=norm), ax=ax)
-cbar.set_label(r'$a_{\rm c}$', fontsize=16)
-
-plt.ylabel(r'$\Delta_{\rm vir}(a_{\rm c})$', size='16')
-plt.xlabel(r'$g_{\mu}$', size='16')
-
-# plt.xlim(10**(-3),1)
-# plt.legend(loc='best')
-plt.grid(".")
-
-h, l = ax.get_legend_handles_labels()
-
-line1 = Line2D([0], [0], label=r'$T_2=0$', color='tab:blue', fontsize = 13)
-line1 = Line2D([0], [0], label=r'$T_2=5$', color='tab:blue', fontsize = 13)
-line1 = Line2D([0], [0], label=r'$T_2=-5$', color='tab:blue', fontsize = 13)
-h.extend([patch, line, point])
-kw = dict(ncol=3, loc="lower center",
-          fancybox=True, fontsize=11, frameon=False)
-leg1 = ax.legend(h[:], l[:], bbox_to_anchor=[0.5, 1.08], **kw)
-ax.add_artist(leg1)"""
 
 plt.tight_layout()
 plt.savefig('delta_c.pdf', bbox_inches='tight')
