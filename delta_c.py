@@ -295,7 +295,7 @@ for ac in ac_arr:
     dc = deltac.delta_c_at_ac(ac, model, model_H, par1, par2)
     plt.scatter(ac, dc, c='tab:blue')
 """
-ac_arr = np.linspace(0.01, 1, 15)
+"""ac_arr = np.linspace(0.01, 1, 15)
 par1 = 500
 par2 = 0
 deltac = delta_c(ac_arr, model, model_H, par1, par2)
@@ -354,6 +354,17 @@ plt.xlim(0.3, 1)
 plt.ylim(0.05, 500)
 plt.yscale('log')
 
+"""
+model = 'kmoufl'
+model_H = 'kmoufl'
+par1 = 0.1
+par2 = 0.5
+a_arr = np.linspace(0.1, 1, 10)
+reion = reionization(a_arr, model, model_H, par1, par2)
+
+R_arr = reion.radius_solve(model, model_H, par1, par2, a_arr)
+
+plt.plot(a_arr, R_arr)
 # plt.plot(a, mu)
 
 """

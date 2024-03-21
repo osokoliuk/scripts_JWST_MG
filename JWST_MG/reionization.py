@@ -23,13 +23,14 @@ class reionization:
         global cosmological_library
         cosmological_library = cosmological_functions(
             a_arr, model, model_H, par1, par2)
-        global deltac_library
-        deltac_library = delta_c(
-            a_arr, model, model_H, par1, par2)
-        self.deltai = deltac_library.binary_search_di(
-            self.ac, self.model, self.model_H, self.par1, self.par2, 0, len(delta_ini), abs_err)
-        self.delta_nl = deltac_library.non_linear(
-            self.deltai, self.a_arr, self.model, self.model_H, self.par1, self.par2)
+        if model != 'kmoufl':
+            global deltac_library
+            deltac_library = delta_c(
+                a_arr, model, model_H, par1, par2)
+            self.deltai = deltac_library.binary_search_di(
+                self.ac, self.model, self.model_H, self.par1, self.par2, 0, len(delta_ini), abs_err)
+            self.delta_nl = deltac_library.non_linear(
+                self.deltai, self.a_arr, self.model, self.model_H, self.par1, self.par2)
 
     def delta_nl_a(self, x):
         func = scipy.interpolate.interp1d(
@@ -41,19 +42,20 @@ class reionization:
     def radius_evolution(self, y, a, model, model_H, par1, par2, a_arr):
         R, dRda = y
 
-        delta_nl = self.delta_nl_a(a)
         H = cosmological_library.H_f(a, model_H, par1, par2)
         dH = cosmological_library.dH_f(a, model_H, par1, par2)
+        H_dot = a*H*dH
         Hprime = a*dH
         Rprime = a*dRda
 
         if model == "LCDM" or model == "wCDM":
+            delta_nl = self.delta_nl_a(a)
             mu = cosmological_library.mu(a, model, model_H, par1, par2)
             ddRda = (-Hprime/H*Rprime +
                  (1+Hprime/H)*R - Omegam0*a**(-3)*H0**2 /
                  (2*H**2) * mu*(R+a/ai)*delta_nl - a*dRda)/a**2
         elif model == "nDGP":
-            H_dot = a*H*dH
+            delta_nl = self.delta_nl_a(a)
             beta = 1 + 2*H*par1/c*(1+H_dot/(3*H**2))
             epsilon = 8/(9*beta**2)*(H0*par1/c)**2*Omegam0*a**(-3)
             RRV = (epsilon*delta_nl)**(-1/3)
@@ -62,43 +64,68 @@ class reionization:
             ddRda = (-Hprime/H*Rprime +
                      (1+Hprime/H)*R - Omegam0*a**(-3)*H0**2 /
                      (2*H**2) * mu*(R+a/ai)*delta_nl - a*dRda)/a**2
+        elif model == "kmoufl":
+            A_kmfl = 1.0 + par1*a
+            X_kmfl = 0.5 * A_kmfl**2*(H*a)**2/((1-Omegam0-Omegar0)*H0**2)
+            k_prime_mfl = 1.0 + 2.0*par2*X_kmfl
+            epsl1_kmfl = 2.0*par1**2/k_prime_mfl
+            epsl2_kmfl = a*par1/(1.0+par1*a)
+            ddRda = (-(H_dot+H**2+epsl2_kmfl)*Rprime-Omegam0*a**(-3) /
+                     2*(R**(-3)-1)*R*(1+epsl1_kmfl)-a*dRda)/a**2
+        else:
+            raise Exception("Incorrect model specified")
         return [dRda, ddRda]
 
     def radius_solve(self, model, model_H, par1, par2, a_arr):
-        deltai = self.deltai
         Hi = cosmological_library.H_f(ai, model_H, par1, par2)
-        R_arr = scipy.integrate.odeint(self.radius_evolution, [0, -ai*Hi*deltai/(3*(1+deltai))], a_arr, args=(
-            model, model_H, par1, par2, a_arr), tfirst=False)[:, 0]
-
-        return R_arr + a_arr/ai
+        if model == "LCDM" or model == "wCDM" or model == "nDGP":
+            deltai = self.deltai
+            R_arr = scipy.integrate.odeint(self.radius_evolution, [0, -ai*Hi*deltai/(3*(1+deltai))], a_arr, args=(
+                model, model_H, par1, par2, a_arr), tfirst=False)[:, 0] + a_arr/ai
+        elif model == "kmoufl":
+            R_arr = scipy.integrate.odeint(self.radius_evolution, [1, 0], a_arr, args=(
+                model, model_H, par1, par2, a_arr), tfirst=False)[:, 0] + a_arr/ai
+        return R_arr
 
     def virial_theorem(self, model, model_H, par1, par2, a_arr):
         G = 1/(8*np.pi)
         ac = a_arr[-1]
-        R_arr = self.radius_solve(
-            model, model_H, par1, par2, a_arr)
         H_arr = cosmological_library.H_f(a_arr, model_H, par1, par2)
         dH_arr = cosmological_library.dH_f(a_arr, model_H, par1, par2)
         delta_nl = self.delta_nl_a(a_arr)
 
-        R_arr[R_arr == -inf] = 0
-        R_arr[R_arr == inf] = 0
-        R_arr[R_arr < 0] = 0
-        R_arr[a_arr < ai] = 0
-        R_arr[a_arr > ac] = 0
-
         H_dot = a_arr*H_arr*dH_arr
-        Rdot = a_arr*H_arr*np.gradient(R_arr)/np.gradient(a_arr)
         rho = 3*H0**2*Omegam0
-        M = 4*np.pi/3*R_arr**3*rho*a_arr**(-3)*(1+delta_nl)
-        deltaM = delta_nl/(1+delta_nl)*M
-        T = 3/10*M*Rdot**2
 
         if model_H == "LCDM" or model_H == "wCDM":
+            R_arr = self.radius_solve(
+                model, model_H, par1, par2, a_arr)
+            R_arr[R_arr == -inf] = 0
+            R_arr[R_arr == inf] = 0
+            R_arr[R_arr < 0] = 0
+            R_arr[a_arr < ai] = 0
+            R_arr[a_arr > ac] = 0
+            Rdot = a_arr*H_arr*np.gradient(R_arr)/np.gradient(a_arr)
+            M = 4*np.pi/3*R_arr**3*rho*a_arr**(-3)*(1+delta_nl)
+            deltaM = delta_nl/(1+delta_nl)*M
+            T = 3/10*M*Rdot**2
+
             mu_arr = cosmological_library.mu(a_arr, model, model_H, par1, par2)
             U = -3/5*G*mu_arr*M*deltaM/R_arr+3/5*(H_dot+H_arr**2)*M*R_arr**2
             virial = T+1/2*U
         elif model_H == "nDGP":
+            R_arr = self.radius_solve(
+                model, model_H, par1, par2, a_arr)
+            R_arr[R_arr == -inf] = 0
+            R_arr[R_arr == inf] = 0
+            R_arr[R_arr < 0] = 0
+            R_arr[a_arr < ai] = 0
+            R_arr[a_arr > ac] = 0
+            Rdot = a_arr*H_arr*np.gradient(R_arr)/np.gradient(a_arr)
+            M = 4*np.pi/3*R_arr**3*rho*a_arr**(-3)*(1+delta_nl)
+            deltaM = delta_nl/(1+delta_nl)*M
+            T = 3/10*M*Rdot**2
+
             beta = 1 + 2*H_arr*par1/c*(1+H_dot/(3*H_arr**2))
             epsilon = 8/(9*beta**2)*(H0*par1/c)**2*Omegam0*a_arr**(-3)
             RRV = (epsilon*delta_nl)**(-1/3)
@@ -110,6 +137,10 @@ class reionization:
                 deltaM/R_arr+3/5*(H_dot+H_arr**2)*M*R_arr**2
             virial = T+1/2*U
         elif model_H == "kmoufl":
+            q = (3*M/(4*np.pi*rho))**(1/3)
+            R_arr = self.radius_solve(
+                model, model_H, par1, par2, a_arr)*q*a
+
             raise ValueError("Not implemented for kmoufl")
         else:
             raise ValueError("Unknown cosmology type!")
