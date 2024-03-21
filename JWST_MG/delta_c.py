@@ -40,11 +40,11 @@ class delta_c:
             a, model, model_H, par1, par2)
         H = cosmological_library.H_f(a, model_H, par1, par2)
         dH = cosmological_library.dH_f(a, model_H, par1, par2)
-        if model == 'LCDM' or model == 'wCDM':
+        if model_H == 'LCDM' or model_H == 'wCDM':
             mu = cosmological_library.mu(a, model, model_H, par1, par2)
             dddeltada = -(3/a+dH/H)*ddeltada + (3*Omegam0*mu)/(2*a**5*H **
                                                                2/H0**2)*delta*(1+delta) + 4*ddeltada**2/(3*(1+delta))
-        elif model == 'nDGP':
+        elif model_H == 'nDGP':
             Hdot = a*H*dH
             beta = 1 + 2*H*par1/c*(1+Hdot/(3*H**2))
             epsilon = 8/(9*beta**2)*(H0*par1/c)**2*Omegam0*a**(-3)
@@ -54,7 +54,13 @@ class delta_c:
             dddeltada = -(3/a+dH/H)*ddeltada + (3*Omegam0*mu)/(2*a**5*H **
                                                                2/H0**2)*delta*(1+delta) + 4*ddeltada**2/(3*(1+delta))
         elif model == 'kmoufl':
-            ddeltada = 1
+            A_kmfl = 1.0 + par1*a
+            X_kmfl = 0.5 * A_kmfl**2*(H*a)**2/((1-Omegam0-Omegar0)*H0**2)
+            k_prime_mfl = 1.0 + 2.0*par2*X_kmfl
+            epsl1_kmfl = 2.0*par1**2/k_prime_mfl
+            epsl2_kmfl = a*par1/(1.0+par1*a)
+            dddeltada = -(3/a+dH/H + epsl2_kmfl/a)*ddeltada + (3*Omegam0*(1+epsl1_kmfl)) / \
+                (2*a**5)*delta*(1+delta)+4/3*ddeltada**2/(3*(1+delta))
         else:
             raise Exception("Incorrect model specified")
         return [ddeltada, dddeltada]
@@ -79,17 +85,23 @@ class delta_c:
             a, model, model_H, par1, par2)
         H = cosmological_library.H_f(a, model_H, par1, par2)
         dH = cosmological_library.dH_f(a, model_H, par1, par2)
-        if model == 'LCDM' or model == 'wCDM':
+        if model_H == 'LCDM' or model_H == 'wCDM':
             mu = cosmological_library.mu(a, model, model_H, par1, par2)
             dddeltada = -(3/a+dH/H)*ddeltada + (3*Omegam0*mu) / \
                 (2*a**5*H**2/H0**2)*delta
-        elif model == 'nDGP':
+        elif model_H == 'nDGP':
             mu = cosmological_library.mu(
                 a, model, model_H, par1, par2, type='linear')
             dddeltada = -(3/a+dH/H)*ddeltada + (3*Omegam0*mu) / \
                 (2*a**5*H ** 2/H0**2)*delta
-        elif model == 'kmoufl':
-            ddeltada = 1
+        elif model_H == 'kmoufl':
+            A_kmfl = 1.0 + par1*a
+            X_kmfl = 0.5 * A_kmfl**2*(H*a)**2/((1-Omegam0-Omegar0)*H0**2)
+            k_prime_mfl = 1.0 + 2.0*par2*X_kmfl
+            epsl1_kmfl = 2.0*par1**2/k_prime_mfl
+            epsl2_kmfl = a*par1/(1.0+par1*a)
+            dddeltada = -(3/a+dH/H + epsl2_kmfl/a)*ddeltada + (3*Omegam0*(1+epsl1_kmfl)) / \
+                (2*a**5)*delta
         else:
             raise Exception("Incorrect model specified")
         return [ddeltada, dddeltada]
@@ -194,11 +206,11 @@ class delta_c:
             a, model, model_H, par1, par2)
         H = cosmological_library.H_f(a, model_H, par1, par2)
         dH = cosmological_library.dH_f(a, model_H, par1, par2)
-        if model == 'LCDM' or model == 'wCDM':
+        if model_H == 'LCDM' or model_H == 'wCDM':
             mu = cosmological_library.mu(a, model, model_H, par1, par2)
             dddeltada = -(3/a+dH/H)*ddeltada + (3*Omegam0*mu)/(2*a**5*H **
                                                            2/H0**2)*delta*(1+delta) + 4*ddeltada**2/(3*(1+delta))
-        elif model == 'nDGP':
+        elif model_H == 'nDGP':
             Hdot = a*H*dH
             beta = 1 + 2*H*par1/c*(1+Hdot/(3*H**2))
             epsilon = 8/(9*beta**2)*(H0*par1/c)**2*Omegam0*a**(-3)
@@ -208,7 +220,14 @@ class delta_c:
             dddeltada = -(3/a+dH/H)*ddeltada + (3*Omegam0*mu)/(2*a**5*H **
                                                                2/H0**2)*delta*(1+delta) + 4*ddeltada**2/(3*(1+delta))
         elif model == 'kmoufl':
-            ddeltada = 1
+            A_kmfl = 1.0 + par1*a
+            X_kmfl = 0.5 * A_kmfl**2*(H*a)**2/((1-Omegam0-Omegar0)*H0**2)
+            k_prime_mfl = 1.0 + 2.0*par2*X_kmfl
+            epsl1_kmfl = 2.0*par1**2/k_prime_mfl
+            epsl2_kmfl = a*par1/(1.0+par1*a)
+            dddeltada = -(3/a+dH/H + epsl2_kmfl/a)*ddeltada + (3*Omegam0*(1+epsl1_kmfl)) / \
+                (2*a**5*H ** 2/H0**2)*delta * \
+                (1+delta)+4/3*ddeltada**2/(3*(1+delta))
         else:
             raise Exception("Incorrect model specified")
 

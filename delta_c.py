@@ -282,19 +282,16 @@ plt.tick_params(axis='both', which='major',
 plt.tick_params(axis='both', which='minor',
                 direction="in", labelsize=11, length=4)
 
-
-model = 'nDGP'
-model_H = 'nDGP'
-model_SFR = 'toy'
-
-
-
-"""
+model = 'kmoufl'
+model_H = 'kmoufl'
+par1 = 0.3
+par2 = 1
+ac_arr = np.linspace(0.05, 1, 15)
 for ac in ac_arr:
     deltac = delta_c(ac, model, model_H, par1, par2)
     dc = deltac.delta_c_at_ac(ac, model, model_H, par1, par2)
     plt.scatter(ac, dc, c='tab:blue')
-"""
+
 """ac_arr = np.linspace(0.01, 1, 15)
 par1 = 500
 par2 = 0
@@ -355,9 +352,9 @@ plt.ylim(0.05, 500)
 plt.yscale('log')
 
 """
-model = 'kmoufl'
-model_H = 'kmoufl'
-par1 = 0.1
+"""model = 'nDGP'
+model_H = 'nDGP'
+par1 = 3000
 par2 = 0.5
 a_arr = np.linspace(0.1, 1, 10)
 reion = reionization(a_arr, model, model_H, par1, par2)
@@ -365,8 +362,35 @@ reion = reionization(a_arr, model, model_H, par1, par2)
 R_arr = reion.radius_solve(model, model_H, par1, par2, a_arr)
 
 plt.plot(a_arr, R_arr)
+plt.yscale('log')"""
 # plt.plot(a, mu)
+"""
 
+model = 'kmoufl'
+model_H = 'kmoufl'
+par2 = 0.5
+ac_arr = np.array([0.1, 0.5, 0.75, 1])
+pars1 = np.linspace(0.1, 0.3, 10)
+
+n = len(ac_arr)
+colors = pl.cm.Reds(np.linspace(0, 1, 5))
+
+
+for i in range(len(ac_arr)):
+    Delta = []
+    ac = ac_arr[i]
+    a_arr = np.linspace(ai, ac, 10000)
+    for par1 in pars1:
+        reion = reionization(a_arr, model, model_H, par1, par2)
+        a_vir, Deltavir = reion.Delta_vir(model, model_H, par1, par2, a_arr)
+        print(Deltavir)
+        Delta.append(Deltavir)
+        # print(Deltavir)
+    plt.plot(pars1, Delta, c=colors[i+1])
+
+plt.xscale('log')
+
+plt.axhline(18*np.pi**2, ls=':', c='tab:blue')"""
 """
 par1 = 3000
 par2 = 0
