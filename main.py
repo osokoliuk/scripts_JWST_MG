@@ -11,8 +11,8 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import commah
 ax = plt.subplot(111)
-model = 'nDGP'
-model_H = 'nDGP'
+model = 'kmoufl'
+model_H = 'kmoufl'
 model_SFR = 'toy'
 
 
@@ -37,8 +37,9 @@ kmfl_settings = {'A_s': 2.101e-9,
                  'lensing': 'yes',
                  'mg_ansatz': 'nDGP'}
 
-
-kmfl_settings['rc'] = 3000
+kmfl_settings['rc'] = 1e8
+# kmfl_settings['beta_kmfl'] = 0.1
+# kmfl_settings['k0_kmfl'] = 0.5
 
 cosmo_kmfl = Class()
 cosmo_kmfl.set(kmfl_settings)
@@ -47,15 +48,15 @@ a = np.logspace(-6, 0, 10000)
 H_arr_kmoufl = [cosmo_kmfl.Hubble(1/ai-1)*c for ai in a]
 dH_arr = np.gradient(H_arr_kmoufl)/np.gradient(a)
 
-par1 = 3000
-par2 = 0
+par1 = 0.3
+par2 = 1
 
 cosmological_library = cosmological_functions(
     a, model, model_H, par1, par2)
-dH = cosmological_library.dH_f(a, model_H, par1, par2)
+H = cosmological_library.H_f(a, model_H, par1, par2)
 Omegarc = 1/(4*H0**2*(par1/c)**2)
 print(Omegarc)
 
 
-plt.plot(a, dH/dH_arr)
+plt.plot(a, (H_arr_kmoufl-H)/H)
 plt.savefig('delta_c.pdf')

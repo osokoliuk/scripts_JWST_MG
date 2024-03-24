@@ -287,10 +287,23 @@ model_H = 'kmoufl'
 par1 = 0.3
 par2 = 1
 ac_arr = np.linspace(0.05, 1, 15)
+a = ac_arr
+cosmological_library = cosmological_functions(
+    a, model, model_H, par1, par2)
+H = cosmological_library.H_f(a, model_H, par1, par2)
+
+A_kmfl = 1.0 + par1*a
+X_kmfl = 0.5 * A_kmfl**2*(H*a)**2/((1-Omegam0-Omegar0)*H0**2)
+k_prime_mfl = 1.0 + 2.0*par2*X_kmfl
+epsl1_kmfl = 2.0*par1**2/k_prime_mfl
+epsl2_kmfl = a*par1/(1.0+par1*a)
+# plt.plot(1/a-1, (1+epsl1_kmfl))
+
+
 for ac in ac_arr:
     deltac = delta_c(ac, model, model_H, par1, par2)
     dc = deltac.delta_c_at_ac(ac, model, model_H, par1, par2)
-    plt.scatter(ac, dc, c='tab:blue')
+    plt.scatter(1/ac-1, dc, c='tab:blue')
 
 """ac_arr = np.linspace(0.01, 1, 15)
 par1 = 500
