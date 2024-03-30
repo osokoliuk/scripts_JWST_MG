@@ -136,7 +136,7 @@ class delta_c:
                     [system.t + dt, system.integrate(system.t + dt)[0]])
             # plt.scatter(system.t+dt, system.integrate(system.t + dt)[0], c ='tab:blue')
         else:
-            while system.successful() and system.y[0] <= 200 and system.t <= 1/(1-0.5):
+            while system.successful() and system.y[0] <= 1e7 and system.t <= 1/(1-0.5):
                 data.append(
                     [system.t + dt, system.integrate(system.t + dt)[0]])
 
@@ -233,8 +233,8 @@ class delta_c:
             epsl1_kmfl = 2.0*par1**2/k_prime_mfl
             epsl2_kmfl = a*par1/(1.0+par1*a)
             dddeltada = -(3/a+dH/H + epsl2_kmfl/a)*ddeltada + (3*Omegam0*(1+epsl1_kmfl)) / \
-                (2*a**5*H**2/H0**2)*delta * \
-                (1+delta)+4/3*ddeltada**2/(3*(1+delta))
+                (2*a**5*H**2/H0**2)*delta*(1+delta) + \
+                4*ddeltada**2/(3*(1+delta))
         else:
             raise Exception("Incorrect model specified")
 

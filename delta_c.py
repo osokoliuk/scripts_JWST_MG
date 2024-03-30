@@ -268,7 +268,6 @@ ax = plt.subplot(1, 1, 1)
 
 
 
-
 ax.xaxis.set_minor_locator(AutoMinorLocator())
 ax.yaxis.set_minor_locator(AutoMinorLocator())
 
@@ -282,28 +281,44 @@ plt.tick_params(axis='both', which='major',
 plt.tick_params(axis='both', which='minor',
                 direction="in", labelsize=11, length=4)
 
+
 model = 'kmoufl'
 model_H = 'kmoufl'
-par1 = 0.3
-par2 = 1
-ac_arr = np.linspace(0.05, 1, 15)
-a = ac_arr
-cosmological_library = cosmological_functions(
-    a, model, model_H, par1, par2)
-H = cosmological_library.H_f(a, model_H, par1, par2)
+model_SFR = 'toy'
+Masses = np.logspace(11, 15, 100)
+pars2 = np.linspace(0.0, 1, 2)
+ac_arr = np.linspace(0.05, 1, 3)
+pars1 = np.array([0.1, 0.2, 0.3])
 
-A_kmfl = 1.0 + par1*a
-X_kmfl = 0.5 * A_kmfl**2*(H*a)**2/((1-Omegam0-Omegar0)*H0**2)
-k_prime_mfl = 1.0 + 2.0*par2*X_kmfl
-epsl1_kmfl = 2.0*par1**2/k_prime_mfl
-epsl2_kmfl = a*par1/(1.0+par1*a)
-# plt.plot(1/a-1, (1+epsl1_kmfl))
+n = len(pars2)
+colors = np.array([pl.cm.Blues(np.linspace(0, 1, n)), pl.cm.Reds(
+    np.linspace(0, 1, n)), pl.cm.Purples(np.linspace(0, 1, n))])
+
+a = 1
+for j in tqdm(range(len(pars1))):
+    par1 = pars1[j]
+    for i in range(len(pars2)):
+        par2 = pars2[i]
+        hmf = HMF(a, model, model_H, par1, par2, Masses)
+        hmf_arr = hmf.ST_mass_function(rhom, Masses, a,
+                                       model_H, model, par1, par2)
+        # print(Deltavir)
+        plt.plot(Masses, hmf_arr, c=colors[j][i], alpha=0.5, lw=1)
 
 
-for ac in ac_arr:
-    deltac = delta_c(ac, model, model_H, par1, par2)
-    dc = deltac.delta_c_at_ac(ac, model, model_H, par1, par2)
-    plt.scatter(1/ac-1, dc, c='tab:blue')
+norm = plt.Normalize(pars2.min(), pars2.max())
+cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=pl.cm.Grays, norm=norm), ax=ax)
+cbar.set_label(r'$K_0$', fontsize=16)
+
+plt.ylabel(r'$\Delta_{\rm vir}(a_c)$', size='16')
+plt.xlabel(r'$a_c$', size=16)
+# plt.xlim(10**(-3),1)
+# plt.legend(loc='best')
+plt.grid(".")
+plt.xscale('log')
+plt.yscale('log')
+
+
 
 """ac_arr = np.linspace(0.01, 1, 15)
 par1 = 500

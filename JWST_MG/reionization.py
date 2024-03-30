@@ -47,7 +47,7 @@ class reionization:
         Hprime = a*dH
         Rprime = a*dRda
 
-        if model_H == "LCDM" or model_H == "wCDM" or model_H == "kmoufl":
+        if model_H == "LCDM" or model_H == "wCDM":
             mu = cosmological_library.mu(a, model, model_H, par1, par2)
             ddRda = (-Hprime/H*Rprime +
                  (1+Hprime/H)*R - Omegam0*a**(-3)*H0**2 /
@@ -62,6 +62,15 @@ class reionization:
             ddRda = (-Hprime/H*Rprime +
                      (1+Hprime/H)*R - Omegam0*a**(-3)*H0**2 /
                      (2*H**2) * mu*(R+a/ai)*delta_nl - a*dRda)/a**2
+        elif model_H == "kmoufl":
+            A_kmfl = 1.0 + par1*a
+            X_kmfl = 0.5 * A_kmfl**2*(H*a)**2/((1-Omegam0-Omegar0)*H0**2)
+            k_prime_mfl = 1.0 + 2.0*par2*X_kmfl
+            epsl1_kmfl = 2.0*par1**2/k_prime_mfl
+            epsl2_kmfl = a*par1/(1.0+par1*a)
+            # -0.5*(4*a**2*R + ((1 + epsl1_kmfl)*Omegam0*(1 + (ai*R)/a) * (-1 + (a**3*(1 + self.deltai))/(a + ai*R)**3))/(
+            ddRda = 1
+            # ai*H**2) - 4*a**3*dRda + (2*a**2*(a*dH + H*(3 + epsl2_kmfl))*(-R + a*dRda))/H)/a**4
         return [dRda, ddRda]
 
     def radius_solve(self, model, model_H, par1, par2, a_arr):
@@ -109,8 +118,6 @@ class reionization:
             U = -3/5*G*M**2/R_arr - 3/5*DeltaGeff*M * \
                 deltaM/R_arr+3/5*(H_dot+H_arr**2)*M*R_arr**2
             virial = T+1/2*U
-        elif model_H == "kmoufl":
-            raise ValueError("Not implemented for kmoufl")
         else:
             raise ValueError("Unknown cosmology type!")
 
@@ -137,12 +144,17 @@ class reionization:
     def minimum_Mhalo(model, model_H, par1, par2, a_arr):
         Delta_vir = self.Delta_vir(
             model, model_H, par1, par2, a_arr)
-        rho_vir = Delta_vir*rhom
-        R_vir = (3*GN*M/(4*np.pi*rho_vir))**(1/3)
-        def v_vir(Mhalo): return np.sqrt(GN*Mhalo/R_vir)
-        Mhalo_min = scipy.optimize.minimize_scalar(
-            lambda x: 0.75*mu_mol*mH*v_vir(x)**2/(2*kB) - 4000, bounds=(1e6, 1e16), method="bounded")
-        Mhalo_min = Mhalo_min.x
+
+        ac = a_arr[-1]
+        H = cosmological_library.H_f(ac, model_H, par1, par2)
+        dH = cosmological_library.dH_f(ac, model_H, par1, par2)
+        mu = cosmological_library.mu(ac, model, model_H, par1, par2)
+        H_dot = ac*H*dH
+
+        Tmin = 4000
+        Ceff = -3/(4*np.pig*GN*rho)*(H_dot+H**2)
+        Mhalo_min = (10*kB*Tmin/(3*mu_mol*mH))**(3/2)*(GN*H0*np.sqrt(Omegam0 *
+                                                                     ac**(-3)*Delta_vir/2))**(-1)*(1/Delta_vir*(Ceff)+mu*(1-1/Delta_vir))**(-3/2)
 
         return Mhalo_min
 
