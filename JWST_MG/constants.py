@@ -52,7 +52,7 @@ Omegab0 = 0.02242/(H0/100)**2
 c = 299792.45800000057
 Tcmb = 2.72e6
 YHe = 0.243
-kB = 1.380649*1e-23*1e-6
+kB = 1.380649*1e-23
 mP = 1.6726e-27
 mu_mol = 1.22
 h = H0/100
@@ -73,6 +73,6 @@ H_int_kmoufl = np.zeros(shape=(15, 15), dtype=object)
 dH_int_kmoufl = np.zeros(shape=(15, 15), dtype=object)
 
 M = {}
-path = os.path.abspath(".")
-kmoufl_H = np.load(path + "/JWST_MG/" + "kmoufl_H.npy", allow_pickle=True)
-kmoufl_dH = np.load(path + "/JWST_MG/" + "kmoufl_dH.npy", allow_pickle=True)
+path = os.path.dirname(os.path.realpath(__file__))
+kmoufl_H = np.load(path  + "/kmoufl_H.npy", allow_pickle=True)
+kmoufl_dH = np.load(path + "/kmoufl_dH.npy", allow_pickle=True)

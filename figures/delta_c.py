@@ -1,27 +1,31 @@
 
-import numpy as np
-import matplotlib.pyplot as plt
-import scipy as sp
-from scipy.integrate import odeint
-from scipy import integrate
-from scipy.special import lambertw
-from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
-import matplotlib.pylab as pl
-import matplotlib as mpl
-import matplotlib
-from scipy import interpolate
-import scipy
-from JWST_MG.UVLF import UVLF
-from JWST_MG.HMF import HMF
-from JWST_MG.reionization import reionization
-from JWST_MG.delta_c import delta_c
-from matplotlib.lines import Line2D
-from JWST_MG.constants import *
-from JWST_MG.cosmological_functions import cosmological_functions
 
-import numpy as np
+# some_file.py
+import scipy
+from scipy import interpolate
+import matplotlib
+import matplotlib as mpl
+import matplotlib.pylab as pl
+from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
+from scipy.special import lambertw
+from scipy import integrate
+from scipy.integrate import odeint
+import scipy as sp
 import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.lines import Line2D
 import matplotlib.cm as cm
+import sys
+sys.path.insert(1, '../')
+from JWST_MG.delta_c import delta_c
+from JWST_MG.reionization import reionization
+from JWST_MG.HMF import HMF
+from JWST_MG.UVLF import UVLF
+from JWST_MG.cosmological_functions import cosmological_functions
+from JWST_MG.constants import *
+
+
+
 plt.rcParams.update({"text.usetex": True})
 
 
@@ -267,7 +271,6 @@ plt.xlim(-0.05, 1.05)
 ax = plt.subplot(1, 1, 1)
 
 
-
 ax.xaxis.set_minor_locator(AutoMinorLocator())
 ax.yaxis.set_minor_locator(AutoMinorLocator())
 
@@ -282,44 +285,21 @@ plt.tick_params(axis='both', which='minor',
                 direction="in", labelsize=11, length=4)
 
 
-model = 'kmoufl'
-model_H = 'kmoufl'
+model = 'nDGP'
+model_H = 'nDGP'
 model_SFR = 'toy'
-Masses = np.logspace(11, 15, 100)
-pars2 = np.linspace(0.0, 1, 2)
-ac_arr = np.linspace(0.05, 1, 3)
-pars1 = np.array([0.1, 0.2, 0.3])
+par1 = 1e6
+par2 = 1
+ac_arr = np.linspace(0.1, 1, 15)
 
-n = len(pars2)
-colors = np.array([pl.cm.Blues(np.linspace(0, 1, n)), pl.cm.Reds(
-    np.linspace(0, 1, n)), pl.cm.Purples(np.linspace(0, 1, n))])
-
-a = 1
-for j in tqdm(range(len(pars1))):
-    par1 = pars1[j]
-    for i in range(len(pars2)):
-        par2 = pars2[i]
-        hmf = HMF(a, model, model_H, par1, par2, Masses)
-        hmf_arr = hmf.ST_mass_function(rhom, Masses, a,
-                                       model_H, model, par1, par2)
-        # print(Deltavir)
-        plt.plot(Masses, hmf_arr, c=colors[j][i], alpha=0.5, lw=1)
-
-
-norm = plt.Normalize(pars2.min(), pars2.max())
-cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=pl.cm.Grays, norm=norm), ax=ax)
-cbar.set_label(r'$K_0$', fontsize=16)
-
-plt.ylabel(r'$\Delta_{\rm vir}(a_c)$', size='16')
-plt.xlabel(r'$a_c$', size=16)
-# plt.xlim(10**(-3),1)
-# plt.legend(loc='best')
-plt.grid(".")
-plt.xscale('log')
-plt.yscale('log')
-
-
-
+for ac in ac_arr:
+    a_arr = np.linspace(ai, ac, 10000)
+    reion = reionization(a_arr, model, model_H, par1, par2)
+    vir1, vir2 = reion.minimum_Mhalo(model, model_H, par1, par2, a_arr)
+    plt.scatter(ac, vir1, c = 'tab:blue')
+    plt.scatter(ac, vir2, c = 'tab:orange')
+    
+#plt.yscale('log')
 """ac_arr = np.linspace(0.01, 1, 15)
 par1 = 500
 par2 = 0

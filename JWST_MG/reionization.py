@@ -130,33 +130,52 @@ class reionization:
         a_vir = scipy.optimize.minimize_scalar(
             lambda x: virial(x), bounds=(ai, self.ac), method="bounded").x
 
-        return a_turn, a_vir
+        if model != "nDGP":
+            return a_turn, a_vir
+        else:
+            return a_turn, a_vir, a_arr, mu_arr
 
     def Delta_vir(self, model, model_H, par1, par2, a_arr):
         ac = a_arr[-1]
 
-        a_turn, a_vir = self.virial_theorem(
-            model, model_H, par1, par2, a_arr)
-        Deltavir = (1+self.delta_nl_a(a_vir))*(ac/a_vir)**3
+        if model != "nDGP":
+            a_turn, a_vir = self.virial_theorem(
+                model, model_H, par1, par2, a_arr)
+            Deltavir = (1+self.delta_nl_a(a_vir))*(ac/a_vir)**3
+            return a_vir, Deltavir
 
-        return a_vir, Deltavir
+        else:
+            a_turn, a_vir, a_arr, mu_arr = self.virial_theorem(
+                model, model_H, par1, par2, a_arr)
+            Deltavir = (1+self.delta_nl_a(a_vir))*(ac/a_vir)**3
+            return a_vir, Deltavir, a_arr, mu_arr
 
-    def minimum_Mhalo(model, model_H, par1, par2, a_arr):
-        Delta_vir = self.Delta_vir(
-            model, model_H, par1, par2, a_arr)
-
+    def minimum_Mhalo(self, model, model_H, par1, par2, a_arr):
         ac = a_arr[-1]
+        if model != "nDGP":
+            a_vir, Deltavir = self.Delta_vir(
+                model, model_H, par1, par2, a_arr)
+            mu = cosmological_library.mu(ac, model, model_H, par1, par2)
+        else:
+            a_vir, Deltavir, a_arr, mu_arr  = self.Delta_vir(
+                model, model_H, par1, par2, a_arr)
+            mu = mu_arr[np.argmin(np.abs(a_arr-ac))]
+
         H = cosmological_library.H_f(ac, model_H, par1, par2)
         dH = cosmological_library.dH_f(ac, model_H, par1, par2)
-        mu = cosmological_library.mu(ac, model, model_H, par1, par2)
         H_dot = ac*H*dH
 
         Tmin = 4000
-        Ceff = -3/(4*np.pig*GN*rho)*(H_dot+H**2)
-        Mhalo_min = (10*kB*Tmin/(3*mu_mol*mH))**(3/2)*(GN*H0*np.sqrt(Omegam0 *
-                                                                     ac**(-3)*Delta_vir/2))**(-1)*(1/Delta_vir*(Ceff)+mu*(1-1/Delta_vir))**(-3/2)
+        Ceff = -3/(4*np.pi*GN*rho*ac**(-3))*(H_dot+H**2)
+        M = 1e13
+        z = 1/ac-1
+        Omegamz = Omegam0*(1+z)**3/(Omegam0*(1+z)**3+1-Omegam0)
+        Vvir2 =3/5*ac**(-1)*(GN*M*H0*np.sqrt(Omegam0*Deltavir/2))**(2/3)*(1-2/Deltavir*(1-Omegam0-Omegar0)/(Omegam0*ac**(-3)))
+        Vvir2_LCDM = 23.4*(M/(1e8*100/H0))**(1/3)*(Omegam0/(Omegamz)*Deltavir/(18*np.pi**2))*(1/6)*((1+z)/10)**(1/2)
+        Mhalo_min = 1e-9*(10*kB*Tmin/(3*mu_mol*mP))**(3/2)*(GN*H0*np.sqrt(Omegam0 *
+                                                                     ac**(-3)*Deltavir/2))**(-1)*(1/Deltavir*(Ceff)+mu*(1-1/Deltavir))**(-3/2)
 
-        return Mhalo_min
+        return np.sqrt(Vvir2), Vvir2_LCDM
 
     # def n_ion():
     #    Nion =

@@ -55,7 +55,7 @@ class OOMFormatter(matplotlib.ticker.ScalarFormatter):
 plt.cla()
 plt.figure()
 plt.rcParams.update({"text.usetex": True})
-fig = plt.figure(figsize=(4.25*1*.95, 4*2*1.05))
+fig = plt.figure(figsize=(4.25*1*.95, 4*2*1.25))
 
 
 ax = plt.subplot(4, 1, 1)
@@ -429,6 +429,5 @@ ax.add_artist(leg1)
 
 plt.tight_layout()
 """
-plt.tight_layout()
 
 plt.savefig('Delta_vir_pheno.pdf', bbox_inches='tight')
