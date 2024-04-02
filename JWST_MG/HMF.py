@@ -33,15 +33,10 @@ class HMF:
                            'T_cmb': 2.7255,
                            'gauge': 'newtonian',  # FOR MGCLASS TO WORK, GAUGE NEEDS TO BE NEWTONIAN
                            'k_pivot': 0.05,
-                           'mg_z_init': 10.000,
-                           'l_logstep': 1.025,
-                           'l_linstep': 15,
+                           'mg_z_init': 25.000,
                            'P_k_max_1/Mpc': 1500.0,
-                           'l_switch_limber': 9,
                            'perturb_sampling_stepsize': 0.05,
-                           'output': 'tCl,pCl,lCl,mPk',
-                           'l_max_scalars': 3000,
-                           'lensing': 'yes',
+                           'output': 'mPk',
                            'z_max_pk': 99}
         common_settings['mg_ansatz'] = model
         if model == 'plk_late':
@@ -50,7 +45,7 @@ class HMF:
         elif model == 'z_flex_late':
             common_settings['mg_muz'] = par1
             common_settings['mg_gamz'] = par2
-            common_settings['mg_zzn'] = par2
+            common_settings['mg_zzn'] = 1
         elif model == 'z_xpans_late':
             common_settings['mg_T1'] = par1
             common_settings['mg_T2'] = par2

@@ -20,6 +20,9 @@ import pandas as pd
 import scipy.integrate as intg
 import astropy.constants as con
 import pickle
+from numba import jit
+from mpi4py import MPI
+
 import os
 
 kmfl_settings = {'A_s': 2.101e-9,
@@ -61,12 +64,13 @@ rho = 3*H0**2*Omegam0/(8*np.pi*GN)
 rhocr = 2.77536627e11
 rhom = rhocr*Omegam0
 
-kvec = np.logspace(np.log10(0.00001), np.log10(1000.0), 10000)
+kvec = np.logspace(np.log10(0.001), np.log10(1000.0), 1000)
 delta_ini = np.logspace(-5, 0, 100000)
 abs_err = 1e-5
 ai = 1e-5
 beta_arr = np.linspace(0, 0.5, 15)
 K0_arr = np.linspace(0.1, 1, 15)
+
 H_arr_kmoufl = np.zeros(shape=(15, 15), dtype=object)
 dH_arr_kmoufl = np.zeros(shape=(15, 15), dtype=object)
 H_int_kmoufl = np.zeros(shape=(15, 15), dtype=object)

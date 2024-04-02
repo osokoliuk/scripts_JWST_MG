@@ -1,6 +1,9 @@
 from JWST_MG.constants import *
 from JWST_MG.cosmological_functions import cosmological_functions
 from JWST_MG.delta_c import delta_c
+from JWST_MG.HMF import HMF
+from JWST_MG.SMF import SMF
+from JWST_MG.SMD import SMD
 
 class reionization:
     ########################################################################
@@ -12,7 +15,7 @@ class reionization:
     # float delta_i - initial linear/non-linear overdensity at a = 1e-5
     ########################################################################
 
-    def __init__(self, a_arr, model, model_H, par1, par2):
+    def __init__(self, a_arr, model, model_H, par1, par2, model_SFR=None, f0=None):
         self.a_arr = a_arr
         self.ac = a_arr[-1]
         self.model = model
@@ -172,5 +175,26 @@ class reionization:
 
         return a_vir, Mhalo_min
 
-    # def n_ion():
-    #    Nion =
+    def n_ion(self, a, rhoM, model, model_H, model_SFR, par1, par2, f0=None):
+        H = cosmological_library.H_f(a, model_H, par1, par2)
+        Nion = 4000
+        tH = 1/H
+        tSF = 0.1/tH
+        a_arr = np.linspace(ai,a,1000)
+        a_vir, Mhalo_min = self.minimum_Mhalo(model, model_H, par1, par2, a_arr)
+        Masses = np.logspace(np.log10(Mhalo_min), 18, 1000)
+        
+        HMF_library = HMF(a, model, model_H, par1, par2, Masses)
+        SMF_library = SMF(a, model, model_H, model_SFR, par1, par2, Masses, f0)
+        SMD_library = SMD(a, model, model_H, model_SFR, par1, par2, Masses, f0)
+
+        HMF_fid = HMF_library.ST_mass_function(
+            rhoM, Masses, a, model_H, model, par1, par2)
+        epstar = SMF_library.epsilon(Masses, model_SFR, a, f0)
+        
+        n_HMF = SMD_library.hmf_integral_gtm(Masses, HMF_fid, mass_density=False)
+        nion = Nion*Omegab0/Omegam0*1/tSF*scipy.integrate.trapz(epstar*n_HMF*Masses,Masses)
+
+        return nion
+
+    #def QHII_diffeq():
