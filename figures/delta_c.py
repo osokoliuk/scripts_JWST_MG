@@ -285,21 +285,24 @@ plt.tick_params(axis='both', which='minor',
                 direction="in", labelsize=11, length=4)
 
 
-model = 'nDGP'
-model_H = 'nDGP'
+model = 'LCDM'
+model_H = 'LCDM'
 model_SFR = 'toy'
-par1 = 1e6
+par1 = 1e9
 par2 = 1
 ac_arr = np.linspace(0.1, 1, 15)
 
 for ac in ac_arr:
     a_arr = np.linspace(ai, ac, 10000)
     reion = reionization(a_arr, model, model_H, par1, par2)
-    vir1, vir2 = reion.minimum_Mhalo(model, model_H, par1, par2, a_arr)
-    plt.scatter(ac, vir1, c = 'tab:blue')
-    plt.scatter(ac, vir2, c = 'tab:orange')
-    
-#plt.yscale('log')
+    a_vir, vir1 = reion.minimum_Mhalo(model, model_H, par1, par2, a_arr)
+    plt.scatter(a_vir, vir1, c = 'tab:blue')
+    #plt.scatter(ac, vir2, c = 'tab:orange')
+
+M_arr = np.array([4.6,8,20])*1e7
+z_arr = np.array([1/16,1/11,1/6])
+plt.scatter(z_arr, M_arr, c = 'tab:green', marker = 's')
+plt.yscale('log')
 """ac_arr = np.linspace(0.01, 1, 15)
 par1 = 500
 par2 = 0

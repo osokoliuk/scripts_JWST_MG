@@ -157,25 +157,20 @@ class reionization:
                 model, model_H, par1, par2, a_arr)
             mu = cosmological_library.mu(ac, model, model_H, par1, par2)
         else:
-            a_vir, Deltavir, a_arr, mu_arr  = self.Delta_vir(
+            a_vir, Deltavir, ac_arr, mu_arr  = self.Delta_vir(
                 model, model_H, par1, par2, a_arr)
-            mu = mu_arr[np.argmin(np.abs(a_arr-ac))]
+            mu = mu_arr[np.argmin(np.abs(ac_arr-ac))]
 
         H = cosmological_library.H_f(ac, model_H, par1, par2)
         dH = cosmological_library.dH_f(ac, model_H, par1, par2)
         H_dot = ac*H*dH
 
-        Tmin = 4000
+        Tmin = 10000
         Ceff = -3/(4*np.pi*GN*rho*ac**(-3))*(H_dot+H**2)
-        M = 1e13
-        z = 1/ac-1
-        Omegamz = Omegam0*(1+z)**3/(Omegam0*(1+z)**3+1-Omegam0)
-        Vvir2 =3/5*ac**(-1)*(GN*M*H0*np.sqrt(Omegam0*Deltavir/2))**(2/3)*(1-2/Deltavir*(1-Omegam0-Omegar0)/(Omegam0*ac**(-3)))
-        Vvir2_LCDM = 23.4*(M/(1e8*100/H0))**(1/3)*(Omegam0/(Omegamz)*Deltavir/(18*np.pi**2))*(1/6)*((1+z)/10)**(1/2)
         Mhalo_min = 1e-9*(10*kB*Tmin/(3*mu_mol*mP))**(3/2)*(GN*H0*np.sqrt(Omegam0 *
                                                                      ac**(-3)*Deltavir/2))**(-1)*(1/Deltavir*(Ceff)+mu*(1-1/Deltavir))**(-3/2)
 
-        return np.sqrt(Vvir2), Vvir2_LCDM
+        return a_vir, Mhalo_min
 
     # def n_ion():
     #    Nion =
