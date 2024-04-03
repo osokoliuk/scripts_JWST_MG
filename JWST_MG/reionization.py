@@ -197,4 +197,14 @@ class reionization:
 
         return nion
 
-    #def QHII_diffeq():
+    def QHII_diffeq(self, y, a, rhoM, model, model_H, model_SFR, par1, par2, f0=None):
+        H = cosmological_library.H_f(a, model_H, par1, par2)
+        xe = y*(1+YHe/4)
+        nH = (1-YHe)*Omegab0/Omegam0*rhoM*a**(-3)/mP
+        dQHIIdt = fesc*self.n_ion(a, rhoM, model, model_H, model_SFR, par1, par2, f0)/nH-CHII*alpha_B*THII*nH*a**(-1)*xe
+
+        return dQHIIdt/(a*H)
+
+    def QHII_sol(self, a_arr, rhoM, model, model_H, model_SFR, par1, par2, f0=None):
+        QHII = scipy.integrate.odeint(self.QHII_diffeq, 0, a_arr, args=(rhoM, model, model_H, model_SFR, par1, par2, f0), full_output=True)
+        return QHII 

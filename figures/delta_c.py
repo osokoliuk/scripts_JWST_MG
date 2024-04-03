@@ -291,15 +291,12 @@ model_SFR = 'toy'
 par1 = 1e9
 par2 = 1
 f0 = 0.3
-ac_arr = np.linspace(0.1, 1, 15)
+ac_arr = np.linspace(1/51, 1, 15)
 
-for ac in ac_arr:
-    a_arr = np.linspace(ai, ac, 10000)
-    reion = reionization(a_arr, model, model_H, par1, par2)
-    nion = reion.n_ion(ac, rhom, model, model_H, model_SFR, par1, par2, f0)
-    print(nion)
-    plt.scatter(1/ac-1, nion, c = 'tab:blue')
-    #plt.scatter(1/a_vir-1, vir2, c = 'tab:orange')
+reion = reionization(ac_arr, model, model_H, par1, par2)
+qhii = reion.QHII_sol(ac_arr, rhom, model, model_H, model_SFR, par1, par2, f0)
+plt.scatter(1/ac_arr-1, qhii, c = 'tab:blue')
+#plt.scatter(1/a_vir-1, vir2, c = 'tab:orange')
 
 M_arr = np.array([4.6,8,20])*1e7
 z_arr = np.array([1/16,1/11,1/6])

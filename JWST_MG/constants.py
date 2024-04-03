@@ -35,7 +35,7 @@ kmfl_settings = {'A_s': 2.101e-9,
                  'T_cmb': 2.7255,
                  'gauge': 'newtonian',  # FOR MGCLASS TO WORK, GAUGE NEEDS TO BE NEWTONIAN
                  'k_pivot': 0.05,
-                 'mg_z_init': 111111.000,
+                 'mg_z_init': 99.000,
                  'l_logstep': 1.025,
                  'l_linstep': 15,
                  'P_k_max_1/Mpc': 3.0,
@@ -57,12 +57,18 @@ Tcmb = 2.72e6
 YHe = 0.243
 kB = 1.380649*1e-23
 mP = 1.6726e-27
+Msol = 1.998e30
+mP_Msol = mP/Msol
 mu_mol = 1.22
 h = H0/100
 GN = 4.301*10**(-9)
 rho = 3*H0**2*Omegam0/(8*np.pi*GN)
 rhocr = 2.77536627e11
 rhom = rhocr*Omegam0
+CHII = 3
+THII = 2*1e4
+fesc = 0.1
+alpha_B = 2.5*1e-13
 
 kvec = np.logspace(np.log10(0.001), np.log10(1000.0), 1000)
 delta_ini = np.logspace(-5, 0, 100000)
