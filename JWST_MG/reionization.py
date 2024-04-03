@@ -206,5 +206,5 @@ class reionization:
         return dQHIIdt/(a*H)
 
     def QHII_sol(self, a_arr, rhoM, model, model_H, model_SFR, par1, par2, f0=None):
-        QHII = scipy.integrate.odeint(self.QHII_diffeq, 0, a_arr, args=(rhoM, model, model_H, model_SFR, par1, par2, f0), full_output=True)
+        QHII = scipy.integrate.odeint(self.QHII_diffeq, 0, a_arr, args=(rhoM, model, model_H, model_SFR, par1, par2, f0))
         return QHII 
