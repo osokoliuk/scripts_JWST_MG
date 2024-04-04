@@ -178,8 +178,8 @@ class reionization:
     def n_ion(self, a, rhoM, model, model_H, model_SFR, par1, par2, f0=None):
         H = cosmological_library.H_f(a, model_H, par1, par2)
         Nion = 4000
-        tH = 1/H
-        tSF = 0.1/tH
+        tH = 1/(H*3.086e-19)
+        tSF = 0.1*tH
         a_arr = np.linspace(ai,a,1000)
         a_vir, Mhalo_min = self.minimum_Mhalo(model, model_H, par1, par2, a_arr)
         Masses = np.logspace(np.log10(Mhalo_min), 18, 1000)
@@ -206,5 +206,6 @@ class reionization:
         return dQHIIdt/(a*H)
 
     def QHII_sol(self, a_arr, rhoM, model, model_H, model_SFR, par1, par2, f0=None):
-        QHII = scipy.integrate.odeint(self.QHII_diffeq, 0, a_arr, args=(rhoM, model, model_H, model_SFR, par1, par2, f0))
+        QHII = scipy.integrate.odeint(self.QHII_diffeq, 0.01, a_arr, args=(
+            rhoM, model, model_H, model_SFR, par1, par2, f0))
         return QHII 

@@ -102,6 +102,18 @@ class UVLF:
         SFR = fstar*dMdt
         return SFR
 
+    def SFRD(self, a, rhoM, model, model_H, model_SFR, par1, par2, Masses, f0):
+        SFR_fid = self.SFR(a, rhoM, model, model_H,
+                           model_SFR, par1, par2, Masses, f0)
+        SMD_library = SMD(a, model, model_H, model_SFR, par1, par2, Masses, f0)
+        HMF_library = HMF(a, model, model_H, par1, par2, Masses)
+        HMF_fid = HMF_library.ST_mass_function(
+            rhoM, Masses, a, model_H, model, par1, par2)
+
+        SFRD = SMD_library.sfr_integral_gtm(
+            Masses, HMF_fid, SFR_fid, mass_density=True)
+        return SFRD
+
     # SFR to MUV confertion
     # Taken from https://github.com/XuejianShen/highz-empirical-variability
     def convert_sfr_to_Muv(self, sfr, model_Muv="Madau2014"):

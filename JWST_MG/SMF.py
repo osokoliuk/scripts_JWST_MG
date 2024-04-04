@@ -50,7 +50,7 @@ class SMF:
             log10M1 = 11.514+(-1.793*(a-1)+(-0.251)*z)*nu
             log10eps = -1.777+(-0.006*(a-1)+(-0.000)*z)*nu-0.119*(a-1)
             log10Mstar = log10eps + log10M1 + \
-                func_SFR(np.log10(Mh)-log10M1, a)-func_SFR(0, a)
+                self.func_SFR(np.log10(Mh)-log10M1, a)-self.func_SFR(0, a)
             Mstar = 10**log10Mstar
             epstar = (Mstar/Mh)/(Omegab0/Omegam0)
         elif model_SFR == 'double_power':
