@@ -104,11 +104,11 @@ class SMF:
         z = 1/a-1
         return ((Masses_star/(10**(10.2+0.5*z)))**(-1.3)+1)**(-1)
 
-    def SMF_obs(self, Masses, rhoM, a, model_H, model, model_SFR, par1, par2, f0):
+    def SMF_obs(self, Masses, rhoM, a, model_H, model, model_SFR, par1, par2, k, Pk, f0):
         # Mh_arr = np.logspace(6.5,18,1000)
         HMF_library = HMF(a, model, model_H, par1, par2, Masses)
         HMF_fid = HMF_library.ST_mass_function(
-            rhoM, Masses, a, model_H, model, par1, par2)
+            rhoM, Masses, a, model_H, model, par1, par2, k, Pk)
         HMF_fid = np.log(10)*Masses*HMF_fid
         Masses = Masses
         Masses_star = self.epsilon(

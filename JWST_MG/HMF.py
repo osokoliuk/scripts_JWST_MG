@@ -14,6 +14,7 @@ class HMF:
     # Masses - array of CDM halo masses
     ########################################################################
 
+
     def __init__(self, a, model, model_H, par1, par2, Masses):
         self.a = a
         self.model = model
@@ -36,7 +37,6 @@ class HMF:
                            'perturb_sampling_stepsize': 0.05,
                            'output': 'mPk',
                            'z_max_pk': 99}
-        self.M = Class()
 
     def Pk(self, a, model, par1, par2):
         common_settings = self.common_settings
@@ -65,7 +65,7 @@ class HMF:
             common_settings['k0_kmfl'] = par2
         else:
             raise Exception("The chosen model is not recognised")
-        M = self.M
+        M = Class()
         M.set(common_settings)
         M.compute()
 
@@ -120,12 +120,10 @@ class HMF:
 
     # Taken from https://pylians3.readthedocs.io/en/master/mass_function.html
     # And properly modified to incorporate MG theories with varying delta_c
-    def ST_mass_function(self, rhoM, Masses, a, model_H, model, par1, par2):
+    def ST_mass_function(self, rhoM, Masses, a, model_H, model, par1, par2, k, Pk):
         c_ST = 3.3
         deltac = delta_c(a, model, model_H, par1, par2)
         deltac = deltac.delta_c_at_ac(a, model, model_H, par1, par2)
-        Pk = np.array(self.Pk(a, model, par1, par2))*h**3
-        k = kvec/h
         if hasattr(Masses, '__len__') and (not isinstance(Masses, str)):
             dndM = np.zeros(Masses.shape[0], dtype=np.float64)
             for i, M in enumerate(Masses):

@@ -23,7 +23,7 @@ import pickle
 from numba import jit
 from mpi4py import MPI
 import os
-
+from multiprocessing import Pool
 
 
 kmfl_settings = {'A_s': 2.101e-9,
@@ -74,8 +74,9 @@ cm_Mpc = 3.24078e-25
 km_Mpc = 3.24078e-20
 MsolMpc3_to_gcm3 = 6.77e-23
 alpha_B = 2.5*1e-13
+sigma_T = 6.6525e-31
 
-kvec = np.logspace(np.log10(0.0001), np.log10(10.0), 500)
+kvec = np.logspace(np.log10(0.0001), np.log10(10.0), 1900)
 delta_ini = np.logspace(-5, 0, 100000)
 abs_err = 1e-5
 ai = 1e-5
@@ -91,3 +92,5 @@ M = {}
 path = os.path.dirname(os.path.realpath(__file__))
 kmoufl_H = np.load(path  + "/kmoufl_H.npy", allow_pickle=True)
 kmoufl_dH = np.load(path + "/kmoufl_dH.npy", allow_pickle=True)
+
+pool_cpu = Pool(8)

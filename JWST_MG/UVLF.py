@@ -28,7 +28,7 @@ class UVLF:
         self.Masses = Masses
         self.f0 = f0
 
-    def calculate_alphabeta(self, a, rhoM, model_H, model, par1, par2, Mass):
+    def calculate_alphabeta(self, a, rhoM, model_H, model, par1, par2, Mass, k, Pk):
         Pk_library = HMF(a, model, model_H, par1, par2, self.Masses)
         cosmological_library = cosmological_functions(
             a, model, model_H, par1, par2)
@@ -36,7 +36,6 @@ class UVLF:
 
         z = 1/a-1
         c_ST = 3.3
-        k = kvec/h
         deltac = deltac_library.delta_c_at_ac(1, model, model_H, par1, par2)
         lineardelta_z0 = deltac_library.linear(
             1e-5, 1, model_H, model, par1, par2)[-1, 1]
@@ -50,8 +49,8 @@ class UVLF:
         alpha = []
         beta = []
         Masses = np.logspace(8, 16, 500)
+        k = kvec/h
         Pk = np.array(Pk_library.Pk(1, model, par1, par2))*h**3
-
         for Mh0 in Masses:
             zf = -0.0064*(np.log10(Mh0))**2+0.0237*np.log10(Mh0) + 1.8837
             q = 4.137*zf**(-0.9476)
@@ -70,15 +69,14 @@ class UVLF:
             Masses, beta, fill_value='extrapolate')
         return alpha(Mass), beta(Mass)
 
-    def MAR(self, a, rhoM, model_H, model, par1, par2, Masses):
+    def MAR(self, a, rhoM, model_H, model, par1, par2, Masses, k, Pk):
         z = 1/a-1
-        Pk_library = HMF(a, model, model_H, par1, par2, Masses)
         cosmological_library = cosmological_functions(
             a, model, model_H, par1, par2)
         deltac_library = delta_c(a, model, model_H, par1, par2)
 
         alpha, beta = self.calculate_alphabeta(
-            a, rhoM, model_H, model, par1, par2, Masses)
+            a, rhoM, model_H, model, par1, par2, Masses, k, Pk)
 
         if hasattr(a, '__len__') and (not isinstance(a, str)):
             dMh_EPS = []
@@ -95,21 +93,33 @@ class UVLF:
 
         return dMh_EPS
 
-    def SFR(self, a, rhoM, model, model_H, model_SFR, par1, par2, Masses, f0):
-        dMdt = self.MAR(a, rhoM, model_H, model, par1, par2, Masses)
+    def SFR(self, a, rhoM, model, model_H, model_SFR, par1, par2, Masses, k, Pk, f0):
+        dMdt = self.MAR(a, rhoM, model_H, model, par1, par2, Masses, k, Pk)
         SMF_library = SMF(a, model, model_H, model_SFR, par1, par2, Masses, f0)
         fstar = SMF_library.epsilon(Masses, model_SFR, a, f0)*Omegab0/Omegam0
         SFR = fstar*dMdt
         return SFR
 
-    def SFRD(self, a, rhoM, model, model_H, model_SFR, par1, par2, Masses, f0):
-        SFR_fid = self.SFR(a, rhoM, model, model_H,
-                           model_SFR, par1, par2, Masses, f0)
-        HMF_library = HMF(a, model, model_H, par1, par2, Masses)
-        HMF_fid = HMF_library.ST_mass_function(
-            rhoM, Masses, a, model_H, model, par1, par2)
+    def SFRD(self, a_arr, rhoM, model, model_H, model_SFR, par1, par2, Masses, k, Pk, f0):
+        if hasattr(a_arr, '__len__') and (not isinstance(a_arr, str)):
+            SFRD = []
+            for i, a in tqdm(enumerate(a_arr)):
+                SFR_fid = self.SFR(a, rhoM, model, model_H,
+                                model_SFR, par1, par2, Masses, k, Pk[i], f0)
+                HMF_library = HMF(a, model, model_H, par1, par2, Masses)
+                HMF_fid = HMF_library.ST_mass_function(
+                    rhoM, Masses, a, model_H, model, par1, par2, k, Pk[i])
 
-        SFRD = scipy.integrate.trapz(HMF_fid*SFR_fid, Masses)
+                SFRD.append(scipy.integrate.trapz(HMF_fid*SFR_fid, Masses))
+        else:
+            a = a_arr
+            SFR_fid = self.SFR(a, rhoM, model, model_H,
+                            model_SFR, par1, par2, Masses, k, Pk, f0)
+            HMF_library = HMF(a, model, model_H, par1, par2, Masses)
+            HMF_fid = HMF_library.ST_mass_function(
+                rhoM, Masses, a, model_H, model, par1, par2, k, Pk)
+
+            SFRD = scipy.integrate.trapz(HMF_fid*SFR_fid, Masses)
         return SFRD
 
     # SFR to MUV confertion
@@ -156,14 +166,14 @@ class UVLF:
 
     # Map SFR to MUV with dust correction
     # Taken from https://github.com/XuejianShen/highz-empirical-variability
-    def mapfunc_mhalo_to_muv(self, a, rhoM, model, model_H, model_SFR, par1, par2, Masses, f0, dust_norm="fixed", include_dust=True):
+    def mapfunc_mhalo_to_muv(self, a, rhoM, model, model_H, model_SFR, par1, par2, Masses, k, Pk, f0, dust_norm="fixed", include_dust=True):
         '''
         mapping from halo mass to UV magnitude (without scatter)
         muv: UV magnitude
         log_mhalo: log10 of halo mass in Msun
         '''
         sfr = self.SFR(a, rhoM, model, model_H,
-                       model_SFR, par1, par2, Masses, f0)
+                       model_SFR, par1, par2, Masses, k, Pk, f0)
 
         muv_raw = self.convert_sfr_to_Muv(sfr)
         if include_dust:
@@ -176,9 +186,9 @@ class UVLF:
     # Derive factor dMUV/dlogMh
     # Taken from https://github.com/XuejianShen/highz-empirical-variability
 
-    def mapfunc_jacobian_numeric(self, a, rhoM, model, model_H, model_SFR, par1, par2, Masses, f0, dust_norm="fixed", include_dust=True):
+    def mapfunc_jacobian_numeric(self, a, rhoM, model, model_H, model_SFR, par1, par2, Masses, k, Pk, f0, dust_norm="fixed", include_dust=True):
         muv = self.mapfunc_mhalo_to_muv(
-            a, rhoM, model, model_H, model_SFR, par1, par2, Masses, f0, dust_norm="fixed", include_dust=True)
+            a, rhoM, model, model_H, model_SFR, par1, par2, Masses, k, Pk,  f0, dust_norm, include_dust)
         dmuv_dlogm = np.gradient(muv)/np.gradient(Masses)
         return np.abs(dmuv_dlogm)
 
@@ -208,14 +218,14 @@ class UVLF:
 
     # Finally compute UVLF by using all of the previously defined functions in this class
     # Taken from https://github.com/XuejianShen/highz-empirical-variability
-    def compute_uv_luminosity_function(self, a, rhoM, model, model_H, model_SFR, par1, par2, Masses, f0, sigma_uv, dust_norm="fixed", include_dust=True):
+    def compute_uv_luminosity_function(self, a, rhoM, model, model_H, model_SFR, par1, par2, Masses, k, Pk, f0, sigma_uv, dust_norm="fixed", include_dust=True):
         HMF_library = HMF(a, model, model_H, par1, par2, Masses)
         phi_halo_arr = HMF_library.ST_mass_function(
-            rhoM, Masses, a, model_H, model, par1, par2)
+            rhoM, Masses, a, model_H, model, par1, par2, k, Pk)
         muv_arr = self.mapfunc_mhalo_to_muv(
-            a, rhoM, model, model_H, model_SFR, par1, par2, Masses, f0, dust_norm, include_dust)
+            a, rhoM, model, model_H, model_SFR, par1, par2, Masses, k, Pk, f0, dust_norm, include_dust)
         dmuv_dlogm = self.mapfunc_jacobian_numeric(
-            a, rhoM, model, model_H, model_SFR, par1, par2, Masses, f0, dust_norm, include_dust)
+            a, rhoM, model, model_H, model_SFR, par1, par2, Masses, k, Pk, f0, dust_norm, include_dust)
         if sigma_uv > 0:
             phi_uv_arr = self.convolve_on_grid(
                 muv_arr, phi_halo_arr/dmuv_dlogm, sigma_uv=sigma_uv)

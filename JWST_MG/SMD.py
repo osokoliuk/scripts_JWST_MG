@@ -140,10 +140,10 @@ class SMD:
 
         return ngtm + int_upper
 
-    def SMD(self, Masses, rhoM, a, model_H, model, model_SFR, par1, par2, f0):
+    def SMD(self, Masses, rhoM, a, model_H, model, model_SFR, par1, par2, k, Pk, f0):
         HMF_library = HMF(a, model, model_H, par1, par2, Masses)
         HMF_fid = HMF_library.ST_mass_function(
-            rhoM, Masses, a, model_H, model, par1, par2)
+            rhoM, Masses, a, model_H, model, par1, par2, k, Pk)
         SMF_library = SMF(a, model, model_H, model_SFR, par1, par2, Masses, f0)
         fstar = SMF_library.epsilon(Masses, model_SFR, a, f0)*Omegab0/Omegam0
         SMD_fid = fstar * \

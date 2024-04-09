@@ -20,6 +20,7 @@ sys.path.insert(0, "../")
 from JWST_MG.reionization import reionization
 from JWST_MG.cosmological_functions import cosmological_functions
 from JWST_MG.constants import *
+from JWST_MG.HMF import HMF
 
 
 
@@ -306,7 +307,6 @@ xerr, yerr = errorData()
 x, y = csfredshift()
 
 #plt.errorbar(x, y, yerr=yerr, xerr=xerr, fmt='.')
-
 model = 'nDGP'
 model_H = 'nDGP'
 model_SFR = 'double_power'
@@ -314,16 +314,28 @@ par1 = 1e9
 par2 = 1
 f0 = 0.3
 ac_arr = np.linspace(1/13, 1/6, 15)
+z_int = np.linspace(12,5,35)
 reion = reionization(ac_arr, model, model_H, par1, par2)
-nion = reion.QHII(ac_arr, rhom, model, model_H, model_SFR, par1, par2, f0)
-plt.scatter(1/ac_arr-1, nion, c='tab:orange')
+"""
+Pk_arr = []
+for i, z_i in enumerate(z_int):
+    HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
+    Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3)
+k = kvec/h
+
+iterable = [(1/(1+z), rhom, model, model_H,
+                    model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
+nion = pool_cpu.starmap(reion.n_ion,tqdm(iterable, total=len(z_int)))
+"""
+
+nion = reion.tau_reio( rhom, model, model_H, model_SFR, par1, par2, f0)
+print(nion)
 # plt.scatter(1/a_vir-1, vir2, c = 'tab:orange')
 plt.ylim(0,1)
 plt.xlim(5,12)
 M_arr = np.array([4.6, 8, 20])*1e7
 z_arr = np.array([1/16, 1/11, 1/6])
 # plt.scatter(1/z_arr-1, M_arr, c = 'tab:green', marker = 's')
-#plt.yscale('symlog')
 """ac_arr = np.linspace(0.01, 1, 15)
 par1 = 500
 par2 = 0
