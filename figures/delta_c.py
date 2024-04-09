@@ -1,26 +1,23 @@
 
 
 # some_file.py
-import scipy
-from scipy import interpolate
-import matplotlib
-import matplotlib as mpl
-import matplotlib.pylab as pl
-from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
-from scipy.special import lambertw
-from scipy import integrate
-from scipy.integrate import odeint
-import scipy as sp
-import matplotlib.pyplot as plt
-import numpy as np
-from matplotlib.lines import Line2D
 import matplotlib.cm as cm
+from matplotlib.lines import Line2D
+import numpy as np
+import matplotlib.pyplot as plt
+import scipy as sp
+from scipy.integrate import odeint
+from scipy import integrate
+from scipy.special import lambertw
+from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
+import matplotlib.pylab as pl
+import matplotlib as mpl
+import matplotlib
+from scipy import interpolate
+import scipy
 import sys
-sys.path.insert(1, '../')
-from JWST_MG.delta_c import delta_c
+sys.path.insert(0, "../")
 from JWST_MG.reionization import reionization
-from JWST_MG.HMF import HMF
-from JWST_MG.UVLF import UVLF
 from JWST_MG.cosmological_functions import cosmological_functions
 from JWST_MG.constants import *
 
@@ -285,24 +282,48 @@ plt.tick_params(axis='both', which='minor',
                 direction="in", labelsize=11, length=4)
 
 
+
+arq = open("../observational_data/hopkins_2004.dat", 'r')
+data= np.loadtxt(arq, delimiter=",")
+def errorData():
+    """Return the asymetric errors in the redshif and CSFR
+    respectively
+    """
+    xerr = np.array([data[:, 0] - data[:, 2],
+            data[:, 3] - data[:, 0]])
+    yerr = np.array([data[:, 1] - data[:, 4],
+                    data[:, 5] - data[:, 1]])
+    return xerr, yerr
+
+def csfredshift():
+    """Return the redshift and the CSFR from
+    observational data
+    """
+    return data[:, 0], data[:, 1]
+
+
+xerr, yerr = errorData()
+x, y = csfredshift()
+
+#plt.errorbar(x, y, yerr=yerr, xerr=xerr, fmt='.')
+
 model = 'nDGP'
 model_H = 'nDGP'
-model_SFR = 'toy'
+model_SFR = 'double_power'
 par1 = 1e9
 par2 = 1
 f0 = 0.3
-ac_arr = np.linspace(0.1, 1, 15)
-
+ac_arr = np.linspace(1/13, 1/6, 15)
 reion = reionization(ac_arr, model, model_H, par1, par2)
-nion = reion.QHII_sol(ac_arr, rhom, model, model_H, model_SFR, par1, par2, f0)
-print(nion)
-plt.scatter(1/ac_arr-1, nion, c='tab:blue')
-    # plt.scatter(1/a_vir-1, vir2, c = 'tab:orange')
-
-M_arr = np.array([4.6,8,20])*1e7
-z_arr = np.array([1/16,1/11,1/6])
-#plt.scatter(1/z_arr-1, M_arr, c = 'tab:green', marker = 's')
-plt.yscale('log')
+nion = reion.QHII(ac_arr, rhom, model, model_H, model_SFR, par1, par2, f0)
+plt.scatter(1/ac_arr-1, nion, c='tab:orange')
+# plt.scatter(1/a_vir-1, vir2, c = 'tab:orange')
+plt.ylim(0,1)
+plt.xlim(5,12)
+M_arr = np.array([4.6, 8, 20])*1e7
+z_arr = np.array([1/16, 1/11, 1/6])
+# plt.scatter(1/z_arr-1, M_arr, c = 'tab:green', marker = 's')
+#plt.yscale('symlog')
 """ac_arr = np.linspace(0.01, 1, 15)
 par1 = 500
 par2 = 0

@@ -21,9 +21,7 @@ class HMF:
         self.par1 = par1
         self.par2 = par2
         self.Masses = Masses
-
-    def Pk(self, a, model, par1, par2):
-        common_settings = {'n_s': 0.9665,
+        self.common_settings = {'n_s': 0.9665,
                            'A_s': 2.101e-9,
                            'tau_reio': 0.0561,
                            'omega_b': 0.02242,
@@ -34,10 +32,14 @@ class HMF:
                            'gauge': 'newtonian',  # FOR MGCLASS TO WORK, GAUGE NEEDS TO BE NEWTONIAN
                            'k_pivot': 0.05,
                            'mg_z_init': 99.000,
-                           'P_k_max_1/Mpc': 1500.0,
+                           'P_k_max_1/Mpc': 10.0,
                            'perturb_sampling_stepsize': 0.05,
                            'output': 'mPk',
                            'z_max_pk': 99}
+        self.M = Class()
+
+    def Pk(self, a, model, par1, par2):
+        common_settings = self.common_settings
         common_settings['mg_ansatz'] = model
         if model == 'plk_late':
             common_settings['mg_E11'] = par1
@@ -63,15 +65,15 @@ class HMF:
             common_settings['k0_kmfl'] = par2
         else:
             raise Exception("The chosen model is not recognised")
-
-        M = Class()
+        M = self.M
         M.set(common_settings)
         M.compute()
 
         Pk = []
         for k in kvec:
             Pk.append(M.pk(k, 1/a-1))
-
+        M.empty()
+        M.struct_cleanup()
         return Pk
 
     """

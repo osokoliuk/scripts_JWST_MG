@@ -45,7 +45,8 @@ kmfl_settings = {'A_s': 2.101e-9,
                  'output': 'tCl,pCl,lCl,mPk',
                  'l_max_scalars': 3000,
                  'lensing': 'yes',
-                 'mg_ansatz': 'kmoufl'}
+                 'mg_ansatz': 'kmoufl',
+                 'mg_bckg': 'yes'}
 
 H0 = 67.66
 Omegam0 = (0.02242/(H0/100)**2+0.11933/(H0/100)**2)
@@ -69,9 +70,12 @@ rhom = rhocr*Omegam0
 CHII = 3
 THII = 2*1e4
 fesc = 0.1
+cm_Mpc = 3.24078e-25
+km_Mpc = 3.24078e-20
+MsolMpc3_to_gcm3 = 6.77e-23
 alpha_B = 2.5*1e-13
 
-kvec = np.logspace(np.log10(0.001), np.log10(1000.0), 1000)
+kvec = np.logspace(np.log10(0.0001), np.log10(10.0), 500)
 delta_ini = np.logspace(-5, 0, 100000)
 abs_err = 1e-5
 ai = 1e-5

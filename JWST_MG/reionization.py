@@ -4,6 +4,7 @@ from JWST_MG.delta_c import delta_c
 from JWST_MG.HMF import HMF
 from JWST_MG.SMF import SMF
 from JWST_MG.SMD import SMD
+from JWST_MG.UVLF import UVLF
 
 class reionization:
     ########################################################################
@@ -175,37 +176,62 @@ class reionization:
 
         return a_vir, Mhalo_min
 
-    def n_ion(self, a, rhoM, model, model_H, model_SFR, par1, par2, f0=None):
-        H = cosmological_library.H_f(a, model_H, par1, par2)
-        Nion = 4000
-        tH = 1/(H*3.086e-19)
-        tSF = 0.1*tH
-        a_arr = np.linspace(ai,a,1000)
-        a_vir, Mhalo_min = self.minimum_Mhalo(model, model_H, par1, par2, a_arr)
-        Masses = np.logspace(np.log10(Mhalo_min), 18, 1000)
+    def n_ion(self, a_scale, rhoM, model, model_H, model_SFR, par1, par2, f0=None):
+        Nion = 10**53.14
+
+        if hasattr(a_scale, '__len__') and (not isinstance(a_scale, str)):
+            n_ion_arr = np.zeros(a_scale.shape[0], dtype=np.float64)
+            for i, a in enumerate(a_scale):
+                a_arr = np.linspace(ai, a, 1000)
+                a_vir, Mhalo_min = self.minimum_Mhalo(
+                    model, model_H, par1, par2, a_arr)
+                Masses = np.logspace(np.log10(Mhalo_min), 18, 1000)
+
+                UVLF_library = UVLF(a, model, model_H, model_SFR,
+                                    par1, par2, Masses, f0)
+                SFRD_fid = UVLF_library.SFRD(
+                    a, rhoM, model, model_H, model_SFR, par1, par2, Masses, f0)
+                n_ion_arr[i] = Nion*SFRD_fid
+            return n_ion_arr
+        else:
+            a_scale = a
+            a_arr = np.linspace(ai, a, 1000)
+            a_vir, Mhalo_min = self.minimum_Mhalo(
+                model, model_H, par1, par2, a_arr)
+            Masses = np.logspace(np.log10(Mhalo_min), 18, 1000)
+
+            UVLF_library = UVLF(a, model, model_H, model_SFR,
+                                par1, par2, Masses, f0)
+            SFRD_fid = UVLF_library.SFRD(
+                a, rhoM, model, model_H, model_SFR, par1, par2, Masses, f0)
+            nion = Nion*SFRD_fid
+
+            return nion
+
+    def QHII(self, a0, rhoM, model, model_H, model_SFR, par1, par2, f0=None):
+        z0 = 1/a0-1
+        a_int = np.linspace(1/51,1,1000)
+        z_int = np.linspace(50, 5, 35)
+
+        H = cosmological_library.H_f(a_int, model_H, par1, par2)
+        H = scipy.interpolate.interp1d(a_int, H, fill_value='extrapolate')
         
-        HMF_library = HMF(a, model, model_H, par1, par2, Masses)
-        SMF_library = SMF(a, model, model_H, model_SFR, par1, par2, Masses, f0)
-        SMD_library = SMD(a, model, model_H, model_SFR, par1, par2, Masses, f0)
+        nion = self.n_ion(1/(1+z_int), rhoM, model, model_H,
+                          model_SFR, par1, par2, f0)
+        nion = scipy.interpolate.interp1d(
+            z_int, nion, fill_value='extrapolate')
 
-        HMF_fid = HMF_library.ST_mass_function(
-            rhoM, Masses, a, model_H, model, par1, par2)
-        epstar = SMF_library.epsilon(Masses, model_SFR, a, f0)
+        xe = (1+YHe/4)
+        nH = (1-YHe)*Omegab0*(H0/100)**2*1.88e-29/(mP*1000)
         
-        n_HMF = SMD_library.hmf_integral_gtm(Masses, HMF_fid, mass_density=False)
-        nion = Nion*Omegab0/Omegam0*1/tSF*scipy.integrate.trapz(epstar*n_HMF*Masses,Masses)
-
-        return nion
-
-    def QHII_diffeq(self, y, a, rhoM, model, model_H, model_SFR, par1, par2, f0=None):
-        H = cosmological_library.H_f(a, model_H, par1, par2)
-        xe = y*(1+YHe/4)
-        nH = (1-YHe)*Omegab0/Omegam0*rhoM*a**(-3)/mP
-        dQHIIdt = fesc*self.n_ion(a, rhoM, model, model_H, model_SFR, par1, par2, f0)/nH-CHII*alpha_B*THII*nH*a**(-1)*xe
-
-        return dQHIIdt/(a*H)
-
-    def QHII_sol(self, a_arr, rhoM, model, model_H, model_SFR, par1, par2, f0=None):
-        QHII = scipy.integrate.odeint(self.QHII_diffeq, 0.01, a_arr, args=(
-            rhoM, model, model_H, model_SFR, par1, par2, f0))
-        return QHII 
+        
+        if hasattr(a0, '__len__') and (not isinstance(a0, str)):
+            QHII = np.zeros(a0.shape[0], dtype=np.float64)
+            for i, z1 in enumerate(z0):
+                QHII[i] = 1/nH*scipy.integrate.quad(lambda z: fesc*nion(z)*cm_Mpc**3/((1+z)*H(1/(1+z))*km_Mpc) \
+                *np.exp(-alpha_B*nH*CHII*xe*scipy.integrate.quad(lambda zp: (1+zp)**2/(H(1/(1+zp))*km_Mpc), z1, z)[0]), z1, 50)[0]
+        else:
+            QHII = 1/nH*scipy.integrate.quad(lambda z: fesc*nion(z)*cm_Mpc**3/((1+z)*H(1/(1+z))*km_Mpc) \
+                *np.exp(-alpha_B*nH*CHII*xe*scipy.integrate.quad(lambda zp: (1+zp)**2/(H(1/(1+zp))*km_Mpc), z0, z)[0]), z0, 50)[0]
+        
+        return QHII
