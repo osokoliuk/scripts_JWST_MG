@@ -205,7 +205,7 @@ class reionization:
     def QHII(self, a0, rhoM, model, model_H, model_SFR, par1, par2, f0=None):
         z0 = 1/a0-1
         a_int = np.linspace(1/51,1,1000)
-        z_int = np.linspace(50, 4, 50)
+        z_int = np.linspace(50, 0, 50)
         cosmological_library = cosmological_functions(
             a_int, model, model_H, par1, par2)
         H = cosmological_library.H_f(a_int, model_H, par1, par2)
@@ -237,12 +237,15 @@ class reionization:
 
 
     def tau_reio(self, rhoM, model, model_H, model_SFR, par1, par2, f0=None):
-        a_int = np.linspace(1/51,1,50)
+        z_span = np.linspace(0,50,50)
+        a_int = np.linspace(1/51,1,1000)
         cosmological_library = cosmological_functions(
             a_int, model, model_H, par1, par2)
-        self.QHII(a_int, rhoM, model, model_H, model_SFR, par1, par2, f0)
+        H = cosmological_library.H_f(a_int, model_H, par1, par2)
+        H = scipy.interpolate.interp1d(a_int, H, fill_value='extrapolate')
+        QHII = np.array(self.QHII(1/(1+z_span), rhoM, model, model_H, model_SFR, par1, par2, f0))
+        QHII[QHII > 1] = 1
         xe = (1+YHe/4)*QHII
         nH = (1-YHe)*Omegab0*(H0/100)**2*1.88e-29/(mP*1000)
-        z = 1/a_int-1
-        tau_reio = nH*sigma_T*scipy.integrate.trapz(c*1e5*xe*(1+z)**2/(H(a_int)*km_Mpc),z)
+        tau_reio = nH*sigma_T*scipy.integrate.trapz(c*1e5*xe*(1+z_span)**2/(H(1/(1+z_span))*km_Mpc),z_span)
         return tau_reio

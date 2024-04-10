@@ -74,7 +74,7 @@ cm_Mpc = 3.24078e-25
 km_Mpc = 3.24078e-20
 MsolMpc3_to_gcm3 = 6.77e-23
 alpha_B = 2.5*1e-13
-sigma_T = 6.6525e-31
+sigma_T = 6.6525e-25
 
 kvec = np.logspace(np.log10(0.0001), np.log10(10.0), 1900)
 delta_ini = np.logspace(-5, 0, 100000)
