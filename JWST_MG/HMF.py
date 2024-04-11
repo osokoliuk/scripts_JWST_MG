@@ -21,8 +21,9 @@ class HMF:
         self.model_H = model_H
         self.par1 = par1
         self.par2 = par2
-        self.Masses = Masses
-        self.common_settings = {'n_s': 0.9665,
+        
+    def Pk(self, a, model, par1, par2):
+        common_settings = {'n_s': 0.9665,
                            'A_s': 2.101e-9,
                            'tau_reio': 0.0561,
                            'omega_b': 0.02242,
@@ -33,34 +34,36 @@ class HMF:
                            'gauge': 'newtonian',  # FOR MGCLASS TO WORK, GAUGE NEEDS TO BE NEWTONIAN
                            'k_pivot': 0.05,
                            'mg_z_init': 99.000,
-                           'P_k_max_1/Mpc': 10.0,
+                           'P_k_max_1/Mpc': 1000.0,
                            'perturb_sampling_stepsize': 0.05,
                            'output': 'mPk',
                            'z_max_pk': 99}
-
-    def Pk(self, a, model, par1, par2):
-        common_settings = self.common_settings
-        common_settings['mg_ansatz'] = model
-        if model == 'plk_late':
+        if model == 'E11':
+            common_settings['mg_ansatz'] = 'plk_late'
             common_settings['mg_E11'] = par1
             common_settings['mg_E22'] = par2
-        elif model == 'z_flex_late':
+        elif model == 'gmu':
+            common_settings['mg_ansatz'] = 'z_flex_late'
             common_settings['mg_muz'] = par1
             common_settings['mg_gamz'] = par2
             common_settings['mg_zzn'] = 1
-        elif model == 'z_xpans_late':
+        elif model == 'DES':
+            common_settings['mg_ansatz'] = 'z_xpans_late'
             common_settings['mg_T1'] = par1
             common_settings['mg_T2'] = par2
             common_settings['mg_T3'] = par1
             common_settings['mg_T4'] = par2
             common_settings['mg_zzn'] = 1
-        elif model == 'GI':
+        elif model == 'wCDM':
+            common_settings['mg_ansatz'] = 'GI'
             common_settings['Omega_Lambda'] = 0.0
             common_settings['w0_fld'] = par1
             common_settings['gamGI'] = par2
         elif model == 'nDGP':
+            common_settings['mg_ansatz'] = 'nDGP'
             common_settings['rc'] = par1
         elif model == 'kmoufl':
+            common_settings['mg_ansatz'] = 'kmoufl'
             common_settings['beta_kmfl'] = par1
             common_settings['k0_kmfl'] = par2
         else:

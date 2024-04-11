@@ -21,7 +21,7 @@ from JWST_MG.reionization import reionization
 from JWST_MG.cosmological_functions import cosmological_functions
 from JWST_MG.constants import *
 from JWST_MG.HMF import HMF
-
+from JWST_MG.SMF import SMF
 
 
 plt.rcParams.update({"text.usetex": True})
@@ -307,35 +307,50 @@ xerr, yerr = errorData()
 x, y = csfredshift()
 
 #plt.errorbar(x, y, yerr=yerr, xerr=xerr, fmt='.')
+from multiprocessing import Pool
+
+pool_cpu = Pool(8)
+
 model = 'nDGP'
 model_H = 'nDGP'
-model_SFR = 'double_power'
-par1 = 1e9
+model_SFR = 'Behroozi'
+par1 = 10**4.2
 par2 = 1
 f0 = 0.3
-ac_arr = np.linspace(1/13, 1/6, 15)
-z_int = np.linspace(12,5,35)
-reion = reionization(ac_arr, model, model_H, par1, par2)
-"""
+z_int = np.array([4,5,6,7]) #np.linspace(12,5,35)
+SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
 Pk_arr = []
 for i, z_i in enumerate(z_int):
     HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
     Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3)
 k = kvec/h
+Masses = np.logspace(8,14,100)
 
-iterable = [(1/(1+z), rhom, model, model_H,
-                    model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
-nion = pool_cpu.starmap(reion.n_ion,tqdm(iterable, total=len(z_int)))
-"""
 
-nion = reion.tau_reio( rhom, model, model_H, model_SFR, par1, par2, f0)
-print(nion)
+iterable = [(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
+Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(z_int))))
+#print(SMF)
+#Masses_star = SMF[0]
+#SMF_obs = SMF[1]
+
+plt.plot(Masses_star[0], SMF_obs[0], c = 'tab:blue')
+plt.plot(Masses_star[1], SMF_obs[1], c = 'tab:orange')
+plt.plot(Masses_star[2], SMF_obs[2], c = 'tab:green')
+plt.plot(Masses_star[3], SMF_obs[3], c = 'tab:red')
+
+Duncan_z4 = np.loadtxt("/home/oleksii/Downloads/Duncan_z4.dat")
+plt.errorbar(10**Duncan_z4[:,0],Duncan_z4[:,1],yerr=(Duncan_z4[:,2],Duncan_z4[:,3]), ls = 'None', marker = '.', c = 'tab:blue')
+Duncan_z4 = np.loadtxt("/home/oleksii/Downloads/Duncan_z5.dat")
+plt.errorbar(10**Duncan_z4[:,0],Duncan_z4[:,1],yerr=(Duncan_z4[:,2],Duncan_z4[:,3]), ls = 'None', marker = '.', c = 'tab:orange')
+Duncan_z4 = np.loadtxt("/home/oleksii/Downloads/Duncan_z6.dat")
+plt.errorbar(10**Duncan_z4[:,0],Duncan_z4[:,1],yerr=(Duncan_z4[:,2],Duncan_z4[:,3]), ls = 'None', marker = '.', c = 'tab:green')
+Duncan_z4 = np.loadtxt("/home/oleksii/Downloads/Duncan_z7.dat")
+plt.errorbar(10**Duncan_z4[:,0],Duncan_z4[:,1],yerr=(Duncan_z4[:,2],Duncan_z4[:,3]), ls = 'None', marker = '.', c = 'tab:red')
 # plt.scatter(1/a_vir-1, vir2, c = 'tab:orange')
-plt.ylim(0,1)
-plt.xlim(5,12)
-M_arr = np.array([4.6, 8, 20])*1e7
-z_arr = np.array([1/16, 1/11, 1/6])
-# plt.scatter(1/z_arr-1, M_arr, c = 'tab:green', marker = 's')
+plt.xscale('log')
+plt.yscale('log')
+plt.ylim(1e-8,1e-1)
+plt.xlim(1e8,1e12)
 """ac_arr = np.linspace(0.01, 1, 15)
 par1 = 500
 par2 = 0

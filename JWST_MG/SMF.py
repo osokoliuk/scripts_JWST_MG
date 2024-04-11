@@ -110,9 +110,8 @@ class SMF:
         HMF_fid = HMF_library.ST_mass_function(
             rhoM, Masses, a, model_H, model, par1, par2, k, Pk)
         HMF_fid = np.log(10)*Masses*HMF_fid
-        Masses = Masses
         Masses_star = self.epsilon(
-            Masses, model_SFR, a, f0)*Omegam0/Omegab0*Masses
+            Masses, model_SFR, a, f0)*Omegab0/Omegam0*Masses
         # varepsilon(Mh_arr,model_SFR,a)
         SMF = HMF_fid*np.gradient(np.log10(Masses)) / \
             np.gradient(np.log10(Masses_star))
