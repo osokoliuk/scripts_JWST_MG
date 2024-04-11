@@ -23,6 +23,10 @@ import pickle
 from numba import jit
 from mpi4py import MPI
 import os
+from astrodatapy.number_density import number_density
+from astrodatapy.correlation    import correlation
+from astrodatapy.clustering     import clustering
+
 os.environ["OMP_NUM_THREADS"] = "1"
 
 

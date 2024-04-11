@@ -11,33 +11,39 @@ from JWST_MG.UVLF import UVLF
 plt.rcParams.update({"text.usetex": True})
 
 
-x = [None]*4
-y = [None]*4
-yerr = [None]*4
+x = [[],[],[],[],[],[],[]]
+y = [[],[],[],[],[],[],[]]
+yerr = [[],[],[],[],[],[],[]]
 
-Duncan_z4 = np.loadtxt("/home/oleksii/Downloads/Duncan_z4.dat")
-#@plt.errorbar(10**Duncan_z4[:,0],Duncan_z4[:,1],yerr=(Duncan_z4[:,2],Duncan_z4[:,3]), ls = 'None', marker = 's', markercolor = 'tab:orange')
-x[0] = 10**Duncan_z4[:,0]
-y[0] = Duncan_z4[:,1]
-yerr[0] = np.array(Duncan_z4[:,2] + Duncan_z4[:,3])
+zs = [4,5,6,7,8,9,10]
 
-Duncan_z4 = np.loadtxt("/home/oleksii/Downloads/Duncan_z5.dat")
-#@plt.errorbar(10**Duncan_z4[:,0],Duncan_z4[:,1],yerr=(Duncan_z4[:,2],Duncan_z4[:,3]), ls = 'None', marker = 's', markercolor = 'tab:orange')
-x[1] = 10**Duncan_z4[:,0]
-y[1] = Duncan_z4[:,1]
-yerr[1] = np.array(Duncan_z4[:,2] + Duncan_z4[:,3])
+for i in range(len(zs)):
+    obs = number_density(feature='GSMF', z_target=zs[i], h=h)
+    j_data = 0
+    k_func = 0
 
-Duncan_z4 = np.loadtxt("/home/oleksii/Downloads/Duncan_z6.dat")
-#@plt.errorbar(10**Duncan_z4[:,0],Duncan_z4[:,1],yerr=(Duncan_z4[:,2],Duncan_z4[:,3]), ls = 'None', marker = 's', markercolor = 'tab:orange')
-x[2] = 10**Duncan_z4[:,0]
-y[2] = Duncan_z4[:,1]
-yerr[2] = np.array(Duncan_z4[:,2] + Duncan_z4[:,3])
+    for ii in range(obs.n_target_observation):
+        data       = obs.target_observation['Data'][ii]
+        datatype   = obs.target_observation['DataType'][ii]
+        data[:,1:] = data[:,1:]
+        if datatype == 'data':
+            x[i] = np.concatenate((x[i], 10**data[:,0]), axis=None)
+            y[i] = np.concatenate((y[i], data[:,1]), axis=None)
+            yerr[i] = np.concatenate((yerr[i], data[:,1]-data[:,3]+data[:,2]- data[:,1]), axis=None)
 
-Duncan_z4 = np.loadtxt("/home/oleksii/Downloads/Duncan_z7.dat")
-#@plt.errorbar(10**Duncan_z4[:,0],Duncan_z4[:,1],yerr=(Duncan_z4[:,2],Duncan_z4[:,3]), ls = 'None', marker = 's', markercolor = 'tab:orange')
-x[3] = 10**Duncan_z4[:,0]
-y[3] = Duncan_z4[:,1]
-yerr[3] = np.array(Duncan_z4[:,2] + Duncan_z4[:,3])
+            j_data +=1
+
+
+
+
+path = '../observational_data/GSMF'
+zs2 = [4,5,6,7,8]
+for i in range(len(zs2)):
+    Navarro = np.loadtxt(path + "/Navarro_z"+str(zs2[i])+".dat")
+    x[i] = np.concatenate((x[i], 10**Navarro[:,0]), axis=None)
+    y[i] = np.concatenate((y[i], 1e-4*Navarro[:,1]), axis=None)
+    yerr[i] = np.concatenate((yerr[i], 2*1e-4*Navarro[:,2]), axis=None)
+
 
 model = 'nDGP'
 model_H = 'nDGP'
@@ -55,104 +61,49 @@ def SMF_func(z, par1, f0):
 
 def log_likelihood(theta, x, y, yerr):
     log_par1, f0 = theta
+
     if hasattr(log_par1, '__len__') and (not isinstance(log_par1, str)) and hasattr(f0, '__len__') and (not isinstance(f0, str)):
         result = np.empty((len(par1), len(f0)), dtype=object)
         for i, log_par1 in enumerate(log_par1):
-            par1 = 10**log_par1
             for j, f0 in enumerate(f0):
-                Masses_star, SMF_sample = SMF_func(4, par1,f0)
-                y_th = scipy.interpolate.interp1d(Masses_star, SMF_sample, fill_value='extrapolate')(x[0])
-                sigma2 = yerr[0]**2
-                result[i,j] += -0.5 * np.sum((y[0] - y_th) ** 2 / sigma2 + np.log(sigma2))
+                for k, zi in enumerate(zs):
+                    Masses_star, SMF_sample = SMF_func(zi, par1,f0)
+                    y_th = scipy.interpolate.interp1d(Masses_star, SMF_sample, fill_value='extrapolate')(x[k])
+                    sigma2 = yerr[k]**2
+                    result[i,j] += -0.5 * np.sum((y[k] - y_th) ** 2 / sigma2 + np.log(sigma2))
 
-                Masses_star, SMF_sample = SMF_func(5, par1,f0)
-                y_th = scipy.interpolate.interp1d(Masses_star, SMF_sample, fill_value='extrapolate')(x[1])
-                sigma2 = yerr[1]**2
-                result[i,j] += -0.5 * np.sum((y[1] - y_th) ** 2 / sigma2 + np.log(sigma2))
-
-                Masses_star, SMF_sample = SMF_func(6, par1,f0)
-                y_th = scipy.interpolate.interp1d(Masses_star, SMF_sample, fill_value='extrapolate')(x[2])
-                sigma2 = yerr[2]**2
-                result[i,j] += -0.5 * np.sum((y[2] - y_th) ** 2 / sigma2 + np.log(sigma2))
-
-                Masses_star, SMF_sample = SMF_func(7, par1,f0)
-                y_th = scipy.interpolate.interp1d(Masses_star, SMF_sample, fill_value='extrapolate')(x[3])
-                sigma2 = yerr[3]**2
-                result[i,j] += -0.5 * np.sum((y[3] - y_th) ** 2 / sigma2 + np.log(sigma2))
     elif hasattr(log_par1, '__len__') and (not isinstance(log_par1, str)) and not hasattr(f0, '__len__') and (isinstance(f0, str)):
         result = np.empty(len(log_par1), dtype=object)
         for i, log_par1 in enumerate(log_par1):
             par1 = 10**log_par1
-            Masses_star, SMF_sample = SMF_func(4, par1,f0)
-            y_th = scipy.interpolate.interp1d(Masses_star, SMF_sample, fill_value='extrapolate')(x[0])
-            sigma2 = yerr[0]**2
-            result[i] += -0.5 * np.sum((y[0] - y_th) ** 2 / sigma2 + np.log(sigma2))
-
-            Masses_star, SMF_sample = SMF_func(5, par1,f0)
-            y_th = scipy.interpolate.interp1d(Masses_star, SMF_sample, fill_value='extrapolate')(x[1])
-            sigma2 = yerr[1]**2
-            result[i] += -0.5 * np.sum((y[1] - y_th) ** 2 / sigma2 + np.log(sigma2))
-
-            Masses_star, SMF_sample = SMF_func(6, par1,f0)
-            y_th = scipy.interpolate.interp1d(Masses_star, SMF_sample, fill_value='extrapolate')(x[2])
-            sigma2 = yerr[2]**2
-            result[i] += -0.5 * np.sum((y[2] - y_th) ** 2 / sigma2 + np.log(sigma2))
-
-            Masses_star, SMF_sample = SMF_func(7, par1,f0)
-            y_th = scipy.interpolate.interp1d(Masses_star, SMF_sample, fill_value='extrapolate')(x[3])
-            sigma2 = yerr[3]**2
-            result[i] += -0.5 * np.sum((y[3] - y_th) ** 2 / sigma2 + np.log(sigma2))
+            for k, zi in enumerate(zs):
+                Masses_star, SMF_sample = SMF_func(zi, par1,f0)
+                y_th = scipy.interpolate.interp1d(Masses_star, SMF_sample, fill_value='extrapolate')(x[k])
+                sigma2 = yerr[k]**2
+                result[i] += -0.5 * np.sum((y[k] - y_th) ** 2 / sigma2 + np.log(sigma2))
     elif hasattr(f0, '__len__') and (not isinstance(f0, str)) and not hasattr(log_par1, '__len__') and (isinstance(log_par1, str)):
         result = np.empty(len(f0), dtype=object)
+        par1 = 10**log_par1
         for i, f0 in enumerate(f0):
-            par1 = 10**log_par1
-            Masses_star, SMF_sample = SMF_func(4, par1,f0)
-            y_th = scipy.interpolate.interp1d(Masses_star, SMF_sample, fill_value='extrapolate')(x[0])
-            sigma2 = yerr[0]**2
-            result[i] += -0.5 * np.sum((y[0] - y_th) ** 2 / sigma2 + np.log(sigma2))
-
-            Masses_star, SMF_sample = SMF_func(5, par1,f0)
-            y_th = scipy.interpolate.interp1d(Masses_star, SMF_sample, fill_value='extrapolate')(x[1])
-            sigma2 = yerr[1]**2
-            result[i] += -0.5 * np.sum((y[1] - y_th) ** 2 / sigma2 + np.log(sigma2))
-
-            Masses_star, SMF_sample = SMF_func(6, par1,f0)
-            y_th = scipy.interpolate.interp1d(Masses_star, SMF_sample, fill_value='extrapolate')(x[2])
-            sigma2 = yerr[2]**2
-            result[i] += -0.5 * np.sum((y[2] - y_th) ** 2 / sigma2 + np.log(sigma2))
-
-            Masses_star, SMF_sample = SMF_func(7, par1,f0)
-            y_th = scipy.interpolate.interp1d(Masses_star, SMF_sample, fill_value='extrapolate')(x[3])
-            sigma2 = yerr[3]**2
-            result[i] += -0.5 * np.sum((y[3] - y_th) ** 2 / sigma2 + np.log(sigma2))
+            for k, zi in enumerate(zs):
+                Masses_star, SMF_sample = SMF_func(zi, par1,f0)
+                y_th = scipy.interpolate.interp1d(Masses_star, SMF_sample, fill_value='extrapolate')(x[k])
+                sigma2 = yerr[k]**2
+                result[i] += -0.5 * np.sum((y[k] - y_th) ** 2 / sigma2 + np.log(sigma2))
     else:
         result = 0
         par1 = 10**log_par1
-        Masses_star, SMF_sample = SMF_func(4, par1,f0)
-        y_th = scipy.interpolate.interp1d(Masses_star, SMF_sample, fill_value='extrapolate')(x[0])
-        sigma2 = yerr[0]**2
-        result += -0.5 * np.sum((y[0] - y_th) ** 2 / sigma2 + np.log(sigma2))
-
-        Masses_star, SMF_sample = SMF_func(5, par1,f0)
-        y_th = scipy.interpolate.interp1d(Masses_star, SMF_sample, fill_value='extrapolate')(x[1])
-        sigma2 = yerr[1]**2
-        result += -0.5 * np.sum((y[1] - y_th) ** 2 / sigma2 + np.log(sigma2))
-
-        Masses_star, SMF_sample = SMF_func(6, par1,f0)
-        y_th = scipy.interpolate.interp1d(Masses_star, SMF_sample, fill_value='extrapolate')(x[2])
-        sigma2 = yerr[2]**2
-        result += -0.5 * np.sum((y[2] - y_th) ** 2 / sigma2 + np.log(sigma2))
-
-        Masses_star, SMF_sample = SMF_func(7, par1,f0)
-        y_th = scipy.interpolate.interp1d(Masses_star, SMF_sample, fill_value='extrapolate')(x[3])
-        sigma2 = yerr[3]**2
-        result += -0.5 * np.sum((y[3] - y_th) ** 2 / sigma2 + np.log(sigma2))
+        for k, zi in enumerate(zs):
+            Masses_star, SMF_sample = SMF_func(zi, par1,f0)
+            y_th = scipy.interpolate.interp1d(Masses_star, SMF_sample, fill_value='extrapolate')(x[k])
+            sigma2 = yerr[k]**2
+            result += -0.5 * np.sum((y[k] - y_th) ** 2 / sigma2 + np.log(sigma2))
 
     return np.array(result)
 
 def log_prior(theta):
     log_par1, f0 = theta
-    if (2 < log_par1 < 8 and 0.01 < f0 < 1):
+    if (2 < log_par1 < 8 and 0.001 < f0 < 1):
         return 0
     return -np.inf
 
@@ -188,7 +139,7 @@ from getdist import plots, MCSamples
 labels = [r'$\log_{10}r_c$', r'$\epsilon_0$']
 names = [r'$\log_{10}r_c$', r'$\epsilon_0$']
 samples = MCSamples(samples=flat_samples,names = names, labels = labels)
-
+samples.saveAsText("double_power_nDGP_SMF")
 # 1D marginalized comparison plot
 g = plots.get_subplot_plotter()
 g.triangle_plot([samples])
