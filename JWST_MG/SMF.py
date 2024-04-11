@@ -54,18 +54,26 @@ class SMF:
             Mstar = 10**log10Mstar
             epstar = (Mstar/Mh)/(Omegab0/Omegam0)
         elif model_SFR == 'double_power':
-            Mp = 2.8*10**11
+            M0 = 3*10**11
             alo = 0.49
             ahi = -0.61
-            epstar = 2*f0/((Mh/Mp)**alo + (Mh/Mp)**ahi)
+            gammaf = gammaM = 0
+            fp = f0*((1+z)/7)**gammaf
+            Mp = M0*((1+z)/7)**gammaM
+            epstar = 2*fp/((Mh/Mp)**alo + (Mh/Mp)**ahi)
         else:
             raise Exception("Incorrect SFR model used.")
         return epstar
 
     def varepsilon(self, Mh, model_SFR, a):
         z = 1/a-1
-        if model_SFR == 'phenomenological_extreme' or model_SFR == 'phenomenological_regular':
+        if model_SFR == 'phenomenological_extreme':
             varepsilon = 1
+        elif model_SFR == 'phenomenological_regular':
+            if z < 10:
+                varepsilon =  -0.03
+            else:
+                varepsilon = 0
         elif model_SFR == 'Behroozi':
             nu = np.exp(-4*a**2)
             log10M1 = 11.514+(-1.793*(a-1)+(-0.251)*z)*nu

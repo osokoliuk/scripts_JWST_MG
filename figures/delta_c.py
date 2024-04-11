@@ -17,6 +17,7 @@ from scipy import interpolate
 import scipy
 import sys
 sys.path.insert(0, "../")
+sys.path.insert(0,'../observational_data/GSMF')
 from JWST_MG.reionization import reionization
 from JWST_MG.cosmological_functions import cosmological_functions
 from JWST_MG.constants import *
@@ -308,16 +309,44 @@ x, y = csfredshift()
 
 #plt.errorbar(x, y, yerr=yerr, xerr=xerr, fmt='.')
 from multiprocessing import Pool
+#############################################
+#
+# extract spectra and plot them
+#
+#############################################
+import numpy as np
+import matplotlib.pyplot as plt
+import scipy as sp
+from scipy.integrate import odeint
+from scipy import integrate
+from scipy.special import lambertw
+from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
+import matplotlib.pylab as pl
+
+plt.figure()
+plt.rcParams.update({"text.usetex":True})
+fig = plt.figure(figsize=(4.25*0.9*2,3*0.9*1.75))
+ax_Pk = plt.subplot(221)
+
+ax_Pk.xaxis.set_minor_locator(AutoMinorLocator())
+ax_Pk.yaxis.set_minor_locator(AutoMinorLocator())
+
+
+ax_Pk.tick_params(axis='both', which='major',direction="in", labelsize=14, length = 5, top=True,right=True)
+ax_Pk.tick_params(axis='both', which='minor',direction="in", labelsize=12, length = 4, top=True,right=True)
+ax_Pk.tick_params(axis='both', which='major',direction="in", labelsize=14, length = 5)
+ax_Pk.tick_params(axis='both', which='minor',direction="in", labelsize=12, length = 4)
+
 
 pool_cpu = Pool(8)
 
 model = 'nDGP'
 model_H = 'nDGP'
-model_SFR = 'toy'
-par1 = 10**3
+model_SFR = 'Behroozi'
+par1 = 10**6
 par2 = 1
 f0 = 0.03
-z_int = np.array([4,5,6,7]) #np.linspace(12,5,35)
+z_int = np.array([4]) #np.linspace(12,5,35)
 SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
 Pk_arr = []
 for i, z_i in enumerate(z_int):
@@ -329,28 +358,76 @@ Masses = np.logspace(8,14,100)
 
 iterable = [(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
 Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(z_int))))
+plt.plot(Masses_star[0], SMF_obs[0], c = 'tab:gray')
+
+
+model = 'nDGP'
+model_H = 'nDGP'
+model_SFR = 'phenomenological_regular'
+par1 = 10**6
+par2 = 1
+f0 = 0.03
+z_int = np.array([4]) #np.linspace(12,5,35)
+SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
+Pk_arr = []
+for i, z_i in enumerate(z_int):
+    HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
+    Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3)
+k = kvec/h
+Masses = np.logspace(8,14,100)
+
+
+iterable = [(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
+Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(z_int))))
+
+plt.plot(Masses_star[0], SMF_obs[0], c = 'tab:gray', ls = '--')
+
+
+model = 'nDGP'
+model_H = 'nDGP'
+model_SFR = 'double_power'
+par1 = 10**6
+par2 = 1
+f0 = 0.025
+z_int = np.array([4]) #np.linspace(12,5,35)
+SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
+Pk_arr = []
+for i, z_i in enumerate(z_int):
+    HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
+    Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3)
+k = kvec/h
+Masses = np.logspace(8,14,100)
+
+
+iterable = [(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
+Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(z_int))))
+
+
 #print(SMF)
 #Masses_star = SMF[0]
 #SMF_obs = SMF[1]
 
-plt.plot(Masses_star[0], SMF_obs[0], c = 'tab:blue')
-plt.plot(Masses_star[1], SMF_obs[1], c = 'tab:orange')
-plt.plot(Masses_star[2], SMF_obs[2], c = 'tab:green')
-plt.plot(Masses_star[3], SMF_obs[3], c = 'tab:red')
+plt.plot(Masses_star[0], SMF_obs[0], c = 'tab:gray', ls = ':')
 
-Duncan_z4 = np.loadtxt("/home/oleksii/Downloads/Duncan_z4.dat")
-plt.errorbar(10**Duncan_z4[:,0],Duncan_z4[:,1],yerr=(Duncan_z4[:,2],Duncan_z4[:,3]), ls = 'None', marker = '.', c = 'tab:blue')
-Duncan_z4 = np.loadtxt("/home/oleksii/Downloads/Duncan_z5.dat")
-plt.errorbar(10**Duncan_z4[:,0],Duncan_z4[:,1],yerr=(Duncan_z4[:,2],Duncan_z4[:,3]), ls = 'None', marker = '.', c = 'tab:orange')
-Duncan_z4 = np.loadtxt("/home/oleksii/Downloads/Duncan_z6.dat")
-plt.errorbar(10**Duncan_z4[:,0],Duncan_z4[:,1],yerr=(Duncan_z4[:,2],Duncan_z4[:,3]), ls = 'None', marker = '.', c = 'tab:green')
-Duncan_z4 = np.loadtxt("/home/oleksii/Downloads/Duncan_z7.dat")
-plt.errorbar(10**Duncan_z4[:,0],Duncan_z4[:,1],yerr=(Duncan_z4[:,2],Duncan_z4[:,3]), ls = 'None', marker = '.', c = 'tab:red')
+path = '../observational_data/GSMF'
+import imports_z4
+x, y, yerr_down, yerr_up = imports_z4.SMF_z4_obs_dict()
+#plt.errorbar(x.get('Duncan'),y.get('Duncan'),yerr=[yerr_down.get('Duncan'),yerr_up.get('Duncan')], c = 'tab:orange', capsize = 2, ls = 'None', marker = '.', label = r'$\rm Duncan+14$')
+#plt.errorbar(x.get('Song'),y.get('Song'),yerr=[yerr_down.get('Song'),yerr_up.get('Song')], c = 'tab:orange', capsize = 2, ls = 'None', marker = 's', label = r'$\rm Song+16$')
+#plt.errorbar(x.get('Navarro'),y.get('Navarro'),yerr=[yerr_down.get('Navarro'),yerr_up.get('Navarro')], c = 'tab:orange', capsize = 2, ls = 'None', marker = 's', label = r'$\rm Song+16$')
+plines = plt.errorbar(x.get('Duncan'),y.get('Duncan'),yerr=[yerr_down.get('Duncan'),yerr_up.get('Duncan')],capsize=0,ecolor='tab:blue',color='w',marker='o',markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor='tab:blue')
+plines = plt.errorbar(x.get('Song'),y.get('Song'),yerr=[yerr_down.get('Song'),yerr_up.get('Song')],capsize=0,ecolor='tab:red',color='w',marker='s',markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor='tab:red')
+plines = plt.errorbar(x.get('Navarro'),y.get('Navarro'),yerr=[yerr_down.get('Navarro'),yerr_up.get('Navarro')],capsize=0,ecolor='tab:purple',color='w',marker='h',markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor='tab:purple')
+
 # plt.scatter(1/a_vir-1, vir2, c = 'tab:orange')
 plt.xscale('log')
 plt.yscale('log')
-plt.ylim(1e-8,1e-1)
+plt.ylim(1e-7,1e-1)
 plt.xlim(1e8,1e12)
+plt.grid(".")
+ax_Pk.set_xlabel(r'$M_\star\;[M_\odot]$', size = '16')
+ax_Pk.set_ylabel(r'$\phi_{\star}\;[\rm Mpc^{-3}\;dex^{-1}]$', size = '16')
+
 """ac_arr = np.linspace(0.01, 1, 15)
 par1 = 500
 par2 = 0
