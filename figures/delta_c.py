@@ -313,10 +313,10 @@ pool_cpu = Pool(8)
 
 model = 'nDGP'
 model_H = 'nDGP'
-model_SFR = 'Behroozi'
-par1 = 10**4.2
+model_SFR = 'toy'
+par1 = 10**3
 par2 = 1
-f0 = 0.3
+f0 = 0.03
 z_int = np.array([4,5,6,7]) #np.linspace(12,5,35)
 SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
 Pk_arr = []
