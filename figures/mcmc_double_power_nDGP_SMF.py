@@ -116,7 +116,7 @@ def log_probability(theta, x, y, yerr):
 
 import emcee
 
-nwalkers = 4
+nwalkers = 6
 ndim = 2
 from multiprocessing import Pool
 
@@ -129,7 +129,7 @@ sampler = emcee.EnsembleSampler(
 initial_params = [3, 0.1]
 per = 0.1
 initial_pos = [initial_params + per * np.random.randn(ndim) for _ in range(nwalkers)]
-sampler.run_mcmc(initial_pos, 50, progress=True)
+sampler.run_mcmc(initial_pos, 100, progress=True)
 
 flat_samples = sampler.get_chain(discard=5, thin=5, flat=True)
 
@@ -142,7 +142,7 @@ samples = MCSamples(samples=flat_samples,names = names, labels = labels)
 samples.saveAsText("double_power_nDGP_SMF")
 # 1D marginalized comparison plot
 g = plots.get_subplot_plotter()
-g.triangle_plot([samples])
+g.triangle_plot([samples], filled = True)
 
 
 
