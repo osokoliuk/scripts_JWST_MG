@@ -47,7 +47,7 @@ for i in range(len(zs2)):
 
 model = 'nDGP'
 model_H = 'nDGP'
-model_SFR = 'double_power'
+model_SFR = 'toy'
 par2 = 1
 
 def SMF_func(z, par1, f0):
