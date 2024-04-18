@@ -59,47 +59,69 @@ def SMF_func(z, par1, f0):
     Masses_star, SMF_sample = SMF_library.SMF_obs(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk, f0)
     return Masses_star, SMF_sample
 
+def SMF_single(log_par1, f0):
+    result = 0
+    par1 = 10**log_par1
+    for k, zi in enumerate(zs):
+        Masses_star, SMF_sample = SMF_func(zi, par1, f0)
+        y_th = scipy.interpolate.interp1d(Masses_star, SMF_sample, fill_value='extrapolate')(x[k])
+        sigma2 = yerr[k]**2
+        result += -0.5 * np.sum((y[k] - y_th) ** 2 / sigma2 + np.log(sigma2))
+
+    return result
+
+from scipy.interpolate import LinearNDInterpolator as linterp
+from scipy.interpolate import NearestNDInterpolator as nearest
+
+class LinearNDInterpolatorExt(object):
+    def __init__(self, points, values):
+        self.funcinterp = linterp(points, values)
+        self.funcnearest = nearest(points, values)
+    
+    def __call__(self, *args):
+        z = self.funcinterp(*args)
+        chk = np.isnan(z)
+        if chk.any():
+            return np.where(chk, self.funcnearest(*args), z)
+        else:
+            return z
+
+
+
+
+def log_likelihood_interpolated(x, y, yerr):
+    sampler = qmc.LatinHypercube(d=2)
+    sample = sampler.random(n=100)
+    l_bounds = [2,0.001]
+    u_bounds = [8,1]
+    sample_scaled = qmc.scale(sample, l_bounds, u_bounds)
+    log_par1_span = sample_scaled[:,0]
+    f0_span = sample_scaled[:,1]
+    #xx, yy = np.meshgrid(log_par1_span, f0_span)
+    iterable = []
+    for log_par1, f0 in zip(log_par1_span,f0_span):
+        iterable.append([log_par1,f0])
+    #result = zip(*pool_cpu.starmap(SMF_single,tqdm(iterable, total=len(log_par1)*len(f0_span))))
+
+    result = np.array(progress_starmap(SMF_single, iterable, n_cpu=None))
+    cols = np.unique(log_par1_span).shape[0]
+    X = log_par1_span.reshape(-1, cols)
+    Y = f0_span.reshape(-1, cols)
+    Z = result.reshape(-1, cols)
+
+    interpolated_likelihood = LinearNDInterpolatorExt(list(zip(log_par1_span, f0_span)),result)
+    return interpolated_likelihood
+
+log_likelihood_int = log_likelihood_interpolated(x, y, yerr)
+with open('double_power_SMF_nDGP_likelihood.pkl', 'wb') as f:
+    pickle.dump(log_likelihood_int, f)
+#with open('double_power_SMF_nDGP_likelihood.pkl', 'rb') as f:
+#    log_likelihood_int = pickle.load(f)
+
 def log_likelihood(theta, x, y, yerr):
     log_par1, f0 = theta
+    return log_likelihood_int(log_par1, f0)
 
-    if hasattr(log_par1, '__len__') and (not isinstance(log_par1, str)) and hasattr(f0, '__len__') and (not isinstance(f0, str)):
-        result = np.empty((len(par1), len(f0)), dtype=object)
-        for i, log_par1 in enumerate(log_par1):
-            for j, f0 in enumerate(f0):
-                for k, zi in enumerate(zs):
-                    Masses_star, SMF_sample = SMF_func(zi, par1,f0)
-                    y_th = scipy.interpolate.interp1d(Masses_star, SMF_sample, fill_value='extrapolate')(x[k])
-                    sigma2 = yerr[k]**2
-                    result[i,j] += -0.5 * np.sum((y[k] - y_th) ** 2 / sigma2 + np.log(sigma2))
-
-    elif hasattr(log_par1, '__len__') and (not isinstance(log_par1, str)) and not hasattr(f0, '__len__') and (isinstance(f0, str)):
-        result = np.empty(len(log_par1), dtype=object)
-        for i, log_par1 in enumerate(log_par1):
-            par1 = 10**log_par1
-            for k, zi in enumerate(zs):
-                Masses_star, SMF_sample = SMF_func(zi, par1,f0)
-                y_th = scipy.interpolate.interp1d(Masses_star, SMF_sample, fill_value='extrapolate')(x[k])
-                sigma2 = yerr[k]**2
-                result[i] += -0.5 * np.sum((y[k] - y_th) ** 2 / sigma2 + np.log(sigma2))
-    elif hasattr(f0, '__len__') and (not isinstance(f0, str)) and not hasattr(log_par1, '__len__') and (isinstance(log_par1, str)):
-        result = np.empty(len(f0), dtype=object)
-        par1 = 10**log_par1
-        for i, f0 in enumerate(f0):
-            for k, zi in enumerate(zs):
-                Masses_star, SMF_sample = SMF_func(zi, par1,f0)
-                y_th = scipy.interpolate.interp1d(Masses_star, SMF_sample, fill_value='extrapolate')(x[k])
-                sigma2 = yerr[k]**2
-                result[i] += -0.5 * np.sum((y[k] - y_th) ** 2 / sigma2 + np.log(sigma2))
-    else:
-        result = 0
-        par1 = 10**log_par1
-        for k, zi in enumerate(zs):
-            Masses_star, SMF_sample = SMF_func(zi, par1,f0)
-            y_th = scipy.interpolate.interp1d(Masses_star, SMF_sample, fill_value='extrapolate')(x[k])
-            sigma2 = yerr[k]**2
-            result += -0.5 * np.sum((y[k] - y_th) ** 2 / sigma2 + np.log(sigma2))
-
-    return np.array(result)
 
 def log_prior(theta):
     log_par1, f0 = theta
@@ -126,7 +148,7 @@ sampler = emcee.EnsembleSampler(
     nwalkers, ndim, log_probability, args=(x, y, yerr), pool = pool_cpu
 )
 
-initial_params = [3, 0.1]
+initial_params = [6, 0.1]
 per = 0.1
 initial_pos = [initial_params + per * np.random.randn(ndim) for _ in range(nwalkers)]
 sampler.run_mcmc(initial_pos, 100, progress=True)

@@ -58,11 +58,6 @@ def SMF_func(z, par1):
     Masses_star, SMF_sample = SMF_library.SMF_obs(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk, f0)
     return Masses_star, SMF_sample
 
-from multiprocessing import Pool
-import emcee
-import defs_mcmc
-
-from parallelbar import progress_map
 
 def SMF_single(log_par1):
     result = 0
