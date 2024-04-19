@@ -16,8 +16,8 @@ import matplotlib
 from scipy import interpolate
 import scipy
 import sys
-sys.path.insert(0, "../")
-sys.path.insert(0,'../observational_data/GSMF')
+sys.path.insert(0, "../../")
+sys.path.insert(0,'../../observational_data/GSMF')
 from JWST_MG.reionization import reionization
 from JWST_MG.cosmological_functions import cosmological_functions
 from JWST_MG.constants import *
@@ -285,27 +285,7 @@ plt.tick_params(axis='both', which='minor',
 
 
 
-arq = open("../observational_data/hopkins_2004.dat", 'r')
-data= np.loadtxt(arq, delimiter=",")
-def errorData():
-    """Return the asymetric errors in the redshif and CSFR
-    respectively
-    """
-    xerr = np.array([data[:, 0] - data[:, 2],
-            data[:, 3] - data[:, 0]])
-    yerr = np.array([data[:, 1] - data[:, 4],
-                    data[:, 5] - data[:, 1]])
-    return xerr, yerr
 
-def csfredshift():
-    """Return the redshift and the CSFR from
-    observational data
-    """
-    return data[:, 0], data[:, 1]
-
-
-xerr, yerr = errorData()
-x, y = csfredshift()
 
 #plt.errorbar(x, y, yerr=yerr, xerr=xerr, fmt='.')
 from multiprocessing import Pool
@@ -366,7 +346,49 @@ Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, 
 #Masses_star = SMF[0]
 #SMF_obs = SMF[1]
 
-plt.loglog(Masses_star[0], SMF_obs[0], c = 'tab:blue', ls = ':', lw = 1.25)
+plt.loglog(Masses_star[0], SMF_obs[0], c = 'tab:blue', ls = '-', lw = 1.25)
+
+
+
+
+
+model = 'nDGP'
+model_H = 'nDGP'
+model_SFR = 'phenomenological_regular'
+par1 = 10**9
+par2 = 1
+f0 = 0.1
+z_int = np.array([7]) #np.linspace(12,5,35)
+SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
+Pk_arr = []
+for i, z_i in enumerate(z_int):
+    HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
+    Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3)
+k = kvec/h
+Masses = np.logspace(6,14,100)
+
+
+iterable = [(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
+Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(z_int))))
+
+
+#print(SMF)
+#Masses_star = SMF[0]
+#SMF_obs = SMF[1]
+
+plt.loglog(Masses_star[0], SMF_obs[0], c = 'tab:orange', ls = '-', lw = 1.25)
+
+
+
+data = np.loadtxt('smf_test_data.txt')
+x = data[:,0]
+y = data[:,1]
+plt.scatter(10**(x-6), 10**y)
+
+data = np.loadtxt('smf_test_data_2.txt')
+x = data[:,0]
+y = data[:,1]
+plt.scatter(10**(x-6), 10**y)
 
 plt.yscale('log')
 plt.grid(".")

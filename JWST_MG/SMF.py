@@ -34,14 +34,49 @@ class SMF:
         self.Masses = Masses
         self.f0 = f0
 
-    def func_SFR(self, x, a):
-        z = 1/a-1
-        nu = np.exp(-4*a**2)
-        alpha_SFR = -1.412+0.731*(a-1)*nu
-        Delta_SFR = 3.508 + (2.608*(a-1)-0.043*z)*nu
-        gamma_SFR = 0.316+(1.319*(a-1)+0.279*z)*nu
-        return -np.log10(10**(alpha_SFR*x)+1)+Delta_SFR*(np.log10(1+np.exp(x)))**gamma_SFR/(1+np.exp(10**(-x)))
+    # Code for Behroozi+13 SMHR is taken from
+    # https://github.com/dr-guangtou/asap/tree/master
+    def behroozi13_evolution(self, redshift):
+        scale = 1.0 / (1.0 + redshift)
+        scale_minus_one = -redshift / (1.0 + redshift)
 
+        mh_1_0, mh_1_a, mh_1_z = 11.514, -1.793, -0.251
+        epsilon_0, epsilon_a = -1.777, -0.006
+        epsilon_z, epsilon_a_2 = -0.000, -0.119
+        alpha_0, alpha_a = -1.412, 0.731
+        delta_0, delta_a, delta_z = 3.508, 2.608, -0.043
+        gamma_0, gamma_a, gamma_z = 0.316, 1.319, 0.279
+
+        nu_a = np.exp(-4.0 * (scale ** 2.0))
+
+        mh_1 = mh_1_0 + ((mh_1_a * scale_minus_one) + mh_1_z * redshift) * nu_a
+        epsilon = epsilon_0 + ((epsilon_a * scale_minus_one) + epsilon_z * redshift) + epsilon_a_2 * scale_minus_one
+        alpha = alpha_0 + (alpha_a * scale_minus_one) * nu_a
+        delta = delta_0 + (delta_a * scale_minus_one + delta_z * redshift) * nu_a
+        gamma = gamma_0 + (gamma_a * scale_minus_one + gamma_z * redshift) * nu_a
+
+        return mh_1, epsilon, alpha, delta, gamma
+
+
+    def behroozi13_f(self, x, alpha, delta, gamma):
+        term_1 = -1.0 * np.log10(10.0 ** (alpha * x) + 1.0)
+
+        term_2 = delta * (np.log10(1.0 + np.exp(x)) ** gamma) / (1.0 + np.exp(10.0 ** -x))
+
+        return term_1 + term_2
+
+    def behroozi13_mh_to_ms(self, halo_mass, z, **kwargs):
+        logmh = np.log10(halo_mass)
+        mh_1, epsilon, alpha, delta, gamma = self.behroozi13_evolution(z, **kwargs)
+
+        mhalo_ratio = logmh - mh_1
+
+        star_mass = mh_1 + epsilon + (self.behroozi13_f(mhalo_ratio, alpha, delta, gamma) -
+                                self.behroozi13_f(0.0, alpha, delta, gamma))
+        star_mass = 10**star_mass
+        epsilon_star = star_mass/(halo_mass*Omegab0/Omegam0)
+        return epsilon_star
+        
     def epsilon(self, Mh, model_SFR, a, f0):
         z = 1/a-1
         if model_SFR == 'toy':
@@ -54,18 +89,14 @@ class SMF:
         elif model_SFR == 'phenomenological_extreme':
             epstar = 1
         elif model_SFR == 'Behroozi':
-            nu = np.exp(-4*a**2)
-            log10M1 = 11.514+(-1.793*(a-1)+(-0.251)*z)*nu
-            log10eps = -1.777+(-0.006*(a-1)+(-0.000)*z)*nu-0.119*(a-1)
-            log10Mstar = log10eps + log10M1 + \
-                self.func_SFR(np.log10(Mh)-log10M1, a)-self.func_SFR(0, a)
-            Mstar = 10**log10Mstar
-            epstar = (Mstar/Mh)/(Omegab0/Omegam0)
+            epstar = self.behroozi13_mh_to_ms(Mh, z)
         elif model_SFR == 'double_power':
-            Mp = 2.8*10**11
-            alo = 0.49
-            ahi = -0.61
-            epstar = 2*f0/((Mh/Mp)**alo + (Mh/Mp)**ahi)
+            Mp = 10**12.1
+            alo = -1.32
+            ahi = 0.43
+            f0 = 10**(-1.69)
+            epstar = f0/((Mh/Mp)**alo + (Mh/Mp)**ahi)
+            epstar = epstar/(Omegab0/Omegam0)
         else:
             raise Exception("Incorrect SFR model used.")
         return epstar
@@ -92,7 +123,7 @@ class SMF:
         SMF = Masses_star*np.log(10)*HMF_fid*np.gradient(Masses)/ \
             np.gradient(Masses_star)
 
-        """
+        z = 1/a-1
         mu_SMF = -0.020+0.081*(a-1)
         kappa_SMF = 0.045 + (-0.155)*(a-1)
         ci = 0.273*(1+np.exp(1.077-z))**(-1)
@@ -102,10 +133,10 @@ class SMF:
         else:
             c = ci + (1-ci1)
             
-        SMF = HMF*np.gradient(np.log10(Mh_arr))/np.gradient(np.log10(Mstar_arr)) #varepsilon(Mh_arr,model_SFR,a)
-        SMF = 10**(sigma_P(z)**2/2*np.log(10)*(np.gradient(np.log10(SMF))/np.gradient(np.log10(Mstar_arr)))**2)*SMF
-        SMF = scipy.interpolate.interp1d(Mstar_arr,SMF, fill_value="extrapolate")
-        SMF = f_passive_obs(Masses_star,a)*SMF(Masses_star*10**(-mu_SMF))+SMF(Masses_star*10**(-mu_SMF))*(1-f_passive_obs(Masses_star*10**(-kappa_SMF),a))
+        
+        #SMF = 10**(self.sigma_P(z)**2/2*np.log(10)*(np.gradient(np.log10(SMF))/np.gradient(np.log10(Masses_star)))**2)*SMF
+        SMF = scipy.interpolate.interp1d(Masses_star,SMF, fill_value="extrapolate")
+        SMF = self.f_passive_obs(Masses_star,a)*SMF(Masses_star*10**(-mu_SMF))+SMF(Masses_star*10**(-mu_SMF))*(1-self.f_passive_obs(Masses_star*10**(-kappa_SMF),a))
         SMF = c*SMF
-        """
+        
         return Masses_star, SMF

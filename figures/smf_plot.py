@@ -340,47 +340,20 @@ ax_Pk.tick_params(axis='both', which='minor',direction="in", labelsize=12, lengt
 pool_cpu = Pool(8)
 
 
-
-model = 'nDGP'
-model_H = 'nDGP'
-model_SFR = 'toy'
-par1 = 10**6
-par2 = 1
-z_int = np.array([4]) #np.linspace(12,5,35)
-f0 = 0
-f0_arr = [0.01,0.025,0.05,0.1,0.5,1]
-SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
-Pk_arr = []
-for i, z_i in enumerate(z_int):
-    HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
-    Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3)
-k = kvec/h
-Masses = np.logspace(8,14,100)
-
-
-for f0 in f0_arr:
-    iterable = [(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
-    Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(z_int))))
-
-    plt.plot(Masses_star[0], SMF_obs[0], c = 'k', ls = '-', alpha = 0.3, lw = 0.75)
-
-plt.fill_between(Masses_star[0], SMF_obs[0], 1, color='k', alpha=.3)
-
-
 model = 'nDGP'
 model_H = 'nDGP'
 model_SFR = 'Behroozi'
-par1 = 10**6
+par1 = 10**9
 par2 = 1
 f0 = 0.03
-z_int = np.array([4]) #np.linspace(12,5,35)
+z_int = np.array([0]) #np.linspace(12,5,35)
 SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
 Pk_arr = []
 for i, z_i in enumerate(z_int):
     HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
     Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3)
 k = kvec/h
-Masses = np.logspace(8,14,100)
+Masses = np.logspace(8,16,100)
 
 
 iterable = [(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
@@ -388,53 +361,28 @@ Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, 
 plt.plot(Masses_star[0], SMF_obs[0], c = 'tab:blue', lw = 1.25)
 
 
-model = 'nDGP'
-model_H = 'nDGP'
-model_SFR = 'phenomenological_regular'
-par1 = 10**6
-par2 = 1
-f0 = 0.03
-z_int = np.array([4]) #np.linspace(12,5,35)
-SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
-Pk_arr = []
-for i, z_i in enumerate(z_int):
-    HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
-    Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3)
-k = kvec/h
-Masses = np.logspace(8,14,100)
-
-
-iterable = [(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
-Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(z_int))))
-
-plt.plot(Masses_star[0], SMF_obs[0], c = 'tab:blue', ls = '--', lw = 1.25)
-
 
 model = 'nDGP'
 model_H = 'nDGP'
 model_SFR = 'double_power'
-par1 = 10**7
+par1 = 10**9
 par2 = 1
-f0 = 0.025
-z_int = np.array([4]) #np.linspace(12,5,35)
+f0 = 0.1
+z_int = np.array([0]) #np.linspace(12,5,35)
 SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
 Pk_arr = []
 for i, z_i in enumerate(z_int):
     HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
     Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3)
 k = kvec/h
-Masses = np.logspace(8,14,100)
+Masses = np.logspace(8,16,100)
 
 
 iterable = [(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
 Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(z_int))))
+plt.plot(Masses_star[0], SMF_obs[0], c = 'tab:blue',ls=':', lw = 1.25)
 
 
-#print(SMF)
-#Masses_star = SMF[0]
-#SMF_obs = SMF[1]
-
-plt.plot(Masses_star[0], SMF_obs[0], c = 'tab:blue', ls = ':', lw = 1.25)
 
 path = '../observational_data/GSMF'
 import imports_z4
@@ -446,7 +394,7 @@ x, y, yerr_down, yerr_up = imports_z4.SMF_z4_obs_dict()
 #plines = plt.errorbar(x.get('Song'),y.get('Song'),yerr=[yerr_down.get('Song'),yerr_up.get('Song')],capsize=0,ecolor='tab:orange',color='w',marker='s',markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor='tab:orange')
 
 
-obs = number_density(feature='GSMF', z_target=4.0, h=h)
+obs = number_density(feature='GSMF', z_target=0.0, h=h)
 j_data = 0
 k_func = 0
 colors         = ['#e41a1c','#377eb8','#4daf4a','#984ea3',\
@@ -468,7 +416,7 @@ for ii in range(obs.n_target_observation):
                     label=r'$\rm '+label + '$',capsize=0,ecolor=color,color='w',marker=marker,markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor=color)
         j_data +=1
 
-plines = plt.errorbar(x.get('Navarro'),y.get('Navarro'),yerr=[yerr_down.get('Navarro'),yerr_up.get('Navarro')],capsize=0,ecolor='k',color='w',marker=markers[j_data+1],markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor='k', label = r'$\rm Navarro+2024$')
+#plines = plt.errorbar(x.get('Navarro'),y.get('Navarro'),yerr=[yerr_down.get('Navarro'),yerr_up.get('Navarro')],capsize=0,ecolor='k',color='w',marker=markers[j_data+1],markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor='k', label = r'$\rm Navarro+2024$')
 
 # plt.scatter(1/a_vir-1, vir2, c = 'tab:orange')
 plt.xscale('log')
