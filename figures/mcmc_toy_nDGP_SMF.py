@@ -113,7 +113,7 @@ def log_likelihood_interpolated(x, y, yerr):
     return interpolated_likelihood
 
 log_likelihood_int = log_likelihood_interpolated(x, y, yerr)
-with open('double_power_SMF_nDGP_likelihood.pkl', 'wb') as f:
+with open('toy_SMF_nDGP_likelihood.pkl', 'wb') as f:
     pickle.dump(log_likelihood_int, f)
 #with open('double_power_SMF_nDGP_likelihood.pkl', 'rb') as f:
 #    log_likelihood_int = pickle.load(f)
@@ -138,7 +138,7 @@ def log_probability(theta, x, y, yerr):
 
 import emcee
 
-nwalkers = 6
+nwalkers = 50
 ndim = 2
 from multiprocessing import Pool
 
@@ -151,9 +151,9 @@ sampler = emcee.EnsembleSampler(
 initial_params = [6, 0.1]
 per = 0.1
 initial_pos = [initial_params + per * np.random.randn(ndim) for _ in range(nwalkers)]
-sampler.run_mcmc(initial_pos, 100, progress=True)
+sampler.run_mcmc(initial_pos, 5000, progress=True)
 
-flat_samples = sampler.get_chain(discard=5, thin=5, flat=True)
+flat_samples = sampler.get_chain(discard=500, thin=500, flat=True)
 
 import getdist
 from getdist import plots, MCSamples
@@ -161,7 +161,7 @@ from getdist import plots, MCSamples
 labels = [r'$\log_{10}r_c$', r'$\epsilon_0$']
 names = [r'$\log_{10}r_c$', r'$\epsilon_0$']
 samples = MCSamples(samples=flat_samples,names = names, labels = labels)
-samples.saveAsText("double_power_nDGP_SMF")
+samples.saveAsText("toy_nDGP_SMF")
 # 1D marginalized comparison plot
 g = plots.get_subplot_plotter()
 g.triangle_plot([samples], filled = True)

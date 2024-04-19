@@ -413,9 +413,9 @@ plt.plot(Masses_star[0], SMF_obs[0], c = 'tab:blue', ls = '--', lw = 1.25)
 model = 'nDGP'
 model_H = 'nDGP'
 model_SFR = 'double_power'
-par1 = 10**9
+par1 = 10**7
 par2 = 1
-f0 = 0.1
+f0 = 0.025
 z_int = np.array([4]) #np.linspace(12,5,35)
 SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
 Pk_arr = []

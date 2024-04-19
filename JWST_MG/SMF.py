@@ -3,6 +3,14 @@ from JWST_MG.cosmological_functions import cosmological_functions
 from JWST_MG.delta_c import delta_c
 from JWST_MG.HMF import HMF
 
+from hmf import MassFunction     # The main hmf class
+import numpy
+from numpy import log, log10, sqrt, exp, pi, arange, logspace, linspace, r_, c_
+# Don't judge me: 
+from matplotlib.pyplot import *
+from scipy.interpolate import UnivariateSpline as US
+import hmf
+from astropy.cosmology import FlatLambdaCDM
 
 class SMF:
    ########################################################################
@@ -54,54 +62,13 @@ class SMF:
             Mstar = 10**log10Mstar
             epstar = (Mstar/Mh)/(Omegab0/Omegam0)
         elif model_SFR == 'double_power':
-            M0 = 3*10**11
+            Mp = 2.8*10**11
             alo = 0.49
             ahi = -0.61
-            gammaf = gammaM = 0
-            fp = f0*((1+z)/7)**gammaf
-            Mp = M0*((1+z)/7)**gammaM
-            epstar = 2*fp/((Mh/Mp)**alo + (Mh/Mp)**ahi)
+            epstar = 2*f0/((Mh/Mp)**alo + (Mh/Mp)**ahi)
         else:
             raise Exception("Incorrect SFR model used.")
         return epstar
-
-    def varepsilon(self, Mh, model_SFR, a):
-        z = 1/a-1
-        if model_SFR == 'phenomenological_extreme':
-            varepsilon = 1
-        elif model_SFR == 'phenomenological_regular':
-            if z < 10:
-                varepsilon =  -0.03
-            else:
-                varepsilon = 0
-        elif model_SFR == 'Behroozi':
-            nu = np.exp(-4*a**2)
-            log10M1 = 11.514+(-1.793*(a-1)+(-0.251)*z)*nu
-            log10eps = -1.777+(-0.006*(a-1)+(-0.000)*z)*nu-0.119*(a-1)
-            log10Mstar = log10eps + log10M1 + \
-                func_SFR(np.log10(Mh)-log10M1, a)-func_SFR(0, a)
-            alpha_SFR = -1.412+0.731*(a-1)*nu
-            Delta_SFR = 3.508 + (2.608*(a-1)-0.043*z)*nu
-            gamma_SFR = 0.316+(1.319*(a-1)+0.279*z)*nu
-            varepsilon = -((Mh**alpha_SFR*alpha_SFR)/(10**(log10M1*alpha_SFR) + Mh**alpha_SFR)) + (np.log(1 + Mh**(1/np.log(10))/np.e**log10M1)**(-1 + gamma_SFR)*Delta_SFR*(10**log10M1*np.exp(10**log10M1/Mh)*(np.e**log10M1 + Mh**(1/np.log(10)))
-                                                                                                                                                                             * np.log(10)*np.log(1 + Mh**(1/np.log(10))/np.e**log10M1) + (1 + np.exp(10**log10M1/Mh))*Mh**(1 + 1/np.log(10))*gamma_SFR))/((1 + np.exp(10**log10M1/Mh))**2*Mh*(np.e**log10M1 + Mh**(1/np.log(10)))*np.log(10)**gamma_SFR)
-        elif model_SFR == 'double_power':
-            z_interpolate = np.linspace(0, 10, 11)
-            A_int = np.array([-1.69, -1.72, -1.72, -1.27, -
-                             1.61, -1.11, -0.8, -1.2, -0.92, -1.34, -1.63])
-            delta = 0.43
-            Mc = 10**12.3
-            gamma_int = np.array(
-                [1.32, 1.45, 1.4, 0.61, 0.89, 1.16, 0.88, 1.25, 1.12, 1.52, 1.02])
-            A = scipy.interpolate.interp1d(
-                z_interpolate, A_int, fill_value='extrapolate')
-            gamma = scipy.interpolate.interp1d(
-                z_interpolate, gamma_int, fill_value='extrapolate')
-            A = 10**A(z)
-            gamma = gamma(z)
-            varepsilon = 1 - ((-gamma*(Mh/Mc)**(-gamma)+delta*(Mh/Mc)
-                              ** (delta))/((Mh/Mc)**(-gamma)+(Mh/Mc)**(delta)))
-        return varepsilon
 
     def sigma_P(self, z):
         sigma0 = 0.07
@@ -117,12 +84,13 @@ class SMF:
         HMF_library = HMF(a, model, model_H, par1, par2, Masses)
         HMF_fid = HMF_library.ST_mass_function(
             rhoM, Masses, a, model_H, model, par1, par2, k, Pk)
-        HMF_fid = np.log(10)*Masses*HMF_fid
+        #HMF_fid = np.log(10)*Masses*HMF_fid
+
         Masses_star = self.epsilon(
             Masses, model_SFR, a, f0)*Omegab0/Omegam0*Masses
         # varepsilon(Mh_arr,model_SFR,a)
-        SMF = HMF_fid*np.gradient(np.log10(Masses)) / \
-            np.gradient(np.log10(Masses_star))
+        SMF = Masses_star*np.log(10)*HMF_fid*np.gradient(Masses)/ \
+            np.gradient(Masses_star)
 
         """
         mu_SMF = -0.020+0.081*(a-1)

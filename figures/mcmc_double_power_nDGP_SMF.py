@@ -7,7 +7,7 @@ from JWST_MG.HMF import HMF
 from JWST_MG.SMF import SMF
 from JWST_MG.SMD import SMD
 from JWST_MG.UVLF import UVLF
-
+import zeus
 plt.rcParams.update({"text.usetex": True})
 
 
@@ -112,11 +112,11 @@ def log_likelihood_interpolated(x, y, yerr):
     interpolated_likelihood = LinearNDInterpolatorExt(list(zip(log_par1_span, f0_span)),result)
     return interpolated_likelihood
 
-log_likelihood_int = log_likelihood_interpolated(x, y, yerr)
-with open('double_power_SMF_nDGP_likelihood.pkl', 'wb') as f:
-    pickle.dump(log_likelihood_int, f)
-#with open('double_power_SMF_nDGP_likelihood.pkl', 'rb') as f:
-#    log_likelihood_int = pickle.load(f)
+#log_likelihood_int = log_likelihood_interpolated(x, y, yerr)
+#with open('double_power_SMF_nDGP_likelihood.pkl', 'wb') as f:
+#    pickle.dump(log_likelihood_int, f)
+with open('./mcmc_outputs/double_power_SMF_nDGP_likelihood.pkl', 'rb') as f:
+    log_likelihood_int = pickle.load(f)
 
 def log_likelihood(theta, x, y, yerr):
     log_par1, f0 = theta
@@ -125,7 +125,7 @@ def log_likelihood(theta, x, y, yerr):
 
 def log_prior(theta):
     log_par1, f0 = theta
-    if (2 < log_par1 < 8 and 0.001 < f0 < 1):
+    if (2 < log_par1 < 8 and 0.01 < f0 < 1):
         return 0
     return -np.inf
 
@@ -138,7 +138,7 @@ def log_probability(theta, x, y, yerr):
 
 import emcee
 
-nwalkers = 6
+nwalkers = 500
 ndim = 2
 from multiprocessing import Pool
 
@@ -149,11 +149,11 @@ sampler = emcee.EnsembleSampler(
 )
 
 initial_params = [6, 0.1]
-per = 0.1
+per = 0.01
 initial_pos = [initial_params + per * np.random.randn(ndim) for _ in range(nwalkers)]
-sampler.run_mcmc(initial_pos, 100, progress=True)
+sampler.run_mcmc(initial_pos, 1500, progress=True)
 
-flat_samples = sampler.get_chain(discard=5, thin=5, flat=True)
+flat_samples = sampler.get_chain()
 
 import getdist
 from getdist import plots, MCSamples
