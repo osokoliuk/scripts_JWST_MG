@@ -377,7 +377,7 @@ legend1.get_frame().set_facecolor('none')
 legend1.get_frame().set_linewidth(0.0)
 ax_Pk.add_artist(legend1)
 plt.xlim(1e6,1e12)
-plt.ylim(10**2.1,1e-8)
+plt.ylim(1e-8,10**2.25)
 
 """ac_arr = np.linspace(0.01, 1, 15)
 par1 = 500
