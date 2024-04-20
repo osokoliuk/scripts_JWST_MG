@@ -88,24 +88,17 @@ class SMF:
         
     def epsilon(self, Mh, model_SFR, a, f0):
         z = 1/a-1
-        if model_SFR == 'toy':
-            epstar = f0
-        elif model_SFR == 'phenomenological_regular':
-            if z < 10:
-                epstar = 0.15 - 0.03*(z-6)
-            else:
-                epstar = 0.03
-        elif model_SFR == 'phenomenological_extreme':
+        if model_SFR == 'phenomenological_extreme':
             epstar = 1
         elif model_SFR == 'Puebla':
             epstar = self.puebla17_mh_to_ms(Mh, z)
         elif model_SFR == 'double_power':
-            Mp = 10**12.1
-            alo = -1.32
-            ahi = 0.43
-            f0 = 10**(-1.69)
-            epstar = f0/((Mh/Mp)**alo + (Mh/Mp)**ahi)
-            epstar = epstar/(Omegab0/Omegam0)
+            Mp = 10**11.16
+            alo = 0.8
+            ahi = -0.53
+            f0 = 10**(-1.26)
+            C10 = (1e10/Mp)**(-alo) + (1e10/Mp)**(-ahi)
+            epstar = C10*f0/((Mh/Mp)**(-alo) + (Mh/Mp)**(-ahi))
         else:
             raise Exception("Incorrect SFR model used.")
         return epstar
@@ -151,12 +144,13 @@ class SMF:
                 c = ci + (1-ci1)
 
             SMF = scipy.interpolate.interp1d(Masses_star,SMF, fill_value="extrapolate")
-            Mstar_grid = np.logspace(min(Masses_star),max(Masses_star),50)
+            Mstar_grid = np.logspace(6,12.1,50)
             SMF_arr = []
             for Mstar in Mstar_grid:
-                SMF_arr.append(self.SMF_interpolation(Mstar, SMF, z,min(Masses_star),max(Masses_star)))
-            SMF = np.array(SMF_arr)
+                SMF_arr.append(self.SMF_interpolation(Mstar, SMF, z,np.log10(min(Masses_star)),np.log10(max(Masses_star))))
+            SMF = c*np.array(SMF_arr)
             Masses_star = Mstar_grid
+
             #Masses_star = 10**mu_SMF*Masses_star 
 
         """

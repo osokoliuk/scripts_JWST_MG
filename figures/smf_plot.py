@@ -336,6 +336,29 @@ ax_Pk.tick_params(axis='both', which='minor',direction="in", labelsize=12, lengt
 ax_Pk.tick_params(axis='both', which='major',direction="in", labelsize=14, length = 5)
 ax_Pk.tick_params(axis='both', which='minor',direction="in", labelsize=12, length = 4)
 
+obs = number_density(feature='GSMF', z_target=4.0, h=h)
+j_data = 0
+k_func = 0
+colors         = ['#e41a1c','#377eb8','#4daf4a','#984ea3',\
+                  '#ff7f00','#a65628','#f781bf','#999999']*4
+color_maps     = ['Reds', 'Blues', 'Greens'] *4
+markers        = ['o','s','v','^','<','>','p','*','D','.','8']*4
+linestyles     = ['-','--','-.',':']*4
+
+for ii in range(obs.n_target_observation):
+    data       = obs.target_observation['Data'][ii]
+    label      = obs.target_observation.index[ii]
+    datatype   = obs.target_observation['DataType'][ii]
+    color      = 'k'
+    marker     = markers[ii]
+    linestyle  = linestyles[k_func]
+    data[:,1:] = data[:,1:]
+    if datatype == 'data':
+        plt.errorbar(10**data[:,0],  data[:,1], yerr = [data[:,1]-data[:,3],data[:,2]- data[:,1]],\
+                    label=r'$\rm '+label + '$',capsize=0,ecolor=color,color='w',marker=marker,markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor=color)
+        j_data +=1
+
+
 
 pool_cpu = Pool(8)
 
@@ -346,7 +369,7 @@ model_SFR = 'Puebla'
 par1 = 10**9
 par2 = 1
 f0 = 0.03
-z_int = np.array([0]) #np.linspace(12,5,35)
+z_int = np.array([4]) #np.linspace(12,5,35)
 SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
 Pk_arr = []
 for i, z_i in enumerate(z_int):
@@ -368,7 +391,7 @@ model_SFR = 'double_power'
 par1 = 10**9
 par2 = 1
 f0 = 0.1
-z_int = np.array([0]) #np.linspace(12,5,35)
+z_int = np.array([4]) #np.linspace(12,5,35)
 SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
 Pk_arr = []
 for i, z_i in enumerate(z_int):
@@ -393,28 +416,6 @@ x, y, yerr_down, yerr_up = imports_z4.SMF_z4_obs_dict()
 #plines = plt.errorbar(x.get('Duncan'),y.get('Duncan'),yerr=[yerr_down.get('Duncan'),yerr_up.get('Duncan')],capsize=0,ecolor='tab:blue',color='w',marker='o',markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor='tab:blue')
 #plines = plt.errorbar(x.get('Song'),y.get('Song'),yerr=[yerr_down.get('Song'),yerr_up.get('Song')],capsize=0,ecolor='tab:orange',color='w',marker='s',markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor='tab:orange')
 
-
-obs = number_density(feature='GSMF', z_target=0.0, h=h)
-j_data = 0
-k_func = 0
-colors         = ['#e41a1c','#377eb8','#4daf4a','#984ea3',\
-                  '#ff7f00','#a65628','#f781bf','#999999']*4
-color_maps     = ['Reds', 'Blues', 'Greens'] *4
-markers        = ['o','s','v','^','<','>','p','*','D','.','8']*4
-linestyles     = ['-','--','-.',':']*4
-
-for ii in range(obs.n_target_observation):
-    data       = obs.target_observation['Data'][ii]
-    label      = obs.target_observation.index[ii]
-    datatype   = obs.target_observation['DataType'][ii]
-    color      = 'k'
-    marker     = markers[ii]
-    linestyle  = linestyles[k_func]
-    data[:,1:] = data[:,1:]
-    if datatype == 'data':
-        plt.errorbar(10**data[:,0],  data[:,1], yerr = [data[:,1]-data[:,3],data[:,2]- data[:,1]],\
-                    label=r'$\rm '+label + '$',capsize=0,ecolor=color,color='w',marker=marker,markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor=color)
-        j_data +=1
 
 #plines = plt.errorbar(x.get('Navarro'),y.get('Navarro'),yerr=[yerr_down.get('Navarro'),yerr_up.get('Navarro')],capsize=0,ecolor='k',color='w',marker=markers[j_data+1],markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor='k', label = r'$\rm Navarro+2024$')
 
