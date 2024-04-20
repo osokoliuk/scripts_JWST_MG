@@ -7,6 +7,8 @@ from JWST_MG.HMF import HMF
 from JWST_MG.SMF import SMF
 from JWST_MG.SMD import SMD
 from JWST_MG.UVLF import UVLF
+
+
 plt.rcParams.update({"text.usetex": True})
 
 
@@ -46,7 +48,7 @@ for i in range(len(zs2)):
 
 model = 'nDGP'
 model_H = 'nDGP'
-model_SFR = 'Behroozi'
+model_SFR = 'Puebla'
 par2 = 1
 f0 = 0.1
 def SMF_func(z, par1):
@@ -71,18 +73,19 @@ def SMF_single(log_par1):
     return result
 
 def log_likelihood_interpolated(x, y, yerr):
-    log_par1_span = np.linspace(2,8,30)
-    
-    result = progress_map(SMF_single, log_par1_span, n_cpu=None)
+    log_par1_span = np.linspace(2,8,100)
+    pool_cpu = Pool(8)
+
+    result = pool_cpu.map(SMF_single, tqdm(log_par1_span, total = len(log_par1_span)))
    
     interpolated_likelihood = scipy.interpolate.interp1d(log_par1_span, result, fill_value='extrapolate')
     return interpolated_likelihood
 
-#log_likelihood_int = log_likelihood_interpolated(x, y, yerr)
-#with open('Behroozi_SMF_nDGP_likelihood.pkl', 'wb') as f:
-#    pickle.dump(log_likelihood_int, f)
-with open('Behroozi_SMF_nDGP_likelihood.pkl', 'rb') as f:
-    log_likelihood_int = pickle.load(f)
+log_likelihood_int = log_likelihood_interpolated(x, y, yerr)
+with open('Puebla_SMF_nDGP_likelihood.pkl', 'wb') as f:
+    pickle.dump(log_likelihood_int, f)
+#with open('Puebla_SMF_nDGP_likelihood.pkl', 'rb') as f:
+#    log_likelihood_int = pickle.load(f)
 
 def log_likelihood(theta, x, y, yerr):
     log_par1 = theta
@@ -104,7 +107,6 @@ def log_probability(theta, x, y, yerr):
 
 nwalkers = 12
 ndim = 1
-pool_cpu = Pool(8)
 
 sampler = emcee.EnsembleSampler(
     nwalkers, ndim, log_probability, args=(x, y, yerr), pool = pool_cpu
@@ -123,7 +125,7 @@ from getdist import plots, MCSamples
 labels = [r'$\log_{10}r_c$']
 names = [r'$\log_{10}r_c$']
 samples = MCSamples(samples=flat_samples,names = names, labels = labels)
-samples.saveAsText("Behroozi_nDGP_SMF")
+samples.saveAsText("Puebla_nDGP_SMF")
 # 1D marginalized comparison plot
 g = plots.get_subplot_plotter()
 g.plot_1d([samples], r'$\log_{10}r_c$')

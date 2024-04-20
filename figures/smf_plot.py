@@ -336,7 +336,7 @@ ax_Pk.tick_params(axis='both', which='minor',direction="in", labelsize=12, lengt
 ax_Pk.tick_params(axis='both', which='major',direction="in", labelsize=14, length = 5)
 ax_Pk.tick_params(axis='both', which='minor',direction="in", labelsize=12, length = 4)
 
-obs = number_density(feature='GSMF', z_target=4.0, h=h)
+obs = number_density(feature='GSMF', z_target=8.0, h=h)
 j_data = 0
 k_func = 0
 colors         = ['#e41a1c','#377eb8','#4daf4a','#984ea3',\
@@ -369,7 +369,7 @@ model_SFR = 'Puebla'
 par1 = 10**9
 par2 = 1
 f0 = 0.03
-z_int = np.array([4]) #np.linspace(12,5,35)
+z_int = np.array([8]) #np.linspace(12,5,35)
 SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
 Pk_arr = []
 for i, z_i in enumerate(z_int):
