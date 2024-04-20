@@ -34,47 +34,56 @@ class SMF:
         self.Masses = Masses
         self.f0 = f0
 
-    # Code for Behroozi+13 SMHR is taken from
-    # https://github.com/dr-guangtou/asap/tree/master
-    def behroozi13_evolution(self, redshift):
-        scale = 1.0 / (1.0 + redshift)
-        scale_minus_one = -redshift / (1.0 + redshift)
+    # Rodriguez-Puebla parameterization is taken from
+    # the repo https://github.com/dr-guangtou/asap/blob/master/asap/shmr.py
+    def puebla17_p(self, x, y, z):
+        """The P(x, y, z) function used in Rodriguez-Puebla+17."""
+        return y * z - (x * z) / (1.0 + z)
 
-        mh_1_0, mh_1_a, mh_1_z = 11.514, -1.793, -0.251
-        epsilon_0, epsilon_a = -1.777, -0.006
-        epsilon_z, epsilon_a_2 = -0.000, -0.119
-        alpha_0, alpha_a = -1.412, 0.731
-        delta_0, delta_a, delta_z = 3.508, 2.608, -0.043
-        gamma_0, gamma_a, gamma_z = 0.316, 1.319, 0.279
+    def puebla17_q(self, z):
+        """The Q(z) function used in Rodriguez-Puebla+17."""
+        return np.exp(-4.0 / (1.0 + z) ** 2.0)
 
-        nu_a = np.exp(-4.0 * (scale ** 2.0))
-
-        mh_1 = mh_1_0 + ((mh_1_a * scale_minus_one) + mh_1_z * redshift) * nu_a
-        epsilon = epsilon_0 + ((epsilon_a * scale_minus_one) + epsilon_z * redshift) + epsilon_a_2 * scale_minus_one
-        alpha = alpha_0 + (alpha_a * scale_minus_one) * nu_a
-        delta = delta_0 + (delta_a * scale_minus_one + delta_z * redshift) * nu_a
-        gamma = gamma_0 + (gamma_a * scale_minus_one + gamma_z * redshift) * nu_a
-
-        return mh_1, epsilon, alpha, delta, gamma
-
-
-    def behroozi13_f(self, x, alpha, delta, gamma):
-        term_1 = -1.0 * np.log10(10.0 ** (alpha * x) + 1.0)
+    def puebla17_g(self, x, alpha, delta, gamma):
+        """The g(x) function used in Behroozi+13."""
+        term_1 = -np.log10(10.0 ** (-alpha * x) + 1.0)
 
         term_2 = delta * (np.log10(1.0 + np.exp(x)) ** gamma) / (1.0 + np.exp(10.0 ** -x))
 
         return term_1 + term_2
 
-    def behroozi13_mh_to_ms(self, halo_mass, z, **kwargs):
-        logmh = np.log10(halo_mass)
-        mh_1, epsilon, alpha, delta, gamma = self.behroozi13_evolution(z, **kwargs)
+    def puebla17_evolution(self, redshift):
+        """Parameterize the evolution in term of scale factor.
+
+        Using the best-fit parameters in Rodriguez-Puebla+17.
+        """
+
+        mh_1_0, mh_1_1, mh_1_2 = 11.548, -1.297, -0.026
+        epsilon_0, epsilon_1 = -1.758, 0.110
+        epsilon_2, epsilon_3 = -0.061, -0.023
+        alpha_0, alpha_1, alpha_2 = 1.975, 0.714, 0.042
+        delta_0, delta_1, delta_2 = 3.390, -0.472, -0.931
+        gamma_0, gamma_1 = 0.498, -0.157
+
+        mh_1 = mh_1_0 + self.puebla17_p(mh_1_1, mh_1_2, redshift) * self.puebla17_q(redshift)
+        epsilon = epsilon_0 + (self.puebla17_p(epsilon_1, epsilon_2, redshift) * self.puebla17_q(redshift) +
+                            self.puebla17_p(epsilon_3, 0.0, redshift))
+        alpha = alpha_0 + self.puebla17_p(alpha_1, alpha_2, redshift) * self.puebla17_q(redshift)
+        delta = delta_0 + self.puebla17_p(delta_1, delta_2, redshift) * self.puebla17_q(redshift)
+        gamma = gamma_0 + self.puebla17_p(gamma_1, 0.0, redshift) * self.puebla17_q(redshift)
+
+        return mh_1, epsilon, alpha, delta, gamma
+
+    def puebla17_mh_to_ms(self, Mh, z):
+        logmh = np.log10(Mh)
+        mh_1, epsilon, alpha, delta, gamma = self.puebla17_evolution(z)
 
         mhalo_ratio = logmh - mh_1
 
-        star_mass = mh_1 + epsilon + (self.behroozi13_f(mhalo_ratio, alpha, delta, gamma) -
-                                self.behroozi13_f(0.0, alpha, delta, gamma))
-        star_mass = 10**star_mass
-        epsilon_star = star_mass/(halo_mass*Omegab0/Omegam0)
+        Mstar = mh_1 + epsilon + (self.puebla17_g(mhalo_ratio, alpha, delta, gamma) -
+                                self.puebla17_g(0.0, alpha, delta, gamma))
+        Mstar = 10**Mstar
+        epsilon_star = Mstar/(Mh*Omegab0/Omegam0)
         return epsilon_star
         
     def epsilon(self, Mh, model_SFR, a, f0):
@@ -88,8 +97,8 @@ class SMF:
                 epstar = 0.03
         elif model_SFR == 'phenomenological_extreme':
             epstar = 1
-        elif model_SFR == 'Behroozi':
-            epstar = self.behroozi13_mh_to_ms(Mh, z)
+        elif model_SFR == 'Puebla':
+            epstar = self.puebla17_mh_to_ms(Mh, z)
         elif model_SFR == 'double_power':
             Mp = 10**12.1
             alo = -1.32
@@ -102,13 +111,20 @@ class SMF:
         return epstar
 
     def sigma_P(self, z):
-        sigma0 = 0.07
+        sigma0 = 0.1
         sigmaz = 0.05
         return sigma0 + sigmaz*z
+
+    def G_prob(self, x, Mstar, z):
+        sigma = self.sigma_P(z)
+        return 1/np.sqrt(2*np.pi*sigma**2)*np.exp(-1/(2*sigma**2)*np.log10(Mstar/x)**2)
 
     def f_passive_obs(self, Masses_star, a):
         z = 1/a-1
         return ((Masses_star/(10**(10.2+0.5*z)))**(-1.3)+1)**(-1)
+
+    def SMF_interpolation(self, Mstar_var, SMF, z, down, up):
+        return scipy.integrate.quad(lambda logx: self.G_prob(10**logx, Mstar_var, z)*SMF(10**logx), down, up)[0]
 
     def SMF_obs(self, Masses, rhoM, a, model_H, model, model_SFR, par1, par2, k, Pk, f0):
         # Mh_arr = np.logspace(6.5,18,1000)
@@ -123,20 +139,30 @@ class SMF:
         SMF = Masses_star*np.log(10)*HMF_fid*np.gradient(Masses)/ \
             np.gradient(Masses_star)
 
-        z = 1/a-1
-        mu_SMF = -0.020+0.081*(a-1)
-        kappa_SMF = 0.045 + (-0.155)*(a-1)
-        ci = 0.273*(1+np.exp(1.077-z))**(-1)
-        ci1 = 0.273*(1+np.exp(1.077-1))**(-1)
-        if z<1:
-            c = 1
-        else:
-            c = ci + (1-ci1)
-            
-        
-        #SMF = 10**(self.sigma_P(z)**2/2*np.log(10)*(np.gradient(np.log10(SMF))/np.gradient(np.log10(Masses_star)))**2)*SMF
+        if model_SFR == 'Puebla':
+            z = 1/a-1
+            mu_SMF = -0.020+0.081*(a-1)
+            kappa_SMF = 0.045 + (-0.155)*(a-1)
+            ci = 0.273*(1+np.exp(1.077-z))**(-1)
+            ci1 = 0.273*(1+np.exp(1.077-1))**(-1)
+            if z<1:
+                c = 1
+            else:
+                c = ci + (1-ci1)
+
+            SMF = scipy.interpolate.interp1d(Masses_star,SMF, fill_value="extrapolate")
+            Mstar_grid = np.logspace(min(Masses_star),max(Masses_star),50)
+            SMF_arr = []
+            for Mstar in Mstar_grid:
+                SMF_arr.append(self.SMF_interpolation(Mstar, SMF, z,min(Masses_star),max(Masses_star)))
+            SMF = np.array(SMF_arr)
+            Masses_star = Mstar_grid
+            #Masses_star = 10**mu_SMF*Masses_star 
+
+        """
+        SMF = 10**(self.sigma_P(z)**2/2*np.log(10)*(np.gradient(np.log10(SMF))/np.gradient(np.log10(Masses_star)))**2)*SMF
         SMF = scipy.interpolate.interp1d(Masses_star,SMF, fill_value="extrapolate")
         SMF = self.f_passive_obs(Masses_star,a)*SMF(Masses_star*10**(-mu_SMF))+SMF(Masses_star*10**(-mu_SMF))*(1-self.f_passive_obs(Masses_star*10**(-kappa_SMF),a))
         SMF = c*SMF
-        
+        """
         return Masses_star, SMF

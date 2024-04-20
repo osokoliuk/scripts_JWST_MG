@@ -342,7 +342,7 @@ pool_cpu = Pool(8)
 
 model = 'nDGP'
 model_H = 'nDGP'
-model_SFR = 'Behroozi'
+model_SFR = 'Puebla'
 par1 = 10**9
 par2 = 1
 f0 = 0.03
@@ -353,7 +353,7 @@ for i, z_i in enumerate(z_int):
     HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
     Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3)
 k = kvec/h
-Masses = np.logspace(8,16,100)
+Masses = np.logspace(6,18,100)
 
 
 iterable = [(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
@@ -375,7 +375,7 @@ for i, z_i in enumerate(z_int):
     HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
     Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3)
 k = kvec/h
-Masses = np.logspace(8,16,100)
+Masses = np.logspace(6,18,100)
 
 
 iterable = [(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
