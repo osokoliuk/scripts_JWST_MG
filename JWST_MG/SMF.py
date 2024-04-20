@@ -93,12 +93,11 @@ class SMF:
         elif model_SFR == 'Puebla':
             epstar = self.puebla17_mh_to_ms(Mh, z)
         elif model_SFR == 'double_power':
-            Mp = 10**11.16
-            alo = 0.8
-            ahi = -0.53
-            f0 = 10**(-1.26)
-            C10 = (1e10/Mp)**(-alo) + (1e10/Mp)**(-ahi)
-            epstar = C10*f0/((Mh/Mp)**(-alo) + (Mh/Mp)**(-ahi))
+            Mp = 10**12.1
+            alo = -1.32
+            ahi = 0.43
+            f0 = 0.12
+            epstar = f0/((Mh/Mp)**(alo) + (Mh/Mp)**(ahi))
         else:
             raise Exception("Incorrect SFR model used.")
         return epstar
@@ -120,11 +119,9 @@ class SMF:
         return scipy.integrate.quad(lambda logx: self.G_prob(10**logx, Mstar_var, z)*SMF(10**logx), down, up)[0]
 
     def SMF_obs(self, Masses, rhoM, a, model_H, model, model_SFR, par1, par2, k, Pk, f0):
-        # Mh_arr = np.logspace(6.5,18,1000)
         HMF_library = HMF(a, model, model_H, par1, par2, Masses)
         HMF_fid = HMF_library.ST_mass_function(
             rhoM, Masses, a, model_H, model, par1, par2, k, Pk)
-        #HMF_fid = np.log(10)*Masses*HMF_fid
 
         Masses_star = self.epsilon(
             Masses, model_SFR, a, f0)*Omegab0/Omegam0*Masses
@@ -132,7 +129,7 @@ class SMF:
         SMF = Masses_star*np.log(10)*HMF_fid*np.gradient(Masses)/ \
             np.gradient(Masses_star)
 
-        if model_SFR == 'Puebla':
+        if model_SFR == 'Puebla' or model_SFR == 'double_power':
             z = 1/a-1
             mu_SMF = -0.020+0.081*(a-1)
             kappa_SMF = 0.045 + (-0.155)*(a-1)
@@ -150,6 +147,9 @@ class SMF:
                 SMF_arr.append(self.SMF_interpolation(Mstar, SMF, z,np.log10(min(Masses_star)),np.log10(max(Masses_star))))
             SMF = c*np.array(SMF_arr)
             Masses_star = Mstar_grid
+            #SMF = scipy.interpolate.interp1d(Masses_star,SMF, fill_value="extrapolate")
+            #SMF = self.f_passive_obs(Masses_star,a)*SMF(Masses_star*10**(-mu_SMF))+SMF(Masses_star*10**(-mu_SMF))*(1-self.f_passive_obs(Masses_star*10**(-kappa_SMF),a))
+
 
             #Masses_star = 10**mu_SMF*Masses_star 
 
