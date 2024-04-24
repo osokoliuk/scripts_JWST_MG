@@ -7,10 +7,9 @@ from JWST_MG.HMF import HMF
 from JWST_MG.SMF import SMF
 from JWST_MG.SMD import SMD
 from JWST_MG.UVLF import UVLF
-
-
+import zeus
 plt.rcParams.update({"text.usetex": True})
-
+from tqdm.contrib.concurrent import process_map  # or thread_map
 
 x = [[],[],[],[],[],[],[]]
 y = [[],[],[],[],[],[],[]]
@@ -51,12 +50,15 @@ model_H = 'nDGP'
 model_SFR = 'Puebla'
 par2 = 1
 f0 = 0.1
+
+
+
 def SMF_func(z, par1):
     SMF_library = SMF(1/(1+z), model, model_H, model_SFR, par1, par2, 1e8)
     HMF_library = HMF(1/(1+z), model, model_H, par1, par2, 1e8)
     Pk = np.array(HMF_library.Pk(1/(1+z), model, par1, par2))*h**3
     k = kvec/h
-    Masses = np.logspace(8,14,100)
+    Masses = np.logspace(6,16,100)
     Masses_star, SMF_sample = SMF_library.SMF_obs(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk, f0)
     return Masses_star, SMF_sample
 
@@ -73,19 +75,18 @@ def SMF_single(log_par1):
     return result
 
 def log_likelihood_interpolated(x, y, yerr):
-    log_par1_span = np.linspace(2,8,100)
-    pool_cpu = Pool(8)
-
-    result = pool_cpu.map(SMF_single, tqdm(log_par1_span, total = len(log_par1_span)))
+    log_par1_span = np.linspace(2,8,150)
+    
+    result = np.array(progress_map(SMF_single, log_par1_span, n_cpu=None))
    
     interpolated_likelihood = scipy.interpolate.interp1d(log_par1_span, result, fill_value='extrapolate')
     return interpolated_likelihood
 
-log_likelihood_int = log_likelihood_interpolated(x, y, yerr)
-with open('Puebla_SMF_nDGP_likelihood.pkl', 'wb') as f:
-    pickle.dump(log_likelihood_int, f)
-#with open('Puebla_SMF_nDGP_likelihood.pkl', 'rb') as f:
-#    log_likelihood_int = pickle.load(f)
+#log_likelihood_int = log_likelihood_interpolated(x, y, yerr)
+#with open('Puebla_SMF_nDGP_likelihood.pkl', 'wb') as f:
+#    pickle.dump(log_likelihood_int, f)
+with open('Puebla_SMF_nDGP_likelihood.pkl', 'rb') as f:
+    log_likelihood_int = pickle.load(f)
 
 def log_likelihood(theta, x, y, yerr):
     log_par1 = theta
@@ -105,9 +106,9 @@ def log_probability(theta, x, y, yerr):
 
 
 
-nwalkers = 12
+nwalkers = 50
 ndim = 1
-
+pool_cpu = Pool(8)
 sampler = emcee.EnsembleSampler(
     nwalkers, ndim, log_probability, args=(x, y, yerr), pool = pool_cpu
 )

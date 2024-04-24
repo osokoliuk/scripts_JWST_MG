@@ -115,7 +115,7 @@ def log_likelihood_interpolated(x, y, yerr):
 #log_likelihood_int = log_likelihood_interpolated(x, y, yerr)
 #with open('double_power_SMF_nDGP_likelihood.pkl', 'wb') as f:
 #    pickle.dump(log_likelihood_int, f)
-with open('./mcmc_outputs/double_power_SMF_nDGP_likelihood.pkl', 'rb') as f:
+with open('double_power_SMF_nDGP_likelihood.pkl', 'rb') as f:
     log_likelihood_int = pickle.load(f)
 
 def log_likelihood(theta, x, y, yerr):
@@ -138,7 +138,7 @@ def log_probability(theta, x, y, yerr):
 
 import emcee
 
-nwalkers = 500
+nwalkers = 50
 ndim = 2
 from multiprocessing import Pool
 
@@ -151,9 +151,9 @@ sampler = emcee.EnsembleSampler(
 initial_params = [6, 0.1]
 per = 0.01
 initial_pos = [initial_params + per * np.random.randn(ndim) for _ in range(nwalkers)]
-sampler.run_mcmc(initial_pos, 1500, progress=True)
+sampler.run_mcmc(initial_pos, 2500, progress=True)
 
-flat_samples = sampler.get_chain()
+flat_samples = sampler.get_chain(discard=500, thin=1000, flat=True)
 
 import getdist
 from getdist import plots, MCSamples

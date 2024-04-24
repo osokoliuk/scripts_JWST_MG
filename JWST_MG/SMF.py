@@ -96,7 +96,6 @@ class SMF:
             Mp = 10**12.1
             alo = -1.32
             ahi = 0.43
-            f0 = 0.12
             epstar = f0/((Mh/Mp)**(alo) + (Mh/Mp)**(ahi))
         else:
             raise Exception("Incorrect SFR model used.")

@@ -34,7 +34,7 @@ class HMF:
                            'gauge': 'newtonian',  # FOR MGCLASS TO WORK, GAUGE NEEDS TO BE NEWTONIAN
                            'k_pivot': 0.05,
                            'mg_z_init': 99.000,
-                           'P_k_max_1/Mpc': 10000.0,
+                           'P_k_max_1/Mpc': 1000.0,
                            'perturb_sampling_stepsize': 0.05,
                            'output': 'mPk',
                            'z_max_pk': 99}
