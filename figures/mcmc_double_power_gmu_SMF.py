@@ -107,11 +107,11 @@ def log_likelihood_interpolated(x, y, yerr):
     interpolated_likelihood = LinearNDInterpolatorExt(list(zip(par1_span, par2_span, f0_span)),result)
     return interpolated_likelihood
 
-log_likelihood_int = log_likelihood_interpolated(x, y, yerr)
-with open('double_power_SMF_gmu_likelihood.pkl', 'wb') as f:
-    pickle.dump(log_likelihood_int, f)
-#with open('double_power_SMF_gmu_likelihood.pkl', 'rb') as f:
-#    log_likelihood_int = pickle.load(f)
+#log_likelihood_int = log_likelihood_interpolated(x, y, yerr)
+#with open('double_power_SMF_gmu_likelihood.pkl', 'wb') as f:
+#    pickle.dump(log_likelihood_int, f)
+with open('double_power_SMF_gmu_likelihood.pkl', 'rb') as f:
+    log_likelihood_int = pickle.load(f)
 
 def log_likelihood(theta, x, y, yerr):
     par1, par2, f0 = theta
@@ -153,8 +153,8 @@ flat_samples = sampler.get_chain(discard=5, thin=5, flat=True)
 import getdist
 from getdist import plots, MCSamples
 
-labels = [r'$E_{11}$', r'$E_{22}$', r'$\epsilon_0$']
-names = [r'$E_{11}$', r'$E_{22}$', r'$\epsilon_0$']
+labels = [r'$g_{\mu}$', r'$g_{\gamma}$', r'$\epsilon_0$']
+names = [r'$g_{\mu}$', r'$g_{\gamma}$', r'$\epsilon_0$']
 samples = MCSamples(samples=flat_samples,names = names, labels = labels)
 samples.saveAsText("double_power_gmu_SMF")
 # 1D marginalized comparison plot
