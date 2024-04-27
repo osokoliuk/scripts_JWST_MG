@@ -326,7 +326,7 @@ plt.figure()
 plt.rcParams.update({"text.usetex":True})
 fig = plt.figure(figsize=(4.25*0.9*2,3*0.9*1.75))
 nn = 1
-z_smf_arr = [7]
+z_smf_arr = [0]
 for z_smf in z_smf_arr:
     ax_Pk = plt.subplot(2,2,nn)
 
@@ -369,8 +369,8 @@ for z_smf in z_smf_arr:
     model = 'E11'
     model_H = 'LCDM'
     model_SFR = 'Puebla'
-    par1 = -0.8
-    par2 = -0.01
+    par1 = 100
+    par2 = 100
     f0 = 0.04
     z_int = np.array([z_smf]) #np.linspace(12,5,35)
     SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)

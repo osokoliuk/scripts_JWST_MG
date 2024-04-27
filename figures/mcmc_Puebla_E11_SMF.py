@@ -92,7 +92,7 @@ def log_likelihood_interpolated(x, y, yerr):
     sampler = qmc.LatinHypercube(d=2)
     sample = sampler.random(n=450)
     l_bounds = [-1,-1]
-    u_bounds = [1,1]
+    u_bounds = [2,2]
     sample_scaled = qmc.scale(sample, l_bounds, u_bounds)
     par1_span = sample_scaled[:,0]
     par2_span = sample_scaled[:,1]
@@ -120,7 +120,7 @@ def log_likelihood(theta, x, y, yerr):
 
 def log_prior(theta):
     par1, par2 = theta
-    if (-1 < par1 < 1 and -1 < par2 < 1):
+    if (-1 < par1 < 2 and -1 < par2 < 2):
         return 0
     return -np.inf
 
@@ -143,18 +143,18 @@ sampler = emcee.EnsembleSampler(
     nwalkers, ndim, log_probability, args=(x, y, yerr), pool = pool_cpu
 )
 
-initial_params = [1, 1]
+initial_params = [1/2, 1/2]
 per = 0.01
 initial_pos = [initial_params + per * np.random.randn(ndim) for _ in range(nwalkers)]
-sampler.run_mcmc(initial_pos, 5000, progress=True)
+sampler.run_mcmc(initial_pos, 16000, progress=True)
 
-flat_samples = sampler.get_chain(discard=5, thin=5, flat=True)
+flat_samples = sampler.get_chain(discard=5000, thin=5000, flat=True)
 
 import getdist
 from getdist import plots, MCSamples
 
+names = ['E11', 'E22']
 labels = [r'$E_{11}$', r'$E_{22}$']
-names = [r'$E_{11}$', r'$E_{22}$']
 samples = MCSamples(samples=flat_samples,names = names, labels = labels)
 samples.saveAsText("Puebla_E11_SMF")
 # 1D marginalized comparison plot

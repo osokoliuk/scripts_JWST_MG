@@ -3,15 +3,6 @@ from JWST_MG.cosmological_functions import cosmological_functions
 from JWST_MG.delta_c import delta_c
 from JWST_MG.HMF import HMF
 
-from hmf import MassFunction     # The main hmf class
-import numpy
-from numpy import log, log10, sqrt, exp, pi, arange, logspace, linspace, r_, c_
-# Don't judge me: 
-from matplotlib.pyplot import *
-from scipy.interpolate import UnivariateSpline as US
-import hmf
-from astropy.cosmology import FlatLambdaCDM
-
 class SMF:
    ########################################################################
     # Initialize a class SMF (Stellar Mass Function)

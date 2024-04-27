@@ -92,7 +92,7 @@ def log_likelihood_interpolated(x, y, yerr):
     sampler = qmc.LatinHypercube(d=2)
     sample = sampler.random(n=450)
     l_bounds = [0,0]
-    u_bounds = [1,1]
+    u_bounds = [3,3]
     sample_scaled = qmc.scale(sample, l_bounds, u_bounds)
     par1_span = sample_scaled[:,0]
     par2_span = sample_scaled[:,1]
@@ -107,11 +107,11 @@ def log_likelihood_interpolated(x, y, yerr):
     interpolated_likelihood = LinearNDInterpolatorExt(list(zip(par1_span, par2_span)),result)
     return interpolated_likelihood
 
-#log_likelihood_int = log_likelihood_interpolated(x, y, yerr)
-#with open('Puebla_SMF_gmu_likelihood.pkl', 'wb') as f:
-#    pickle.dump(log_likelihood_int, f)
-with open('Puebla_SMF_gmu_likelihood.pkl', 'rb') as f:
-    log_likelihood_int = pickle.load(f)
+log_likelihood_int = log_likelihood_interpolated(x, y, yerr)
+with open('Puebla_SMF_gmu_likelihood.pkl', 'wb') as f:
+    pickle.dump(log_likelihood_int, f)
+#with open('Puebla_SMF_gmu_likelihood.pkl', 'rb') as f:
+#    log_likelihood_int = pickle.load(f)
 
 def log_likelihood(theta, x, y, yerr):
     par1, par2 = theta
@@ -153,8 +153,8 @@ flat_samples = sampler.get_chain(discard=5, thin=5, flat=True)
 import getdist
 from getdist import plots, MCSamples
 
+names = ['gmu', 'ggamma']
 labels = [r'$g_{\mu}$', r'$g_{\gamma}$']
-names = [r'$g_{\mu}$', r'$g_{\gamma}$']
 samples = MCSamples(samples=flat_samples,names = names, labels = labels)
 samples.saveAsText("Puebla_gmu_SMF")
 # 1D marginalized comparison plot

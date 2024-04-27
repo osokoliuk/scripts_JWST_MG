@@ -20,7 +20,6 @@ import pandas as pd
 import scipy.integrate as intg
 import astropy.constants as con
 import pickle
-from numba import jit
 from mpi4py import MPI
 import os
 from astrodatapy.number_density import number_density

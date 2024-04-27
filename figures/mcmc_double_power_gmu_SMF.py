@@ -91,7 +91,7 @@ def log_likelihood_interpolated(x, y, yerr):
     sampler = qmc.LatinHypercube(d=3)
     sample = sampler.random(n=450)
     l_bounds = [0,0,0.001]
-    u_bounds = [1,1,1]
+    u_bounds = [3,3,1]
     sample_scaled = qmc.scale(sample, l_bounds, u_bounds)
     par1_span = sample_scaled[:,0]
     par2_span = sample_scaled[:,1]
@@ -107,11 +107,11 @@ def log_likelihood_interpolated(x, y, yerr):
     interpolated_likelihood = LinearNDInterpolatorExt(list(zip(par1_span, par2_span, f0_span)),result)
     return interpolated_likelihood
 
-#log_likelihood_int = log_likelihood_interpolated(x, y, yerr)
-#with open('double_power_SMF_gmu_likelihood.pkl', 'wb') as f:
-#    pickle.dump(log_likelihood_int, f)
-with open('double_power_SMF_gmu_likelihood.pkl', 'rb') as f:
-    log_likelihood_int = pickle.load(f)
+log_likelihood_int = log_likelihood_interpolated(x, y, yerr)
+with open('double_power_SMF_gmu_likelihood.pkl', 'wb') as f:
+    pickle.dump(log_likelihood_int, f)
+#with open('double_power_SMF_gmu_likelihood.pkl', 'rb') as f:
+#    log_likelihood_int = pickle.load(f)
 
 def log_likelihood(theta, x, y, yerr):
     par1, par2, f0 = theta
@@ -146,15 +146,15 @@ sampler = emcee.EnsembleSampler(
 initial_params = [1, 1, 0.1]
 per = 0.01
 initial_pos = [initial_params + per * np.random.randn(ndim) for _ in range(nwalkers)]
-sampler.run_mcmc(initial_pos, 5000, progress=True)
+sampler.run_mcmc(initial_pos, 60000, progress=True)
 
-flat_samples = sampler.get_chain(discard=5, thin=5, flat=True)
+flat_samples = sampler.get_chain(discard=7500, thin=7500, flat=True)
 
 import getdist
 from getdist import plots, MCSamples
 
+names = ['gmu', 'ggamma', 'epstar']
 labels = [r'$g_{\mu}$', r'$g_{\gamma}$', r'$\epsilon_0$']
-names = [r'$g_{\mu}$', r'$g_{\gamma}$', r'$\epsilon_0$']
 samples = MCSamples(samples=flat_samples,names = names, labels = labels)
 samples.saveAsText("double_power_gmu_SMF")
 # 1D marginalized comparison plot
