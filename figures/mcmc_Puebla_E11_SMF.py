@@ -120,7 +120,7 @@ def log_likelihood(theta, x, y, yerr):
 
 def log_prior(theta):
     par1, par2 = theta
-    if (-1 < par1 < 2 and -1 < par2 < 2):
+    if (0 < par1 < 2 and -1 < par2 < 2):
         return 0
     return -np.inf
 
@@ -143,10 +143,10 @@ sampler = emcee.EnsembleSampler(
     nwalkers, ndim, log_probability, args=(x, y, yerr), pool = pool_cpu
 )
 
-initial_params = [1/2, 1/2]
+initial_params = [0, 0]
 per = 0.01
 initial_pos = [initial_params + per * np.random.randn(ndim) for _ in range(nwalkers)]
-sampler.run_mcmc(initial_pos, 16000, progress=True)
+sampler.run_mcmc(initial_pos, 36000, progress=True)
 
 flat_samples = sampler.get_chain(discard=5000, thin=5000, flat=True)
 

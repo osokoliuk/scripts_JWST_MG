@@ -107,11 +107,11 @@ def log_likelihood_interpolated(x, y, yerr):
     interpolated_likelihood = LinearNDInterpolatorExt(list(zip(par1_span, par2_span)),result)
     return interpolated_likelihood
 
-log_likelihood_int = log_likelihood_interpolated(x, y, yerr)
-with open('Puebla_SMF_gmu_likelihood.pkl', 'wb') as f:
-    pickle.dump(log_likelihood_int, f)
-#with open('Puebla_SMF_gmu_likelihood.pkl', 'rb') as f:
-#    log_likelihood_int = pickle.load(f)
+#log_likelihood_int = log_likelihood_interpolated(x, y, yerr)
+#with open('Puebla_SMF_gmu_likelihood.pkl', 'wb') as f:
+#    pickle.dump(log_likelihood_int, f)
+with open('Puebla_SMF_gmu_likelihood.pkl', 'rb') as f:
+    log_likelihood_int = pickle.load(f)
 
 def log_likelihood(theta, x, y, yerr):
     par1, par2 = theta
@@ -120,7 +120,7 @@ def log_likelihood(theta, x, y, yerr):
 
 def log_prior(theta):
     par1, par2 = theta
-    if (0 < par1 < 1 and 0 < par2 < 1):
+    if (0 < par1 < 3 and 0 < par2 < 3):
         return 0
     return -np.inf
 
@@ -146,9 +146,9 @@ sampler = emcee.EnsembleSampler(
 initial_params = [1, 1]
 per = 0.01
 initial_pos = [initial_params + per * np.random.randn(ndim) for _ in range(nwalkers)]
-sampler.run_mcmc(initial_pos, 5000, progress=True)
+sampler.run_mcmc(initial_pos, 60000, progress=True)
 
-flat_samples = sampler.get_chain(discard=5, thin=5, flat=True)
+flat_samples = sampler.get_chain(discard=7500, thin=7500, flat=True)
 
 import getdist
 from getdist import plots, MCSamples

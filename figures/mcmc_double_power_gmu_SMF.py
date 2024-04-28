@@ -107,11 +107,11 @@ def log_likelihood_interpolated(x, y, yerr):
     interpolated_likelihood = LinearNDInterpolatorExt(list(zip(par1_span, par2_span, f0_span)),result)
     return interpolated_likelihood
 
-log_likelihood_int = log_likelihood_interpolated(x, y, yerr)
-with open('double_power_SMF_gmu_likelihood.pkl', 'wb') as f:
-    pickle.dump(log_likelihood_int, f)
-#with open('double_power_SMF_gmu_likelihood.pkl', 'rb') as f:
-#    log_likelihood_int = pickle.load(f)
+#log_likelihood_int = log_likelihood_interpolated(x, y, yerr)
+#with open('double_power_SMF_gmu_likelihood.pkl', 'wb') as f:
+#    pickle.dump(log_likelihood_int, f)
+with open('double_power_SMF_gmu_likelihood.pkl', 'rb') as f:
+    log_likelihood_int = pickle.load(f)
 
 def log_likelihood(theta, x, y, yerr):
     par1, par2, f0 = theta
@@ -120,7 +120,7 @@ def log_likelihood(theta, x, y, yerr):
 
 def log_prior(theta):
     par1, par2, f0 = theta
-    if (0 < par1 < 1 and 0 < par2 < 1 and 0.001 < f0 < 1):
+    if (0 < par1 < 3 and 0 < par2 < 3 and 0.001 < f0 < 1):
         return 0
     return -np.inf
 
@@ -143,7 +143,7 @@ sampler = emcee.EnsembleSampler(
     nwalkers, ndim, log_probability, args=(x, y, yerr), pool = pool_cpu
 )
 
-initial_params = [1, 1, 0.1]
+initial_params = [1/2, 1/2, 0.12]
 per = 0.01
 initial_pos = [initial_params + per * np.random.randn(ndim) for _ in range(nwalkers)]
 sampler.run_mcmc(initial_pos, 60000, progress=True)
