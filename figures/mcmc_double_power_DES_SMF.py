@@ -120,7 +120,7 @@ def log_likelihood(theta, x, y, yerr):
 
 def log_prior(theta):
     par1, par2, f0 = theta
-    if (-1 < par1 < 1 and -1 < par2 < 1 and 0.005 < f0 < 1):
+    if (-1 < par1 < 1 and -1 < par2 < 1 and 0.05 < f0 < 1):
         return 0
     return -np.inf
 
@@ -146,9 +146,9 @@ sampler = zeus.EnsembleSampler(
 initial_params = [0.1, 0.1, 0.1]
 per = 0.01
 initial_pos = [initial_params + per * np.random.randn(ndim) for _ in range(nwalkers)]
-sampler.run_mcmc(initial_pos, 15000, progress=True)
+sampler.run_mcmc(initial_pos, 25000, progress=True)
 
-flat_samples = sampler.get_chain(discard=500, flat=True)
+flat_samples = sampler.get_chain(discard=0, flat=True)
 
 import getdist
 from getdist import plots, MCSamples
