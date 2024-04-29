@@ -120,7 +120,7 @@ def log_likelihood(theta, x, y, yerr):
 
 def log_prior(theta):
     par1, par2 = theta
-    if (0 < par1 < 2 and -1 < par2 < 2):
+    if (-1 < par1 < 2 and -1 < par2 < 2):
         return 0
     return -np.inf
 

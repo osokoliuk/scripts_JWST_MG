@@ -120,7 +120,7 @@ def log_likelihood(theta, x, y, yerr):
 
 def log_prior(theta):
     par1, par2, f0 = theta
-    if (0 < par1 < 3 and 0 < par2 < 3 and 0.001 < f0 < 1):
+    if (0 < par1 < 3 and 0 < par2 < 3 and 0.05 < f0 < 1):
         return 0
     return -np.inf
 
@@ -139,22 +139,22 @@ from multiprocessing import Pool
 
 pool_cpu = Pool(8)
 
-sampler = emcee.EnsembleSampler(
+sampler = zeus.EnsembleSampler(
     nwalkers, ndim, log_probability, args=(x, y, yerr), pool = pool_cpu
 )
 
-initial_params = [1/2, 1/2, 0.12]
+initial_params = [0.1, 0.1, 0.1]
 per = 0.01
 initial_pos = [initial_params + per * np.random.randn(ndim) for _ in range(nwalkers)]
-sampler.run_mcmc(initial_pos, 60000, progress=True)
+sampler.run_mcmc(initial_pos, 5000, progress=True)
 
-flat_samples = sampler.get_chain(discard=7500, thin=7500, flat=True)
+flat_samples = sampler.get_chain(discard=500, flat=True)
 
 import getdist
 from getdist import plots, MCSamples
 
 names = ['gmu', 'ggamma', 'epstar']
-labels = [r'$g_{\mu}$', r'$g_{\gamma}$', r'$\epsilon_0$']
+labels = ['g_{\mu}', 'g_{\gamma}', '\epsilon_0']
 samples = MCSamples(samples=flat_samples,names = names, labels = labels)
 samples.saveAsText("double_power_gmu_SMF")
 # 1D marginalized comparison plot
