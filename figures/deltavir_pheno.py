@@ -1,3 +1,6 @@
+import sys
+sys.path.insert(0, "../")
+
 from JWST_MG.UVLF import UVLF
 from JWST_MG.HMF import HMF
 from JWST_MG.reionization import reionization
@@ -99,7 +102,7 @@ for i in range(len(pars1)):
         print(Deltavir)
         Delta.append(Deltavir)
         # print(Deltavir)
-    plt.plot(ac_arr, Delta, c=colors[i], alpha=0.5, lw=1)
+    plt.plot(ac_arr, Delta, c=colors[i], lw=1)
 
 
 norm = plt.Normalize(pars1.min(), pars1.max())
@@ -161,7 +164,7 @@ for i in range(len(pars1)):
         print(Deltavir)
         Delta.append(Deltavir)
         # print(Deltavir)
-    plt.plot(ac_arr, Delta, c=colors[i], alpha=0.5, lw=1)
+    plt.plot(ac_arr, Delta, c=colors[i], lw=1)
 
 
 norm = plt.Normalize(pars1.min(), pars1.max())

@@ -1,3 +1,6 @@
+import sys
+sys.path.insert(0, "../")
+
 from JWST_MG.UVLF import UVLF
 from JWST_MG.HMF import HMF
 from JWST_MG.reionization import reionization
@@ -80,12 +83,13 @@ model = 'nDGP'
 model_H = 'nDGP'
 model_SFR = 'toy'
 
-pars1 = np.logspace(2.69897000434, 6, 15)
+pars1 = np.logspace(3, 5, 10)
 ac_arr = np.linspace(0.05, 1, 20)
 par2 = 0
 
 n = len(pars1)
 colors = pl.cm.Blues(np.linspace(0, 1, n))
+import matplotlib.colors as colorss
 
 for i in range(len(pars1)):
     Delta = []
@@ -93,17 +97,17 @@ for i in range(len(pars1)):
     for ac in ac_arr:
         a_arr = np.linspace(ai, ac, 10000)
         reion = reionization(a_arr, model, model_H, par1, par2)
-        a_vir, Deltavir = reion.Delta_vir(
+        a_vir, Deltavir, a_arr, mu_arr = reion.Delta_vir(
             model, model_H, par1, par2, a_arr)
         print(Deltavir)
         Delta.append(Deltavir)
         # print(Deltavir)
-    plt.plot(ac_arr, Delta, c=colors[i], alpha=0.5, lw=1)
+    plt.plot(ac_arr, Delta, c=colors[i], lw=1)
 
 
-norm = plt.Normalize((pars1/c*H0).min(), (pars1/c*H0).max())
+norm = colorss.LogNorm(pars1.min(), pars1.max())
 cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=pl.cm.Blues, norm=norm), ax=ax)
-cbar.set_label(r'$r_cH_0$', fontsize=16)
+cbar.set_label(r'$r_c$', fontsize=16)
 
 plt.ylabel(r'$\Delta_{\rm vir}(a_c)$', size='16')
 
@@ -144,7 +148,7 @@ model_SFR = 'toy'
 
 pars2 = np.linspace(0.0, 1, 10)
 ac_arr = np.linspace(0.05, 1, 20)
-pars1 = np.array([0.1, 0.2, 0.3])
+pars1 = np.array([0.1, 0.3, 0.5])
 
 n = len(pars2)
 colors = np.array([pl.cm.Blues(np.linspace(0, 1, n)), pl.cm.Reds(
@@ -180,15 +184,15 @@ h, l = ax.get_legend_handles_labels()
 
 
 line1 = Line2D([0], [0], label=r'$\beta=0.1$', color='tab:blue')
-line2 = Line2D([0], [0], label=r'$\beta=0.2$', color='tab:red')
-line3 = Line2D([0], [0], label=r'$\beta=0.3$', color='tab:purple')
+line2 = Line2D([0], [0], label=r'$\beta=0.3$', color='tab:red')
+line3 = Line2D([0], [0], label=r'$\beta=0.5$', color='tab:purple')
 h.extend([line1, line2, line3])
 kw = dict(ncol=1,
           fancybox=True, fontsize=10, frameon=False)
 # leg1 = ax.legend(h[:], l[:], bbox_to_anchor=[0.5, 1.08], **kw)
 ax.legend(handles=h, loc='upper left', **kw)
 plt.axhline(18*np.pi**2, c='tab:gray', lw=0.8)
-plt.text(0.72, 165, r'$\Delta_{\rm vir}|_{G_{\rm eff}=1}$',
+plt.text(0.72, 191, r'$\Delta_{\rm vir}|_{G_{\rm eff}=1}$',
          fontsize=11, c='tab:grey')
 ax.fill_between([-0.1, 1.1], 18*np.pi**2-2.5, 18*np.pi**2 +
                 2.5, alpha=0.25, color='tab:gray')

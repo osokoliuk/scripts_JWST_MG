@@ -1,3 +1,6 @@
+import sys
+sys.path.insert(0, "../")
+
 from JWST_MG.UVLF import UVLF
 from JWST_MG.HMF import HMF
 from JWST_MG.reionization import reionization
@@ -93,7 +96,7 @@ for i in tqdm(range(len(pars1))):
         dc = deltac.delta_c_at_ac(ac, model, model_H, par1, par2)
         Delta.append(dc)
         # print(Deltavir)
-    plt.plot(ac_arr, Delta, c=colors[i], alpha=0.75, lw=1)
+    plt.plot(ac_arr, Delta, c=colors[i], lw=1)
 
 
 norm = plt.Normalize(pars1.min(), pars1.max())
@@ -146,7 +149,7 @@ for i in tqdm(range(len(pars1))):
         dc = deltac.delta_c_at_ac(ac, model, model_H, par1, par2)
         Delta.append(dc)
         # print(Deltavir)
-    plt.plot(ac_arr, Delta, c=colors[i], alpha=0.75, lw=1)
+    plt.plot(ac_arr, Delta, c=colors[i], lw=1)
 
 
 norm = plt.Normalize(pars1.min(), pars1.max())

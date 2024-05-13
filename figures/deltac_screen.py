@@ -1,3 +1,6 @@
+import sys
+sys.path.insert(0, "../")
+
 from JWST_MG.UVLF import UVLF
 from JWST_MG.HMF import HMF
 from JWST_MG.reionization import reionization
@@ -92,7 +95,7 @@ for i in tqdm(range(len(pars1))):
         dc = deltac.delta_c_at_ac(ac, model, model_H, par1, par2)
         Delta.append(dc)
         # print(Deltavir)
-    plt.plot(ac_arr, Delta, c=colors[i], alpha=0.75, lw=1)
+    plt.plot(ac_arr, Delta, c=colors[i], lw=1)
 
 
 norm = colorss.LogNorm(pars1.min(), pars1.max())
@@ -132,7 +135,7 @@ model_SFR = 'toy'
 
 pars2 = np.linspace(0.0, 1, 10)
 ac_arr = np.linspace(0.15, 1, 20)
-pars1 = np.array([0.1, 0.2, 0.3])
+pars1 = np.array([0.1, 0.3, 0.5])
 
 n = len(pars2)
 colors = np.array([pl.cm.Blues(np.linspace(0, 1, n)), pl.cm.Reds(
@@ -164,14 +167,14 @@ plt.grid(".")
 h, l = ax.get_legend_handles_labels()
 
 
-line1 = Line2D([0], [0], label=r'$T_2=0$', color='tab:blue')
-line2 = Line2D([0], [0], label=r'$T_2=1$', color='tab:red')
-line3 = Line2D([0], [0], label=r'$T_2=-1$', color='tab:purple')
+line1 = Line2D([0], [0], label=r'$\beta=0.1$', color='tab:blue')
+line2 = Line2D([0], [0], label=r'$\beta=0.3$', color='tab:red')
+line3 = Line2D([0], [0], label=r'$\beta=0.5$', color='tab:purple')
 h.extend([line1, line2, line3])
 kw = dict(ncol=1,
           fancybox=True, fontsize=10, frameon=False)
 # leg1 = ax.legend(h[:], l[:], bbox_to_anchor=[0.5, 1.08], **kw)
-ax.legend(handles=h, **kw)
+ax.legend(handles=h, **kw,loc='upper right')
 
 plt.xlim(0.1, 1.1)
 plt.xlabel(r'$a_c$', size=16)

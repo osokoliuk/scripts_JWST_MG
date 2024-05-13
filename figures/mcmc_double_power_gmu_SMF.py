@@ -146,9 +146,9 @@ sampler = zeus.EnsembleSampler(
 initial_params = [0.1, 0.1, 0.1]
 per = 0.01
 initial_pos = [initial_params + per * np.random.randn(ndim) for _ in range(nwalkers)]
-sampler.run_mcmc(initial_pos, 5000, progress=True)
+sampler.run_mcmc(initial_pos, 25000, progress=True)
 
-flat_samples = sampler.get_chain(discard=500, flat=True)
+flat_samples = sampler.get_chain(discard=0, flat=True)
 
 import getdist
 from getdist import plots, MCSamples

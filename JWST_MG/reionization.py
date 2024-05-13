@@ -73,9 +73,8 @@ class reionization:
             k_prime_mfl = 1.0 + 2.0*par2*X_kmfl
             epsl1_kmfl = 2.0*par1**2/k_prime_mfl
             epsl2_kmfl = a*par1/(1.0+par1*a)
-            # -0.5*(4*a**2*R + ((1 + epsl1_kmfl)*Omegam0*(1 + (ai*R)/a) * (-1 + (a**3*(1 + self.deltai))/(a + ai*R)**3))/(
-            ddRda = 1
-            # ai*H**2) - 4*a**3*dRda + (2*a**2*(a*dH + H*(3 + epsl2_kmfl))*(-R + a*dRda))/H)/a**4
+            Hdot = a*H*dH
+            ddRda = (H0**2*(1 + epsl1_kmfl)*Omegam0*(-1 + R**3) - 2*a**4*(Hdot + H**2*(3 + epsl2_kmfl))*R**2*dRda)/ (2.*a**5*H**2*R**2)
         return [dRda, ddRda]
 
     def radius_solve(self, model, model_H, par1, par2, a_arr):
@@ -83,10 +82,18 @@ class reionization:
         cosmological_library = cosmological_functions(
             ai, model, model_H, par1, par2)
         Hi = cosmological_library.H_f(ai, model_H, par1, par2)
-        R_arr = scipy.integrate.odeint(self.radius_evolution, [0, -ai*Hi*deltai/(3*(1+deltai))], a_arr, args=(
-            model, model_H, par1, par2, a_arr), tfirst=False)[:, 0]
+        if model != "kmoufl":
+            R_arr = scipy.integrate.odeint(self.radius_evolution, [0, -ai*Hi*deltai/(3*(1+deltai))], a_arr, args=(
+                model, model_H, par1, par2, a_arr), tfirst=False)[:, 0]
 
-        return R_arr + a_arr/ai
+            return R_arr + a_arr/ai
+        else:
+            delta_nl = self.delta_nl_a(a_arr)
+            R_arr = (a_arr**3*ai**6*(1+delta_nl)**2*(1+deltai))**(1/3)/(ai**3*(1+delta_nl))
+            return R_arr
+            #R_arr = scipy.integrate.odeint(self.radius_evolution, [(1+deltai)**(-1/3), -deltai/(3*ai*(1+deltai)**(4/3))], a_arr, args=(
+            #    model, model_H, par1, par2, a_arr), tfirst=False)[:, 0]
+            #return a_arr*R_arr
 
     def virial_theorem(self, model, model_H, par1, par2, a_arr):
         G = 1/(8*np.pi)
