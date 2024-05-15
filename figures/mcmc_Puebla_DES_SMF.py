@@ -11,11 +11,12 @@ import zeus
 plt.rcParams.update({"text.usetex": True})
 
 
-x = [[],[],[],[],[],[],[]]
-y = [[],[],[],[],[],[],[]]
-yerr = [[],[],[],[],[],[],[]]
 
-zs = [4,5,6,7,8,9,10]
+x = [[],[],[],[],[],[],[],[],[],[],[]]
+y = [[],[],[],[],[],[],[],[],[],[],[]]
+yerr = [[],[],[],[],[],[],[],[],[],[],[]]
+
+zs = [0,1,1.75,4,5,6,7,8,9,10]
 
 for i in range(len(zs)):
     obs = number_density(feature='GSMF', z_target=zs[i], h=h)
@@ -32,17 +33,14 @@ for i in range(len(zs)):
             yerr[i] = np.concatenate((yerr[i], data[:,1]-data[:,3]+data[:,2]- data[:,1]), axis=None)
 
             j_data +=1
+    
+    if zs[i] in [4,5,6,7,8]:
+        path = '../observational_data/GSMF'
+        Navarro = np.loadtxt(path + "/Navarro_z"+str(zs[i])+".dat")
+        x[i] = np.concatenate((x[i], 10**Navarro[:,0]), axis=None)
+        y[i] = np.concatenate((y[i], 1e-4*Navarro[:,1]), axis=None)
+        yerr[i] = np.concatenate((yerr[i], 2*1e-4*Navarro[:,2]), axis=None)
 
-
-
-
-path = '../observational_data/GSMF'
-zs2 = [4,5,6,7,8]
-for i in range(len(zs2)):
-    Navarro = np.loadtxt(path + "/Navarro_z"+str(zs2[i])+".dat")
-    x[i] = np.concatenate((x[i], 10**Navarro[:,0]), axis=None)
-    y[i] = np.concatenate((y[i], 1e-4*Navarro[:,1]), axis=None)
-    yerr[i] = np.concatenate((yerr[i], 2*1e-4*Navarro[:,2]), axis=None)
 
 
 model = 'DES'

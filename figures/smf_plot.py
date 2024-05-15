@@ -387,6 +387,52 @@ for z_smf in z_smf_arr:
     Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(z_int))))
     plt.plot(Masses_star[0], SMF_obs[0], c = 'tab:blue', lw = 1.25)
 
+
+    model = 'kmoufl'
+    model_H = 'kmoufl'
+    model_SFR = 'double_power'
+    par1 = 0.05
+    par2 = 0.2
+    f0 = 0.14
+    z_int = np.array([z_smf]) #np.linspace(12,5,35)
+    SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
+    Pk_arr = []
+    for i, z_i in enumerate(z_int):
+        HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
+        Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3)
+    k = kvec/h
+    Masses = np.logspace(6,18,100)
+
+
+    iterable = [(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
+    Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(z_int))))
+    plt.plot(Masses_star[0], SMF_obs[0], c = 'tab:orange', lw = 1.25)
+
+
+
+    model = 'nDGP'
+    model_H = 'nDGP'
+    model_SFR = 'double_power'
+    par1 = 10**5.91
+    par2 = 0.2
+    f0 = 0.15
+    z_int = np.array([z_smf]) #np.linspace(12,5,35)
+    SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
+    Pk_arr = []
+    for i, z_i in enumerate(z_int):
+        HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
+        Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3)
+    k = kvec/h
+    Masses = np.logspace(6,18,100)
+
+
+    iterable = [(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
+    Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(z_int))))
+    plt.plot(Masses_star[0], SMF_obs[0], c = 'tab:green', lw = 1.25)
+
+
+
+
     model = 'gmu'
     model_H = 'LCDM'
     model_SFR = 'Puebla'

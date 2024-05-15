@@ -103,11 +103,11 @@ def log_likelihood_interpolated(x, y, yerr):
     interpolated_likelihood = LinearNDInterpolatorExt(list(zip(par1_span, par2_span, f0_span)),result)
     return interpolated_likelihood
 
-log_likelihood_int = log_likelihood_interpolated(x, y, yerr)
-with open('double_power_SMF_kmoufl_likelihood.pkl', 'wb') as f:
-    pickle.dump(log_likelihood_int, f)
-#with open('double_power_SMF_kmoufl_likelihood.pkl', 'rb') as f:
-#    log_likelihood_int = pickle.load(f)
+#log_likelihood_int = log_likelihood_interpolated(x, y, yerr)
+#with open('double_power_SMF_kmoufl_likelihood.pkl', 'wb') as f:
+#    pickle.dump(log_likelihood_int, f)
+with open('double_power_SMF_kmoufl_likelihood.pkl', 'rb') as f:
+    log_likelihood_int = pickle.load(f)
 
 def log_likelihood(theta, x, y, yerr):
     par1, par2, f0 = theta
