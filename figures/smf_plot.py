@@ -326,7 +326,8 @@ plt.figure()
 plt.rcParams.update({"text.usetex":True})
 fig = plt.figure(figsize=(4.25*0.9*2,3*0.9*1.75))
 nn = 1
-z_smf_arr = [3,4,5,6,7,8]
+z_smf_arr = [0,1,1.75,4,5,6]
+
 for z_smf in z_smf_arr:
     ax_Pk = plt.subplot(3,2,nn)
 
@@ -370,7 +371,7 @@ for z_smf in z_smf_arr:
     model_H = 'kmoufl'
     model_SFR = 'Puebla'
     par1 = 0.3
-    par2 = 0.5
+    par2 = 0.96
     f0 = 0.04
     z_int = np.array([z_smf]) #np.linspace(12,5,35)
     SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
@@ -386,8 +387,11 @@ for z_smf in z_smf_arr:
     Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(z_int))))
     plt.plot(Masses_star[0], SMF_obs[0], c = 'tab:blue', lw = 1.25)
 
-    par1 = 0.0
-    par2 = 0.0
+    model = 'gmu'
+    model_H = 'LCDM'
+    model_SFR = 'Puebla'
+    par1 = 0
+    par2 = 0
     f0 = 0.04
     z_int = np.array([z_smf]) #np.linspace(12,5,35)
     SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)

@@ -11,11 +11,11 @@ import zeus
 plt.rcParams.update({"text.usetex": True})
 
 
-x = [[],[],[],[],[],[],[]]
-y = [[],[],[],[],[],[],[]]
-yerr = [[],[],[],[],[],[],[]]
+x = [[],[],[],[],[],[],[],[],[],[],[]]
+y = [[],[],[],[],[],[],[],[],[],[],[]]
+yerr = [[],[],[],[],[],[],[],[],[],[],[]]
 
-zs = [4,5,6,7,8,9,10]
+zs = [0,1,1.75,4,5,6,7,8,9,10]
 
 for i in range(len(zs)):
     obs = number_density(feature='GSMF', z_target=zs[i], h=h)
@@ -32,17 +32,13 @@ for i in range(len(zs)):
             yerr[i] = np.concatenate((yerr[i], data[:,1]-data[:,3]+data[:,2]- data[:,1]), axis=None)
 
             j_data +=1
-
-
-
-
-path = '../observational_data/GSMF'
-zs2 = [0,1,2,3,4,5,6,7,8]
-for i in range(len(zs2)):
-    Navarro = np.loadtxt(path + "/Navarro_z"+str(zs2[i])+".dat")
-    x[i] = np.concatenate((x[i], 10**Navarro[:,0]), axis=None)
-    y[i] = np.concatenate((y[i], 1e-4*Navarro[:,1]), axis=None)
-    yerr[i] = np.concatenate((yerr[i], 2*1e-4*Navarro[:,2]), axis=None)
+    
+    if zs[i] in [4,5,6,7,8]:
+        path = '../observational_data/GSMF'
+        Navarro = np.loadtxt(path + "/Navarro_z"+str(zs[i])+".dat")
+        x[i] = np.concatenate((x[i], 10**Navarro[:,0]), axis=None)
+        y[i] = np.concatenate((y[i], 1e-4*Navarro[:,1]), axis=None)
+        yerr[i] = np.concatenate((yerr[i], 2*1e-4*Navarro[:,2]), axis=None)
 
 
 model = 'kmoufl'
@@ -107,11 +103,11 @@ def log_likelihood_interpolated(x, y, yerr):
     interpolated_likelihood = LinearNDInterpolatorExt(list(zip(par1_span, par2_span, f0_span)),result)
     return interpolated_likelihood
 
-#log_likelihood_int = log_likelihood_interpolated(x, y, yerr)
-#with open('double_power_SMF_kmoufl_likelihood.pkl', 'wb') as f:
-#    pickle.dump(log_likelihood_int, f)
-with open('double_power_SMF_kmoufl_likelihood.pkl', 'rb') as f:
-    log_likelihood_int = pickle.load(f)
+log_likelihood_int = log_likelihood_interpolated(x, y, yerr)
+with open('double_power_SMF_kmoufl_likelihood.pkl', 'wb') as f:
+    pickle.dump(log_likelihood_int, f)
+#with open('double_power_SMF_kmoufl_likelihood.pkl', 'rb') as f:
+#    log_likelihood_int = pickle.load(f)
 
 def log_likelihood(theta, x, y, yerr):
     par1, par2, f0 = theta
@@ -120,7 +116,7 @@ def log_likelihood(theta, x, y, yerr):
 
 def log_prior(theta):
     par1, par2, f0 = theta
-    if (0 < par1 < 0.5 and 0 < par2 < 1 and 0.01 < f0 < 1):
+    if (0.001 < par1 < 0.5 and 0.001 < par2 < 1 and 0.01 < f0 < 1):
         return 0
     return -np.inf
 
@@ -139,14 +135,14 @@ from multiprocessing import Pool
 
 pool_cpu = Pool(8)
 
-sampler = zeus.EnsembleSampler(
+sampler = emcee.EnsembleSampler(
     nwalkers, ndim, log_probability, args=(x, y, yerr), pool = pool_cpu
 )
 
 initial_params = [0.1, 0.1, 0.1]
 per = 0.01
 initial_pos = [initial_params + per * np.random.randn(ndim) for _ in range(nwalkers)]
-sampler.run_mcmc(initial_pos, 15000, progress=True)
+sampler.run_mcmc(initial_pos, 10000, progress=True)
 
 flat_samples = sampler.get_chain(discard=0, flat=True)
 
