@@ -322,14 +322,14 @@ from scipy.special import lambertw
 from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
 import matplotlib.pylab as pl
 
-plt.figure()
+plt.figure(figsize=(15,15))
 plt.rcParams.update({"text.usetex":True})
-fig = plt.figure(figsize=(4.25*0.9*2,3*0.9*1.75))
+fig = plt.figure()
 nn = 1
-z_smf_arr = [0,1,1.75,4,5,6]
+z_smf_arr = [0,1,1.75,4,5,6,7,8,9,10]
 
 for z_smf in z_smf_arr:
-    ax_Pk = plt.subplot(3,2,nn)
+    ax_Pk = plt.subplot(5,2,nn)
 
     ax_Pk.xaxis.set_minor_locator(AutoMinorLocator())
     ax_Pk.yaxis.set_minor_locator(AutoMinorLocator())
@@ -356,7 +356,6 @@ for z_smf in z_smf_arr:
         color      = 'k'
         marker     = markers[ii]
         linestyle  = linestyles[k_func]
-        data[:,1:] = data[:,1:]
         if datatype == 'data':
             plt.errorbar(10**data[:,0],  data[:,1],\
                         label=r'$\rm '+label + '$',capsize=0,ecolor=color,color='w',marker=marker,markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor=color)
@@ -469,7 +468,8 @@ for z_smf in z_smf_arr:
     # plt.scatter(1/a_vir-1, vir2, c = 'tab:orange')
     plt.xscale('log')
     plt.yscale('log')
-    plt.ylim(1e-7,1e-1)
+    plt.tight_layout()
+    plt.ylim(1e-8,1e-1)
     plt.xlim(1e8,1e12)
     plt.grid(".")
     ax_Pk.set_xlabel(r'$M_\star\;[M_\odot]$', size = '16')

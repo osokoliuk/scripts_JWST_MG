@@ -16,23 +16,24 @@ x = [[],[],[],[],[],[],[],[],[],[],[]]
 y = [[],[],[],[],[],[],[],[],[],[],[]]
 yerr = [[],[],[],[],[],[],[],[],[],[],[]]
 
-zs = [0,1,1.75,4,5,6,7,8,9,10]
+zs = [0,1,1.75,4,5,6,7, 8]
 
 for i in range(len(zs)):
     obs = number_density(feature='GSMF', z_target=zs[i], h=h)
     j_data = 0
     k_func = 0
+    if zs[i] == 8:
+        pass
+    else:
+        for ii in range(obs.n_target_observation):
+            data       = obs.target_observation['Data'][ii]
+            datatype   = obs.target_observation['DataType'][ii]
+            if datatype == 'data':
+                x[i] = np.concatenate((x[i], 10**data[:,0]), axis=None)
+                y[i] = np.concatenate((y[i], data[:,1]), axis=None)
+                yerr[i] = np.concatenate((yerr[i], data[:,1]-data[:,3]+data[:,2]- data[:,1]), axis=None)
 
-    for ii in range(obs.n_target_observation):
-        data       = obs.target_observation['Data'][ii]
-        datatype   = obs.target_observation['DataType'][ii]
-        data[:,1:] = data[:,1:]
-        if datatype == 'data':
-            x[i] = np.concatenate((x[i], 10**data[:,0]), axis=None)
-            y[i] = np.concatenate((y[i], data[:,1]), axis=None)
-            yerr[i] = np.concatenate((yerr[i], data[:,1]-data[:,3]+data[:,2]- data[:,1]), axis=None)
-
-            j_data +=1
+                j_data +=1
     
     if zs[i] in [4,5,6,7,8]:
         path = '../observational_data/GSMF'

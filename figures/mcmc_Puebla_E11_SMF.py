@@ -15,23 +15,24 @@ x = [[],[],[],[],[],[],[],[],[],[],[]]
 y = [[],[],[],[],[],[],[],[],[],[],[]]
 yerr = [[],[],[],[],[],[],[],[],[],[],[]]
 
-zs = [0,1,1.75,4,5,6,7,8,9,10]
+zs = [0,1,1.75,4,5,6,7, 8]
 
 for i in range(len(zs)):
     obs = number_density(feature='GSMF', z_target=zs[i], h=h)
     j_data = 0
     k_func = 0
+    if zs[i] == 8:
+        pass
+    else:
+        for ii in range(obs.n_target_observation):
+            data       = obs.target_observation['Data'][ii]
+            datatype   = obs.target_observation['DataType'][ii]
+            if datatype == 'data':
+                x[i] = np.concatenate((x[i], 10**data[:,0]), axis=None)
+                y[i] = np.concatenate((y[i], data[:,1]), axis=None)
+                yerr[i] = np.concatenate((yerr[i], data[:,1]-data[:,3]+data[:,2]- data[:,1]), axis=None)
 
-    for ii in range(obs.n_target_observation):
-        data       = obs.target_observation['Data'][ii]
-        datatype   = obs.target_observation['DataType'][ii]
-        data[:,1:] = data[:,1:]
-        if datatype == 'data':
-            x[i] = np.concatenate((x[i], 10**data[:,0]), axis=None)
-            y[i] = np.concatenate((y[i], data[:,1]), axis=None)
-            yerr[i] = np.concatenate((yerr[i], data[:,1]-data[:,3]+data[:,2]- data[:,1]), axis=None)
-
-            j_data +=1
+                j_data +=1
     
     if zs[i] in [4,5,6,7,8]:
         path = '../observational_data/GSMF'
@@ -39,7 +40,6 @@ for i in range(len(zs)):
         x[i] = np.concatenate((x[i], 10**Navarro[:,0]), axis=None)
         y[i] = np.concatenate((y[i], 1e-4*Navarro[:,1]), axis=None)
         yerr[i] = np.concatenate((yerr[i], 2*1e-4*Navarro[:,2]), axis=None)
-
 
 
 model = 'E11'
@@ -104,11 +104,11 @@ def log_likelihood_interpolated(x, y, yerr):
     interpolated_likelihood = LinearNDInterpolatorExt(list(zip(par1_span, par2_span)),result)
     return interpolated_likelihood
 
-log_likelihood_int = log_likelihood_interpolated(x, y, yerr)
-with open('Puebla_SMF_E11_likelihood.pkl', 'wb') as f:
-    pickle.dump(log_likelihood_int, f)
-#with open('Puebla_SMF_E11_likelihood.pkl', 'rb') as f:
-#    log_likelihood_int = pickle.load(f)
+#log_likelihood_int = log_likelihood_interpolated(x, y, yerr)
+#with open('Puebla_SMF_E11_likelihood.pkl', 'wb') as f:
+#    pickle.dump(log_likelihood_int, f)
+with open('Puebla_SMF_E11_likelihood.pkl', 'rb') as f:
+    log_likelihood_int = pickle.load(f)
 
 def log_likelihood(theta, x, y, yerr):
     par1, par2 = theta
@@ -143,9 +143,9 @@ sampler = emcee.EnsembleSampler(
 initial_params = [0, 0]
 per = 0.01
 initial_pos = [initial_params + per * np.random.randn(ndim) for _ in range(nwalkers)]
-sampler.run_mcmc(initial_pos, 36000, progress=True)
+sampler.run_mcmc(initial_pos, 5000, progress=True)
 
-flat_samples = sampler.get_chain(discard=5000, thin=5000, flat=True)
+flat_samples = sampler.get_chain( flat=True)
 
 import getdist
 from getdist import plots, MCSamples
