@@ -86,7 +86,7 @@ class LinearNDInterpolatorExt(object):
 
 def log_likelihood_interpolated(x, y, yerr):
     sampler = qmc.LatinHypercube(d=2)
-    sample = sampler.random(n=450)
+    sample = sampler.random(n=400)
     l_bounds = [-1,-1]
     u_bounds = [1,1]
     sample_scaled = qmc.scale(sample, l_bounds, u_bounds)
