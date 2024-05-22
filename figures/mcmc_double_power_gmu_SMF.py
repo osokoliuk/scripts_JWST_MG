@@ -103,11 +103,11 @@ def log_likelihood_interpolated(x, y, yerr):
     interpolated_likelihood = LinearNDInterpolatorExt(list(zip(par1_span, par2_span, f0_span)),result)
     return interpolated_likelihood
 
-log_likelihood_int = log_likelihood_interpolated(x, y, yerr)
-with open('double_power_SMF_gmu_likelihood.pkl', 'wb') as f:
-    pickle.dump(log_likelihood_int, f)
-#with open('double_power_SMF_gmu_likelihood.pkl', 'rb') as f:
-#    log_likelihood_int = pickle.load(f)
+#log_likelihood_int = log_likelihood_interpolated(x, y, yerr)
+#with open('double_power_SMF_gmu_likelihood.pkl', 'wb') as f:
+#    pickle.dump(log_likelihood_int, f)
+with open('double_power_SMF_gmu_likelihood.pkl', 'rb') as f:
+    log_likelihood_int = pickle.load(f)
 
 def log_likelihood(theta, x, y, yerr):
     par1, par2, f0 = theta
@@ -135,14 +135,14 @@ from multiprocessing import Pool
 
 pool_cpu = Pool(8)
 
-sampler = zeus.EnsembleSampler(
+sampler = emcee.EnsembleSampler(
     nwalkers, ndim, log_probability, args=(x, y, yerr), pool = pool_cpu
 )
 
-initial_params = [0.1, 0.1, 0.1]
+initial_params = [1/2, 1/2, 0.1]
 per = 0.01
 initial_pos = [initial_params + per * np.random.randn(ndim) for _ in range(nwalkers)]
-sampler.run_mcmc(initial_pos, 25000, progress=True)
+sampler.run_mcmc(initial_pos, 16000, progress=True)
 
 flat_samples = sampler.get_chain(discard=0, flat=True)
 
