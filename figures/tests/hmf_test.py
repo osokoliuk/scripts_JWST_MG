@@ -16,7 +16,7 @@ import matplotlib
 from scipy import interpolate
 import scipy
 import sys
-sys.path.insert(0, "../")
+sys.path.insert(0, "../../")
 sys.path.insert(0,'../observational_data/GSMF')
 from JWST_MG.reionization import reionization
 from JWST_MG.cosmological_functions import cosmological_functions
@@ -284,17 +284,7 @@ plt.tick_params(axis='both', which='minor',
 
 
 
-arq = open("../observational_data/hopkins_2004.dat", 'r')
-data= np.loadtxt(arq, delimiter=",")
-def errorData():
-    """Return the asymetric errors in the redshif and CSFR
-    respectively
-    """
-    xerr = np.array([data[:, 0] - data[:, 2],
-            data[:, 3] - data[:, 0]])
-    yerr = np.array([data[:, 1] - data[:, 4],
-                    data[:, 5] - data[:, 1]])
-    return xerr, yerr
+
 
 def csfredshift():
     """Return the redshift and the CSFR from
@@ -302,9 +292,6 @@ def csfredshift():
     """
     return data[:, 0], data[:, 1]
 
-
-xerr, yerr = errorData()
-x, y = csfredshift()
 
 #plt.errorbar(x, y, yerr=yerr, xerr=xerr, fmt='.')
 from multiprocessing import Pool
@@ -341,11 +328,11 @@ pool_cpu = Pool(8)
 
 
 
-model = 'nDGP'
-model_H = 'nDGP'
-model_SFR = 'Behroozi'
-par1 = 10**12
-par2 = 1
+model = 'wCDM'
+model_H = 'wCDM'
+model_SFR = 'Puebla'
+par1 = -2
+par2 = 0.55
 f0 = 0.05
 z_int = np.array([10]) #np.linspace(12,5,35)
 SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
@@ -361,13 +348,13 @@ HMF_int = scipy.interpolate.interp1d(Masses, HMF_fid, kind='linear', fill_value 
 plt.loglog(Masses, HMF_fid)
 import hmf
 from hmf import mass_function
-from astropy.cosmology import FlatLambdaCDM
+from astropy.cosmology import FlatwCDM
 
 import numpy as np
 
-"""def calculate_hmf(z, Mmin, Mmax, dlog10m, cosmo):
+def calculate_hmf(z, Mmin, Mmax, dlog10m, cosmo):
         halo_mass_function = mass_function.hmf.MassFunction(z=z, Mmin=Mmin, Mmax=Mmax, dlog10m=dlog10m, 
-                cosmo_model=cosmo, n = ns, sigma_8 = sigma8, delta_c=1.686, 
+                cosmo_model=cosmo, n = ns, sigma_8 = sigma8, 
                 # transfer function defaults to CAMB
                 transfer_model = hmf.density_field.transfer_models.CAMB, transfer_params = None,
                 hmf_model      = hmf.mass_function.fitting_functions.SMT, hmf_params=None, 
@@ -380,6 +367,7 @@ import numpy as np
         phi_halo_arr = halo_mass_function.dndlog10m  * hubble**3            # dn/dlog10M [1/Mpc^3/dex]
         return 10**mhalo_arr, phi_halo_arr/np.log(10)/10**mhalo_arr
 
+
 # define cosmology; Planck collaboration 2020
 hubble  = 67.66/100
 Omega0  = (0.02242/(hubble)**2+0.11933/(hubble)**2)
@@ -387,18 +375,18 @@ ns      = 0.9665
 sigma8  = 0.8102
 fbaryon = 0.02242/(hubble)**2/Omega0
 
-cosmo = FlatLambdaCDM(H0=hubble*100, Om0 = Omega0, Ob0=Omega0*fbaryon, Tcmb0=2.7255, Neff=3.046, m_nu=0.0)
+cosmo = FlatwCDM(H0=hubble*100, Om0 = Omega0, Ob0=Omega0*fbaryon, Tcmb0=2.7255, Neff=3.046, m_nu=0.0, w0=par1)
 
 
 mhalo_arr, phi_halo_arr = calculate_hmf(z, 8, 16, 0.01, cosmo)
-plt.loglog(mhalo_arr, phi_halo_arr/HMF_int(mhalo_arr))
+plt.loglog(mhalo_arr, phi_halo_arr)
 
-"""
+
 
 data = np.loadtxt('data.txt')
 x = data[:, 0]
 y = data[:, 1]
-plt.plot(x,y)
+#plt.plot(x,y)
 """ac_arr = np.linspace(0.01, 1, 15)
 par1 = 500
 par2 = 0

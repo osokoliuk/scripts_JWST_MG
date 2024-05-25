@@ -322,14 +322,14 @@ from scipy.special import lambertw
 from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
 import matplotlib.pylab as pl
 
-plt.figure(figsize=(15,15))
+plt.figure(figsize=(15,30))
 plt.rcParams.update({"text.usetex":True})
 fig = plt.figure()
 nn = 1
-z_smf_arr = [0,1,1.75,4,5,6,7,8,9,10]
+z_smf_arr = [0,1,1.75,4,5,6,7,8]
 
 for z_smf in z_smf_arr:
-    ax_Pk = plt.subplot(5,2,nn)
+    ax_Pk = plt.subplot(4,2,nn)
 
     ax_Pk.xaxis.set_minor_locator(AutoMinorLocator())
     ax_Pk.yaxis.set_minor_locator(AutoMinorLocator())
@@ -366,11 +366,11 @@ for z_smf in z_smf_arr:
     pool_cpu = Pool(8)
 
 
-    model = 'kmoufl'
-    model_H = 'kmoufl'
+    model = 'wCDM'
+    model_H = 'wCDM'
     model_SFR = 'Puebla'
-    par1 = 0.3
-    par2 = 0.96
+    par1 = -2
+    par2 = 0.55
     f0 = 0.04
     z_int = np.array([z_smf]) #np.linspace(12,5,35)
     SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
@@ -386,58 +386,12 @@ for z_smf in z_smf_arr:
     Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(z_int))))
     plt.plot(Masses_star[0], SMF_obs[0], c = 'tab:blue', lw = 1.25)
 
-
-    model = 'kmoufl'
-    model_H = 'kmoufl'
-    model_SFR = 'double_power'
-    par1 = 0.05
-    par2 = 0.2
-    f0 = 0.14
-    z_int = np.array([z_smf]) #np.linspace(12,5,35)
-    SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
-    Pk_arr = []
-    for i, z_i in enumerate(z_int):
-        HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
-        Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3)
-    k = kvec/h
-    Masses = np.logspace(6,18,100)
-
-
-    iterable = [(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
-    Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(z_int))))
-    plt.plot(Masses_star[0], SMF_obs[0], c = 'tab:orange', lw = 1.25)
-
-
-
     model = 'nDGP'
     model_H = 'nDGP'
-    model_SFR = 'double_power'
-    par1 = 10**5.91
-    par2 = 0.2
-    f0 = 0.15
-    z_int = np.array([z_smf]) #np.linspace(12,5,35)
-    SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
-    Pk_arr = []
-    for i, z_i in enumerate(z_int):
-        HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
-        Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3)
-    k = kvec/h
-    Masses = np.logspace(6,18,100)
-
-
-    iterable = [(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
-    Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(z_int))))
-    plt.plot(Masses_star[0], SMF_obs[0], c = 'tab:green', lw = 1.25)
-
-
-
-
-    model = 'gmu'
-    model_H = 'LCDM'
     model_SFR = 'Puebla'
-    par1 = 0
+    par1 = 10**8
     par2 = 0
-    f0 = 0.04
+    f0 = 0.21
     z_int = np.array([z_smf]) #np.linspace(12,5,35)
     SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
     Pk_arr = []
@@ -450,7 +404,8 @@ for z_smf in z_smf_arr:
 
     iterable = [(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
     Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(z_int))))
-    plt.plot(Masses_star[0], SMF_obs[0], c = 'tab:red', lw = 1.25)
+    plt.plot(Masses_star[0], SMF_obs[0], c = 'tab:blue', lw = 1.25, ls = ':')
+
 
 
     path = '../observational_data/GSMF'
@@ -472,13 +427,14 @@ for z_smf in z_smf_arr:
     plt.ylim(1e-8,1e-1)
     plt.xlim(1e8,1e12)
     plt.grid(".")
-    ax_Pk.set_xlabel(r'$M_\star\;[M_\odot]$', size = '16')
+    """ax_Pk.set_xlabel(r'$M_\star\;[M_\odot]$', size = '16')
     ax_Pk.set_ylabel(r'$\phi_{\star}\;[\rm Mpc^{-3}\;dex^{-1}]$', size = '16')
     legend1 = ax_Pk.legend(loc='best',fancybox=True, fontsize=9)
     legend1.get_frame().set_facecolor('none')
     legend1.get_frame().set_linewidth(0.0)
     ax_Pk.add_artist(legend1)
     ax_Pk.text(10**11.15,1e-2,r'$z='+str(z_smf)+r'$', size = '16')
+    """    
     nn += 1
 
 """ac_arr = np.linspace(0.01, 1, 15)
