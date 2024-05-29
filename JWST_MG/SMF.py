@@ -81,6 +81,11 @@ class SMF:
         z = 1/a-1
         if model_SFR == 'phenomenological_extreme':
             epstar = 1
+        elif model_SFR == 'phenomenological_regular':
+            if z >= 6 and z <= 10:
+                epstar = 0.15-0.03*(z-6)
+            else:
+                epstar = 0.03
         elif model_SFR == 'Puebla':
             epstar = self.puebla17_mh_to_ms(Mh, z)
         elif model_SFR == 'double_power':

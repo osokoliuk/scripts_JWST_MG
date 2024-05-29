@@ -24,6 +24,7 @@ from JWST_MG.constants import *
 from JWST_MG.HMF import HMF
 from JWST_MG.SMF import SMF
 from JWST_MG.UVLF import UVLF
+from JWST_MG.SMD import SMD
 
 plt.rcParams.update({"text.usetex": True})
 
@@ -201,8 +202,8 @@ ax.yaxis.set_minor_locator(AutoMinorLocator())
 plt.tick_params(axis='both', which='major', direction="in",
                 labelsize=14, length=5, top=True, right=True)
 plt.tick_params(axis='both', which='minor', direction="in",
-                labelsize=11, length=4, top=True, right=True)
-plt.tick_params(axis='both', which='major',
+                labelsiz    def SMD(self, Masses, rhoM, a, model_H, model, model_SFR, par1, par2, k, Pk, f0):
+th', which='major',
                 direction="in", labelsize=14, length=5)
 plt.tick_params(axis='both', which='minor',
                 direction="in", labelsize=11, length=4)
@@ -306,7 +307,7 @@ import matplotlib.pylab as pl
 plt.figure()
 plt.rcParams.update({"text.usetex":True})
 fig = plt.figure(figsize=(4.25*0.9*2,3*0.9*1.75))
-ax_Pk = plt.subplot(221)
+ax_Pk = plt.subplot(121)
 
 ax_Pk.xaxis.set_minor_locator(AutoMinorLocator())
 ax_Pk.yaxis.set_minor_locator(AutoMinorLocator())
@@ -328,18 +329,18 @@ model_SFR = 'phenomenological_extreme'
 par1 = -1
 par2 = 0.55
 f0 = 0.1
-z_int = np.array([0]) #np.linspace(12,5,35)
-SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
+z_int = np.array([8]) #np.linspace(12,5,35)
+SMD_library = SMD(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
 Pk_arr = []
 for i, z_i in enumerate(z_int):
     HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
     Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3)
 k = kvec/h
-Masses = np.logspace(6,14,100)
+Masses = np.logspace(8,16,1000)
 
 
 iterable = [(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
-Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(z_int))))
+Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMD_library.SMD,tqdm(iterable, total=len(z_int))))
 
 
 #print(SMF)
@@ -356,18 +357,18 @@ model_SFR = 'phenomenological_extreme'
 par1 = -1.5
 par2 = 0.55
 f0 = 0.1
-z_int = np.array([0]) #np.linspace(12,5,35)
-SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
+z_int = np.array([8]) #np.linspace(12,5,35)
+SMD_library = SMD(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
 Pk_arr = []
 for i, z_i in enumerate(z_int):
     HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
     Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3)
 k = kvec/h
-Masses = np.logspace(6,14,100)
+Masses = np.logspace(8,16,1000)
 
 
 iterable = [(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
-Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(z_int))))
+Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMD_library.SMD,tqdm(iterable, total=len(z_int))))
 
 
 #print(SMF)
@@ -377,24 +378,21 @@ Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, 
 plt.loglog(Masses_star[0], SMF_obs[0], c = 'tab:blue', ls = '--', lw = 1.25)
 
 
-model = 'wCDM'
-model_H = 'wCDM'
-model_SFR = 'phenomenological_extreme'
 par1 = -0.5
 par2 = 0.55
 f0 = 0.1
-z_int = np.array([0]) #np.linspace(12,5,35)
-SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
+z_int = np.array([8]) #np.linspace(12,5,35)
+SMD_library = SMD(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
 Pk_arr = []
 for i, z_i in enumerate(z_int):
     HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
     Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3)
 k = kvec/h
-Masses = np.logspace(6,14,100)
+Masses = np.logspace(8,16,1000)
 
 
 iterable = [(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
-Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(z_int))))
+Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMD_library.SMD,tqdm(iterable, total=len(z_int))))
 
 
 #print(SMF)
@@ -405,104 +403,109 @@ plt.loglog(Masses_star[0], SMF_obs[0], c = 'tab:blue', ls = ':', lw = 1.25)
 
 
 
+data = np.loadtxt('/home/oleksii/codes/scripts_JWST_MG/observational_data/SMD/JWST_z8.txt')
+x = data[:,0]
+y = data[:,1]
+yerr = data[:,2]/2
+plt.errorbar(x,y,yerr=yerr)
+
+plt.ylim(1e5,1e9)
+plt.xlim(1e8,1e12)
+
+
+
+
+
+plt.subplot(122)
+
 
 
 
 model = 'wCDM'
 model_H = 'wCDM'
-model_SFR = 'phenomenological_regular'
+model_SFR = 'phenomenological_extreme'
 par1 = -1
 par2 = 0.55
 f0 = 0.1
-z_int = np.array([0]) #np.linspace(12,5,35)
-SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
+z_int = np.array([10]) #np.linspace(12,5,35)
+SMD_library = SMD(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
 Pk_arr = []
 for i, z_i in enumerate(z_int):
     HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
     Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3)
 k = kvec/h
-Masses = np.logspace(6,14,100)
+Masses = np.logspace(8,18,1000)
 
 
 iterable = [(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
-Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(z_int))))
+Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMD_library.SMD,tqdm(iterable, total=len(z_int))))
 
 
 #print(SMF)
 #Masses_star = SMF[0]
 #SMF_obs = SMF[1]
 
-plt.loglog(Masses_star[0], SMF_obs[0], c = 'tab:orange', ls = '-', lw = 1.25)
+plt.loglog(Masses_star[0], SMF_obs[0], c = 'tab:blue', ls = '-', lw = 1.25)
 
 
 
 model = 'wCDM'
 model_H = 'wCDM'
-model_SFR = 'phenomenological_regular'
+model_SFR = 'phenomenological_extreme'
 par1 = -1.5
 par2 = 0.55
 f0 = 0.1
-z_int = np.array([0]) #np.linspace(12,5,35)
-SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
+z_int = np.array([10]) #np.linspace(12,5,35)
+SMD_library = SMD(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
 Pk_arr = []
 for i, z_i in enumerate(z_int):
     HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
     Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3)
 k = kvec/h
-Masses = np.logspace(6,14,100)
+Masses = np.logspace(8,18,1000)
 
 
 iterable = [(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
-Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(z_int))))
+Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMD_library.SMD,tqdm(iterable, total=len(z_int))))
 
 
 #print(SMF)
 #Masses_star = SMF[0]
 #SMF_obs = SMF[1]
 
-plt.loglog(Masses_star[0], SMF_obs[0], c = 'tab:orange', ls = '--', lw = 1.25)
+plt.loglog(Masses_star[0], SMF_obs[0], c = 'tab:blue', ls = '--', lw = 1.25)
 
 
-model = 'wCDM'
-model_H = 'wCDM'
-model_SFR = 'phenomenological_regular'
 par1 = -0.5
 par2 = 0.55
 f0 = 0.1
-z_int = np.array([0]) #np.linspace(12,5,35)
-SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
+z_int = np.array([10]) #np.linspace(12,5,35)
+SMD_library = SMD(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
 Pk_arr = []
 for i, z_i in enumerate(z_int):
     HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
     Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3)
 k = kvec/h
-Masses = np.logspace(6,14,100)
+Masses = np.logspace(8,18,1000)
 
 
 iterable = [(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
-Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(z_int))))
+Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMD_library.SMD,tqdm(iterable, total=len(z_int))))
 
 
 #print(SMF)
 #Masses_star = SMF[0]
 #SMF_obs = SMF[1]
 
-plt.loglog(Masses_star[0], SMF_obs[0], c = 'tab:orange', ls = ':', lw = 1.25)
+plt.loglog(Masses_star[0], SMF_obs[0], c = 'tab:blue', ls = ':', lw = 1.25)
 
 
 
-
-
-
-data = np.loadtxt('smf_test_data.txt')
+data = np.loadtxt('/home/oleksii/codes/scripts_JWST_MG/observational_data/SMD/JWST_z10.txt')
 x = data[:,0]
 y = data[:,1]
-#plt.scatter(10**(x-6), 10**y)
-
-data = np.loadtxt('smf_test_data_2.txt')
-x = data[:,0]
-y = data[:,1]
-#plt.scatter(10**(x-6), 10**y)
+yerr = data[:,2]/2
+plt.errorbar(x,y,yerr=yerr, color = 'tab:blue')
 
 plt.yscale('log')
 plt.grid(".")
@@ -512,8 +515,8 @@ legend1 = ax_Pk.legend(loc='lower left',fancybox=True, fontsize=9)
 legend1.get_frame().set_facecolor('none')
 legend1.get_frame().set_linewidth(0.0)
 ax_Pk.add_artist(legend1)
-plt.xlim(1e6,1e12)
-plt.ylim(1e-5,10**2.25)
+plt.xlim(1e8,1e12)
+plt.ylim(1e5,1e12)
 
 """ac_arr = np.linspace(0.01, 1, 15)
 par1 = 500

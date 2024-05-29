@@ -25,11 +25,11 @@ from JWST_MG.SMF import SMF
 plt.rcParams.update({"text.usetex": True})
 
 
-model = 'E11'
-model_H = 'LCDM'
+model = 'wCDM'
+model_H = 'wCDM'
 model_SFR = 'double_power'
-pars1 = [1,0]
-par2 = 0.0
+pars1 = [-1,-1.5,-0.5]
+par2 = 0.55
 f0 = 0.12
 for i, par1 in enumerate(pars1):
     z_int = z_i = 0

@@ -328,30 +328,53 @@ pool_cpu = Pool(8)
 
 
 
+
+
 model = 'wCDM'
 model_H = 'wCDM'
 model_SFR = 'Puebla'
-par1 = -2
+par1 = -1
 par2 = 0.55
 f0 = 0.05
-z_int = np.array([10]) #np.linspace(12,5,35)
+z_int = np.array([0]) #np.linspace(12,5,35)
 SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
 Pk_arr = []
 z = z_int[0]
-HMF_library = HMF(1/(1+z), model, model_H, par1, par2, 1e8)
+HMF_library = HMF(1/(1+z), model, model_H, par1, par2, 1e18)
 Pk = np.array(HMF_library.Pk(1/(1+z), model, par1, par2))*h**3
 k = kvec/h
 Masses = np.logspace(8,16,100)
 
 HMF_fid = HMF_library.ST_mass_function(rhom, Masses, 1/(1+z), model_H, model, par1, par2, k, Pk)
 HMF_int = scipy.interpolate.interp1d(Masses, HMF_fid, kind='linear', fill_value = 'extrapolate')
-plt.loglog(Masses, HMF_fid)
+plt.loglog(Masses*h, HMF_fid, c = 'tab:blue')
+
+
+
+model = 'wCDM'
+model_H = 'wCDM'
+model_SFR = 'Puebla'
+pars1 = [-0.5,-0.75,-1,-1.25,-1.5,-1.75,-2]
+par2 = 0.55
+f0 = 0.05
+z = 0
+for par1 in pars1:
+    SMF_library = SMF(1/(1+z), model, model_H, model_SFR, par1, par2, 1e8, f0)
+    HMF_library = HMF(1/(1+z), model, model_H, par1, par2, 1e18)
+    Pk = np.array(HMF_library.Pk(1/(1+z), model, par1, par2))*h**3
+    k = kvec/h
+    Masses = np.logspace(8,16,100)
+
+    HMF_fid = HMF_library.ST_mass_function(rhom, Masses, 1/(1+z), model_H, model, par1, par2, k, Pk)
+    HMF_int = scipy.interpolate.interp1d(Masses, HMF_fid, kind='linear', fill_value = 'extrapolate')
+    plt.loglog(Masses*h, HMF_fid)
+
 import hmf
 from hmf import mass_function
 from astropy.cosmology import FlatwCDM
 
 import numpy as np
-
+"""
 def calculate_hmf(z, Mmin, Mmax, dlog10m, cosmo):
         halo_mass_function = mass_function.hmf.MassFunction(z=z, Mmin=Mmin, Mmax=Mmax, dlog10m=dlog10m, 
                 cosmo_model=cosmo, n = ns, sigma_8 = sigma8, 
@@ -369,23 +392,89 @@ def calculate_hmf(z, Mmin, Mmax, dlog10m, cosmo):
 
 
 # define cosmology; Planck collaboration 2020
-hubble  = 67.66/100
-Omega0  = (0.02242/(hubble)**2+0.11933/(hubble)**2)
+hubble  = H0/100
+Omega0  = Omegam0
 ns      = 0.9665
 sigma8  = 0.8102
 fbaryon = 0.02242/(hubble)**2/Omega0
-
-cosmo = FlatwCDM(H0=hubble*100, Om0 = Omega0, Ob0=Omega0*fbaryon, Tcmb0=2.7255, Neff=3.046, m_nu=0.0, w0=par1)
-
-
-mhalo_arr, phi_halo_arr = calculate_hmf(z, 8, 16, 0.01, cosmo)
-plt.loglog(mhalo_arr, phi_halo_arr)
+"""
 
 
 
-data = np.loadtxt('data.txt')
-x = data[:, 0]
-y = data[:, 1]
+
+from hmf import MassFunction     # The main hmf class
+import numpy
+from numpy import log, log10, sqrt, exp, pi, arange, logspace, linspace, r_, c_
+# Don't judge me: 
+from matplotlib.pyplot import *
+from scipy.interpolate import UnivariateSpline as US
+import hmf
+from astropy.cosmology import FlatLambdaCDM
+
+from hmf import MassFunction     # The main hmf class
+import numpy
+from numpy import log, log10, sqrt, exp, pi, arange, logspace, linspace, r_, c_
+# Don't judge me: 
+from matplotlib.pyplot import *
+from scipy.interpolate import UnivariateSpline as US
+import hmf
+from astropy.cosmology import FlatwCDM
+
+h0=h
+om0=Omegam0
+ob0h2=Omegab0*h**2
+ob0=ob0h2/h**2
+ns=0.96605
+sigma8=0.8120
+t_cmb=2.7255
+# f_bary=Omega_b/Omega_m
+fbary=ob0h2/h0**2/om0
+
+
+# set up cosmological model:
+"""planck2020_model=FlatLambdaCDM(H0 = 100*h0, Om0=om0, Tcmb0 = t_cmb, Ob0 = ob0)
+mf = MassFunction(Mmin= 8, Mmax = 16, hmf_model='SMT', z = z,
+                       cosmo_model=planck2020_model,
+                       sigma_8=sig8, n=ns,
+                       transfer_model=hmf.density_field.transfer_models.CAMB,
+                       transfer_params={'extrapolate_with_eh':True})
+
+Masses= mf.m/h0
+HMF = mf.dndm*h0**4
+#plt.loglog(Masses, HMF)
+"""
+
+from colossus.cosmology import cosmology
+model_SFR = 'double_power'    
+
+
+cosmo = cosmology.setCosmology('planck_w0wa', params = cosmology.cosmologies['planck18'], 
+                                                                de_model = 'w0wa', w0 = -1, wa = 0)
+
+
+from colossus.lss import mass_function
+mfunc = mass_function.massFunction(Masses, z, mdef = 'fof', model = 'sheth99', q_out = 'dndlnM', sigma_args = {'filt': 'tophat'})
+
+
+
+#plt.plot(Masses/h,(mfunc/Masses)*h**4, c = 'tab:orange')
+
+cosmo = cosmology.setCosmology('planck_w0wa', params = cosmology.cosmologies['planck18'], 
+                                                                de_model = 'w0wa', w0 = -0.5, wa = 0)
+
+
+
+from colossus.lss import mass_function
+mfunc = mass_function.massFunction(Masses, z, mdef = 'fof', model = 'sheth99', q_out = 'dndlnM', sigma_args = {'filt': 'tophat'})
+
+
+
+#plt.plot(Masses/h,(mfunc/Masses)*h**4, c = 'tab:orange', ls = ':')
+
+
+
+
+
 #plt.plot(x,y)
 """ac_arr = np.linspace(0.01, 1, 15)
 par1 = 500
