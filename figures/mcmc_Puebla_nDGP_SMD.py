@@ -16,7 +16,7 @@ x = [[],[]]
 y = [[],[]]
 yerr = [[],[]]
 
-zs = [8,10]
+zs = [8,9]
 
 for i in range(len(zs)):
     path = '../observational_data/SMD'
@@ -35,25 +35,20 @@ f0 = 0.1
 
 
 def SMD_func(z, par1):
-    SMD_library = SMD(1/(1+z), model, model_H, model_SFR, par1, par2, 1e8)
+    SMD_library = SMD(1/(1+z), model, model_H, model_SFR, par1, par2, 1e8, f0)
     HMF_library = HMF(1/(1+z), model, model_H, par1, par2, 1e8)
     Pk = np.array(HMF_library.Pk(1/(1+z), model, par1, par2))*h**3
     k = kvec/h
-    Masses = np.logspace(6,18,100)
+    Masses = np.logspace(8,18,1000)
     Masses_star, SMF_sample = SMD_library.SMD(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk, f0)
     return Masses_star, SMF_sample
 
-
-Masses_star, SMF_sample =  SMD_func(8, 1e8)
-
-plt.loglog(Masses_star, SMF_sample)
-plt.savefig("HMF.pdf")
 
 def SMF_single(log_par1):
     result = 0
     par1 = 10**log_par1
     for k, zi in enumerate(zs):
-        Masses_star, SMF_sample = SMF_func(zi, par1)
+        Masses_star, SMF_sample = SMD_func(zi, par1)
         y_th = scipy.interpolate.interp1d(Masses_star, SMF_sample, fill_value='extrapolate')(x[k])
         sigma2 = yerr[k]**2
         result += -0.5 * np.sum((y[k] - y_th) ** 2 / sigma2 + np.log(sigma2))
@@ -69,9 +64,9 @@ def log_likelihood_interpolated(x, y, yerr):
     return interpolated_likelihood
 
 #log_likelihood_int = log_likelihood_interpolated(x, y, yerr)
-#with open('Puebla_SMF_nDGP_likelihood.pkl', 'wb') as f:
+#with open('Puebla_SMD_nDGP_likelihood.pkl', 'wb') as f:
 #    pickle.dump(log_likelihood_int, f)
-with open('Puebla_SMF_nDGP_likelihood.pkl', 'rb') as f:
+with open('Puebla_SMD_nDGP_likelihood.pkl', 'rb') as f:
     log_likelihood_int = pickle.load(f)
 
 def log_likelihood(theta, x, y, yerr):
@@ -102,7 +97,7 @@ sampler = emcee.EnsembleSampler(
 initial_params = [3]
 per = 0.5
 initial_pos = [initial_params + per * np.random.randn(ndim) for _ in range(nwalkers)]
-sampler.run_mcmc(initial_pos, 100, progress=True)
+sampler.run_mcmc(initial_pos, 10000, progress=True)
 
 flat_samples = sampler.get_chain(flat=True)
 

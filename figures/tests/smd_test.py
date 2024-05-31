@@ -323,12 +323,12 @@ pool_cpu = Pool(8)
 
 
 
-model = 'wCDM'
-model_H = 'wCDM'
-model_SFR = 'phenomenological_extreme'
-par1 = -1
+model = 'nDGP'
+model_H = 'nDGP'
+model_SFR = 'Puebla'
+par1=1e4
 par2 = 0.55
-f0 = 0.1
+f0 = 1
 z_int = np.array([8]) #np.linspace(12,5,35)
 SMD_library = SMD(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
 Pk_arr = []
@@ -351,12 +351,12 @@ plt.loglog(Masses_star[0], SMF_obs[0], c = 'tab:blue', ls = '-', lw = 1.25)
 
 
 
-model = 'wCDM'
-model_H = 'wCDM'
-model_SFR = 'phenomenological_extreme'
-par1 = -1.5
+model = 'nDGP'
+model_H = 'nDGP'
+model_SFR = 'Puebla'
+par1=10**2.5
 par2 = 0.55
-f0 = 0.1
+f0 = 1
 z_int = np.array([8]) #np.linspace(12,5,35)
 SMD_library = SMD(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
 Pk_arr = []
@@ -378,9 +378,9 @@ Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMD_library.SMD,tqdm(iterable, tota
 plt.loglog(Masses_star[0], SMF_obs[0], c = 'tab:blue', ls = '--', lw = 1.25)
 
 
-par1 = -0.5
+par1=1e5
 par2 = 0.55
-f0 = 0.1
+f0 = 1
 z_int = np.array([8]) #np.linspace(12,5,35)
 SMD_library = SMD(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
 Pk_arr = []
@@ -410,7 +410,7 @@ yerr = data[:,2]/2
 plt.errorbar(x,y,yerr=yerr)
 
 plt.ylim(1e5,1e9)
-plt.xlim(1e8,1e12)
+plt.ylim(1e3,10**6.5)
 
 
 
@@ -421,13 +421,13 @@ plt.subplot(122)
 
 
 
-model = 'wCDM'
-model_H = 'wCDM'
-model_SFR = 'phenomenological_extreme'
-par1 = -1
+model = 'nDGP'
+model_H = 'nDGP'
+model_SFR = 'Puebla'
+par1=1e4
 par2 = 0.55
-f0 = 0.1
-z_int = np.array([10]) #np.linspace(12,5,35)
+f0 = 1
+z_int = np.array([9]) #np.linspace(12,5,35)
 SMD_library = SMD(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
 Pk_arr = []
 for i, z_i in enumerate(z_int):
@@ -449,13 +449,13 @@ plt.loglog(Masses_star[0], SMF_obs[0], c = 'tab:blue', ls = '-', lw = 1.25)
 
 
 
-model = 'wCDM'
-model_H = 'wCDM'
-model_SFR = 'phenomenological_extreme'
-par1 = -1.5
+model = 'nDGP'
+model_H = 'nDGP'
+model_SFR = 'Puebla'
+par1=10**2.5
 par2 = 0.55
-f0 = 0.1
-z_int = np.array([10]) #np.linspace(12,5,35)
+f0 = 1
+z_int = np.array([9]) #np.linspace(12,5,35)
 SMD_library = SMD(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
 Pk_arr = []
 for i, z_i in enumerate(z_int):
@@ -476,10 +476,10 @@ Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMD_library.SMD,tqdm(iterable, tota
 plt.loglog(Masses_star[0], SMF_obs[0], c = 'tab:blue', ls = '--', lw = 1.25)
 
 
-par1 = -0.5
+par1=1e5
 par2 = 0.55
-f0 = 0.1
-z_int = np.array([10]) #np.linspace(12,5,35)
+f0 = 1
+z_int = np.array([9]) #np.linspace(12,5,35)
 SMD_library = SMD(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
 Pk_arr = []
 for i, z_i in enumerate(z_int):
@@ -501,7 +501,7 @@ plt.loglog(Masses_star[0], SMF_obs[0], c = 'tab:blue', ls = ':', lw = 1.25)
 
 
 
-data = np.loadtxt('/home/oleksii/codes/scripts_JWST_MG/observational_data/SMD/JWST_z10.txt')
+data = np.loadtxt('/home/oleksii/codes/scripts_JWST_MG/observational_data/SMD/JWST_z9.txt')
 x = data[:,0]
 y = data[:,1]
 yerr = data[:,2]/2
@@ -516,7 +516,7 @@ legend1.get_frame().set_facecolor('none')
 legend1.get_frame().set_linewidth(0.0)
 ax_Pk.add_artist(legend1)
 plt.xlim(1e8,1e12)
-plt.ylim(1e5,1e12)
+plt.ylim(1e3,10**6.5)
 
 """ac_arr = np.linspace(0.01, 1, 15)
 par1 = 500

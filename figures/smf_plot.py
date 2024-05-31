@@ -23,6 +23,7 @@ from JWST_MG.cosmological_functions import cosmological_functions
 from JWST_MG.constants import *
 from JWST_MG.HMF import HMF
 from JWST_MG.SMF import SMF
+import matplotlib.colors as colorss
 
 plt.rcParams.update({"text.usetex": True})
 
@@ -322,9 +323,8 @@ from scipy.special import lambertw
 from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
 import matplotlib.pylab as pl
 
-plt.figure(figsize=(15,30))
+fig = plt.figure(figsize=(4.25*2*1.15, 2*4*1.1))
 plt.rcParams.update({"text.usetex":True})
-fig = plt.figure()
 nn = 1
 z_smf_arr = [0,1,1.75,4,5,6,7,8]
 
@@ -353,67 +353,61 @@ for z_smf in z_smf_arr:
         data       = obs.target_observation['Data'][ii]
         label      = obs.target_observation.index[ii]
         datatype   = obs.target_observation['DataType'][ii]
-        color      = 'k'
-        marker     = markers[ii]
+        color = 'tab:gray'
+        marker     = 'o'
         linestyle  = linestyles[k_func]
         if datatype == 'data':
-            plt.errorbar(10**data[:,0],  data[:,1],\
-                        label=r'$\rm '+label + '$',capsize=0,ecolor=color,color='w',marker=marker,markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor=color)
+            if  ii == 0:
+                ax_Pk.errorbar(10**data[:,0],  data[:,1],\
+                        label=r'$\rm pre-JWST$',capsize=0,ecolor=color,color='w',marker=marker,markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor=color)
+            else:
+                ax_Pk.errorbar(10**data[:,0],  data[:,1],\
+                        capsize=0,ecolor=color,color='w',marker=marker,markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor=color)
+            
             j_data +=1
 
 
-
+    if z_smf in [4,5,6,7,8]:
+        path = '../observational_data/GSMF'
+        Navarro = np.loadtxt(path + "/Navarro_z"+str(z_smf)+".dat")
+        x = 10**Navarro[:,0]
+        y = 1e-4*Navarro[:,1]
+        yerr = 1e-4*Navarro[:,2]
+        color = 'k'
+        ax_Pk.errorbar(x,y,yerr=yerr,label=r'$\rm JWST$',capsize=0,ecolor=color,color='w',marker='v',markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor=color)
+    
     pool_cpu = Pool(8)
-
-
-    model = 'wCDM'
-    model_H = 'wCDM'
-    model_SFR = 'Puebla'
-    par1 = -2
-    par2 = 0.55
-    f0 = 0.04
-    z_int = np.array([z_smf]) #np.linspace(12,5,35)
-    SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
-    Pk_arr = []
-    for i, z_i in enumerate(z_int):
-        HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
-        Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3)
-    k = kvec/h
-    Masses = np.logspace(6,18,100)
-
-
-    iterable = [(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
-    Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(z_int))))
-    plt.plot(Masses_star[0], SMF_obs[0], c = 'tab:blue', lw = 1.25)
 
     model = 'nDGP'
     model_H = 'nDGP'
     model_SFR = 'Puebla'
-    par1 = 10**8
+    pars1 = np.logspace(2.25, 5, 10)
     par2 = 0
     f0 = 0.21
-    z_int = np.array([z_smf]) #np.linspace(12,5,35)
-    SMF_library = SMF(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
+    n = len(pars1)
+    colors = pl.cm.Blues(np.linspace(0, 1, n))
+    """
+    SMF_library = SMF(1/(1+z_smf), model, model_H, model_SFR, pars1, par2, 1e8, f0)
     Pk_arr = []
-    for i, z_i in enumerate(z_int):
-        HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
-        Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3)
+    for par1 in pars1:
+        HMF_library = HMF(1/(1+z_smf), model, model_H, par1, par2, 1e8)
+        Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_smf), model, par1, par2))*h**3)
     k = kvec/h
     Masses = np.logspace(6,18,100)
 
 
-    iterable = [(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
-    Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(z_int))))
-    plt.plot(Masses_star[0], SMF_obs[0], c = 'tab:blue', lw = 1.25, ls = ':')
+    iterable = [(Masses, rhom, 1/(1+z_smf), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,par1 in enumerate(pars1)]
+    Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(pars1))))
+    for i in range(len(SMF_obs)):
+        ax_Pk.plot(Masses_star[i], SMF_obs[i], c = colors[i], lw=  1)
+    """
 
+    norm = colorss.LogNorm(pars1.min(), pars1.max())
+    cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=pl.cm.Blues, norm=norm), ax=ax_Pk)
+    cbar.set_label(r'$r_c$', fontsize=16)
 
-
-    path = '../observational_data/GSMF'
-    import imports_z4
-    x, y, yerr_down, yerr_up = imports_z4.SMF_z4_obs_dict()
     #plt.errorbar(x.get('Duncan'),y.get('Duncan'),yerr=[yerr_down.get('Duncan'),yerr_up.get('Duncan')], c = 'tab:orange', capsize = 2, ls = 'None', marker = '.', label = r'$\rm Duncan+14$')
     #plt.errorbar(x.get('Song'),y.get('Song'),yerr=[yerr_down.get('Song'),yerr_up.get('Song')], c = 'tab:orange', capsize = 2, ls = 'None', marker = 's', label = r'$\rm Song+16$')
-    #plt.errorbar(x.get('Navarro'),y.get('Navarro'),yerr=[yerr_down.get('Navarro'),yerr_up.get('Navarro')], c = 'tab:orange', capsize = 2, ls = 'None', marker = 's', label = r'$\rm Song+16$')
     #plines = plt.errorbar(x.get('Duncan'),y.get('Duncan'),yerr=[yerr_down.get('Duncan'),yerr_up.get('Duncan')],capsize=0,ecolor='tab:blue',color='w',marker='o',markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor='tab:blue')
     #plines = plt.errorbar(x.get('Song'),y.get('Song'),yerr=[yerr_down.get('Song'),yerr_up.get('Song')],capsize=0,ecolor='tab:orange',color='w',marker='s',markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor='tab:orange')
 
@@ -424,17 +418,24 @@ for z_smf in z_smf_arr:
     plt.xscale('log')
     plt.yscale('log')
     plt.tight_layout()
-    plt.ylim(1e-8,1e-1)
-    plt.xlim(1e8,1e12)
+    plt.ylim(1e-8,1e0)
+    plt.xlim(1e6,10**12.5)
+    if nn == len(z_smf_arr) or nn == len(z_smf_arr)-1:
+        ax_Pk.set_xlabel(r'$M_\star\;[M_\odot]$', size = '16')
+        ax_Pk.set_ylabel(r'$\phi_{\star}\;[\rm Mpc^{-3}\;dex^{-1}]$', size = '16')
+    else:
+        ax_Pk.set_xticklabels([])
+        ax_Pk.set_ylabel(r'$\phi_{\star}\;[\rm Mpc^{-3}\;dex^{-1}]$', size = '16')
+
     plt.grid(".")
-    """ax_Pk.set_xlabel(r'$M_\star\;[M_\odot]$', size = '16')
-    ax_Pk.set_ylabel(r'$\phi_{\star}\;[\rm Mpc^{-3}\;dex^{-1}]$', size = '16')
-    legend1 = ax_Pk.legend(loc='best',fancybox=True, fontsize=9)
+    
+    ax_Pk.text(10**11.25,0.065,r'$z='+str(int(round(z_smf)))+r'$', size = '16')
+    
+    legend1 = ax_Pk.legend(loc='lower left',fancybox=True, fontsize=10)
     legend1.get_frame().set_facecolor('none')
     legend1.get_frame().set_linewidth(0.0)
     ax_Pk.add_artist(legend1)
-    ax_Pk.text(10**11.15,1e-2,r'$z='+str(z_smf)+r'$', size = '16')
-    """    
+    
     nn += 1
 
 """ac_arr = np.linspace(0.01, 1, 15)
@@ -673,4 +674,4 @@ plt.grid(".")
 
 
 plt.tight_layout()
-plt.savefig('delta_c.pdf', bbox_inches='tight')
+plt.savefig('SMF_screen_Puebla.pdf', bbox_inches='tight')

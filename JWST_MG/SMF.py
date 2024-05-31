@@ -86,6 +86,8 @@ class SMF:
                 epstar = 0.15-0.03*(z-6)
             else:
                 epstar = 0.03
+        elif model_SFR == 'toy':
+            epstar = f0
         elif model_SFR == 'Puebla':
             epstar = self.puebla17_mh_to_ms(Mh, z)
         elif model_SFR == 'double_power':

@@ -28,6 +28,7 @@ from multiprocessing import Pool
 import emcee
 from parallelbar import progress_map, progress_starmap
 from scipy.stats import qmc
+from numpy import log, log10, sqrt, exp, pi, arange, logspace, linspace, r_, c_
 
 os.environ["OMP_NUM_THREADS"] = "1"
 
