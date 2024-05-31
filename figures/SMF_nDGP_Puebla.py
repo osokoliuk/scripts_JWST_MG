@@ -267,45 +267,6 @@ plt.xlim(-0.05, 1.05)
 """
 
 
-ax = plt.subplot(1, 1, 1)
-
-
-ax.xaxis.set_minor_locator(AutoMinorLocator())
-ax.yaxis.set_minor_locator(AutoMinorLocator())
-
-
-plt.tick_params(axis='both', which='major', direction="in",
-                labelsize=14, length=5, top=True, right=True)
-plt.tick_params(axis='both', which='minor', direction="in",
-                labelsize=11, length=4, top=True, right=True)
-plt.tick_params(axis='both', which='major',
-                direction="in", labelsize=14, length=5)
-plt.tick_params(axis='both', which='minor',
-                direction="in", labelsize=11, length=4)
-
-
-
-arq = open("../observational_data/hopkins_2004.dat", 'r')
-data= np.loadtxt(arq, delimiter=",")
-def errorData():
-    """Return the asymetric errors in the redshif and CSFR
-    respectively
-    """
-    xerr = np.array([data[:, 0] - data[:, 2],
-            data[:, 3] - data[:, 0]])
-    yerr = np.array([data[:, 1] - data[:, 4],
-                    data[:, 5] - data[:, 1]])
-    return xerr, yerr
-
-def csfredshift():
-    """Return the redshift and the CSFR from
-    observational data
-    """
-    return data[:, 0], data[:, 1]
-
-
-xerr, yerr = errorData()
-x, y = csfredshift()
 
 #plt.errorbar(x, y, yerr=yerr, xerr=xerr, fmt='.')
 from multiprocessing import Pool
@@ -323,22 +284,34 @@ from scipy.special import lambertw
 from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
 import matplotlib.pylab as pl
 
-fig = plt.figure(figsize=(4.25*2*1.15, 2*4*1.1))
-plt.rcParams.update({"text.usetex":True})
+
+plt.cla()
+plt.figure()
+plt.rcParams.update({"text.usetex": True})
+fig = plt.figure(figsize=(4.25*2*.95, 2*4*1.05))
+
+
 nn = 1
 z_smf_arr = [0,1,1.75,4,5,6,7,8]
 
 for z_smf in z_smf_arr:
     ax_Pk = plt.subplot(4,2,nn)
 
+    
     ax_Pk.xaxis.set_minor_locator(AutoMinorLocator())
     ax_Pk.yaxis.set_minor_locator(AutoMinorLocator())
 
 
-    ax_Pk.tick_params(axis='both', which='major',direction="in", labelsize=14, length = 5, top=True,right=True)
-    ax_Pk.tick_params(axis='both', which='minor',direction="in", labelsize=12, length = 4, top=True,right=True)
-    ax_Pk.tick_params(axis='both', which='major',direction="in", labelsize=14, length = 5)
-    ax_Pk.tick_params(axis='both', which='minor',direction="in", labelsize=12, length = 4)
+    plt.tick_params(axis='both', which='major', direction="in",
+                    labelsize=14, length=5, top=True, right=True)
+    plt.tick_params(axis='both', which='minor', direction="in",
+                    labelsize=11, length=4, top=True, right=True)
+    plt.tick_params(axis='both', which='major',
+                    direction="in", labelsize=14, length=5)
+    plt.tick_params(axis='both', which='minor',
+                    direction="in", labelsize=11, length=4)
+
+
 
     obs = number_density(feature='GSMF', z_target=z_smf, h=h)
     j_data = 0
@@ -358,10 +331,10 @@ for z_smf in z_smf_arr:
         linestyle  = linestyles[k_func]
         if datatype == 'data':
             if  ii == 0:
-                ax_Pk.errorbar(10**data[:,0],  data[:,1],\
+                ax_Pk.errorbar(10**data[:,0],  data[:,1],yerr = np.abs([data[:,1]-data[:,3],data[:,2]- data[:,1]]),\
                         label=r'$\rm pre-JWST$',capsize=0,ecolor=color,color='w',marker=marker,markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor=color)
             else:
-                ax_Pk.errorbar(10**data[:,0],  data[:,1],\
+                ax_Pk.errorbar(10**data[:,0],  data[:,1],yerr = np.abs([data[:,1]-data[:,3],data[:,2]- data[:,1]]),\
                         capsize=0,ecolor=color,color='w',marker=marker,markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor=color)
             
             j_data +=1
@@ -386,7 +359,7 @@ for z_smf in z_smf_arr:
     f0 = 0.21
     n = len(pars1)
     colors = pl.cm.Blues(np.linspace(0, 1, n))
-    """
+    
     SMF_library = SMF(1/(1+z_smf), model, model_H, model_SFR, pars1, par2, 1e8, f0)
     Pk_arr = []
     for par1 in pars1:
@@ -400,8 +373,8 @@ for z_smf in z_smf_arr:
     Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(pars1))))
     for i in range(len(SMF_obs)):
         ax_Pk.plot(Masses_star[i], SMF_obs[i], c = colors[i], lw=  1)
-    """
-
+    
+    
     norm = colorss.LogNorm(pars1.min(), pars1.max())
     cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=pl.cm.Blues, norm=norm), ax=ax_Pk)
     cbar.set_label(r'$r_c$', fontsize=16)
@@ -429,7 +402,7 @@ for z_smf in z_smf_arr:
 
     plt.grid(".")
     
-    ax_Pk.text(10**11.25,0.065,r'$z='+str(int(round(z_smf)))+r'$', size = '16')
+    ax_Pk.text(10**11,0.065,r'$z='+str(int(round(z_smf)))+r'$', size = '15')
     
     legend1 = ax_Pk.legend(loc='lower left',fancybox=True, fontsize=10)
     legend1.get_frame().set_facecolor('none')
