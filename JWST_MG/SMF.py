@@ -138,7 +138,7 @@ class SMF:
                 c = ci + (1-ci1)
 
             SMF = scipy.interpolate.interp1d(Masses_star,SMF, fill_value="extrapolate")
-            Mstar_grid = np.logspace(6,12.1,50)
+            Mstar_grid = np.logspace(6,13,150)
             SMF_arr = []
             for Mstar in Mstar_grid:
                 SMF_arr.append(self.SMF_interpolation(Mstar, SMF, z,np.log10(min(Masses_star)),np.log10(max(Masses_star))))
