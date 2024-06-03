@@ -358,7 +358,9 @@ for z_smf in z_smf_arr:
     par2 = 0
     f0 = 0.21
     n = len(pars1)
-    colors = pl.cm.Blues(np.linspace(0, 1, n))
+    cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
+
+    colors = cmap3(np.linspace(0, 1, n))
     
     SMF_library = SMF(1/(1+z_smf), model, model_H, model_SFR, pars1, par2, 1e8, f0)
     Pk_arr = []
@@ -376,7 +378,7 @@ for z_smf in z_smf_arr:
     
     
     norm = colorss.LogNorm(pars1.min(), pars1.max())
-    cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=pl.cm.Blues, norm=norm), ax=ax_Pk)
+    cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=cmap3, norm=norm), ax=ax_Pk)
     cbar.set_label(r'$r_c$', fontsize=16)
 
     #plt.errorbar(x.get('Duncan'),y.get('Duncan'),yerr=[yerr_down.get('Duncan'),yerr_up.get('Duncan')], c = 'tab:orange', capsize = 2, ls = 'None', marker = '.', label = r'$\rm Duncan+14$')

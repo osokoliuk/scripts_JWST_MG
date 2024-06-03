@@ -86,8 +86,9 @@ par2 = 0
 z = 8
 f0 = 0.12
 n = len(pars1)
-colors = pl.cm.Blues(np.linspace(0, 1, n))
+cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
 
+colors = cmap3(np.linspace(0, 1, n))
 SMD_library = SMD(1/(1+z), model, model_H, model_SFR, pars1, par2, 1e8, f0)
 Pk_arr = []
 for par1 in pars1:
@@ -123,7 +124,7 @@ plt.errorbar(x,y,yerr=c_[ye_low, ye_upp].T,capsize=0,ecolor='k',color='w',marker
 
 
 norm = colorss.LogNorm(pars1.min(), pars1.max())
-cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=pl.cm.Blues, norm=norm), ax=ax)
+cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=cmap3, norm=norm), ax=ax)
 cbar.set_label(r'$r_c$', fontsize=16)
 
 plt.ylabel(r'$\rho_\star\;[M_\odot\;\rm Mpc^{-3}]$', size='16')
@@ -161,8 +162,9 @@ par2 = 0
 z = 9
 f0 = 0.12
 n = len(pars1)
-colors = pl.cm.Blues(np.linspace(0, 1, n))
+cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
 
+colors = cmap3(np.linspace(0, 1, n))
 SMD_library = SMD(1/(1+z), model, model_H, model_SFR, pars1, par2, 1e8, f0)
 Pk_arr = []
 for par1 in pars1:
@@ -194,7 +196,7 @@ plt.errorbar(x,y,yerr=c_[ye_low, ye_upp].T,capsize=0,ecolor='k',color='w',marker
 
 
 norm = colorss.LogNorm(pars1.min(), pars1.max())
-cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=pl.cm.Blues, norm=norm), ax=ax)
+cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=cmap3, norm=norm), ax=ax)
 cbar.set_label(r'$r_c$', fontsize=16)
 
 
@@ -231,10 +233,13 @@ model_SFR = 'double_power'
 pars2 = np.linspace(0.0, 1, 10)
 pars1 = np.array([0.1, 0.3, 0.5])
 z = 8
-f0 = 0.12
+f0 = 0.21
 n = len(pars2)
-colors = np.array([pl.cm.Blues(np.linspace(0, 1, n)), pl.cm.Reds(
-    np.linspace(0, 1, n)), pl.cm.Purples(np.linspace(0, 1, n))])
+cmap1 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#66c2a5"]) 
+cmap2 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#fc8d62"]) 
+cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
+
+colors = np.array([cmap1(np.linspace(0, 1, n)), cmap2(np.linspace(0, 1, n)), cmap3(np.linspace(0, 1, n))])
 
 for j, par1 in enumerate(pars1):
     SMD_library = SMD(1/(1+z), model, model_H, model_SFR, pars1, par2, 1e8, f0)
@@ -254,15 +259,15 @@ for j, par1 in enumerate(pars1):
     #Masses_star = SMF[0]
     #SMF_obs = SMF[1]
     for i, Masses_star in enumerate(Masses_stars):
-        plt.loglog(Masses_stars[i], SMDs[i],  c=colors[j][i], alpha=0.5)
+        plt.loglog(Masses_stars[i], SMDs[i],  c=colors[j][i], alpha=1)
 
 
 hhh, llll = ax.get_legend_handles_labels()
 
 
-line1 = Line2D([0], [0], label=r'$\beta=0.1$', color='tab:blue')
-line2 = Line2D([0], [0], label=r'$\beta=0.3$', color='tab:red')
-line3 = Line2D([0], [0], label=r'$\beta=0.5$', color='tab:purple')
+line1 = Line2D([0], [0], label=r'$\beta=0.1$', color='#66c2a5')
+line2 = Line2D([0], [0], label=r'$\beta=0.3$', color='#fc8d62')
+line3 = Line2D([0], [0], label=r'$\beta=0.5$', color='#8da0cb')
 hhh.extend([line1, line2, line3])
 kw = dict(ncol=1,
           fancybox=True, fontsize=10, frameon=False)
@@ -320,8 +325,11 @@ pars1 = np.array([0.1, 0.3, 0.5])
 z = 9
 f0 = 0.12
 n = len(pars2)
-colors = np.array([pl.cm.Blues(np.linspace(0, 1, n)), pl.cm.Reds(
-    np.linspace(0, 1, n)), pl.cm.Purples(np.linspace(0, 1, n))])
+cmap1 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#66c2a5"]) 
+cmap2 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#fc8d62"]) 
+cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
+
+colors = np.array([cmap1(np.linspace(0, 1, n)), cmap2(np.linspace(0, 1, n)), cmap3(np.linspace(0, 1, n))])
 
 for j, par1 in enumerate(pars1):
     SMD_library = SMD(1/(1+z), model, model_H, model_SFR, pars1, par2, 1e8, f0)
@@ -341,16 +349,16 @@ for j, par1 in enumerate(pars1):
     #Masses_star = SMF[0]
     #SMF_obs = SMF[1]
     for i, Masses_star in enumerate(Masses_stars):
-        plt.loglog(Masses_stars[i], SMDs[i],  c=colors[j][i], alpha=0.5)
+        plt.loglog(Masses_stars[i], SMDs[i],  c=colors[j][i], alpha=1)
 
 
 
 hhh, lll = ax.get_legend_handles_labels()
 
 
-line1 = Line2D([0], [0], label=r'$\beta=0.1$', color='tab:blue')
-line2 = Line2D([0], [0], label=r'$\beta=0.3$', color='tab:red')
-line3 = Line2D([0], [0], label=r'$\beta=0.5$', color='tab:purple')
+line1 = Line2D([0], [0], label=r'$\beta=0.1$', color='#66c2a5')
+line2 = Line2D([0], [0], label=r'$\beta=0.3$', color='#fc8d62')
+line3 = Line2D([0], [0], label=r'$\beta=0.5$', color='#8da0cb')
 hhh.extend([line1, line2, line3])
 kw = dict(ncol=1,
           fancybox=True, fontsize=10, frameon=False)
@@ -423,7 +431,7 @@ for j in tqdm(range(len(pars1))):
             dc = deltac.delta_c_at_ac(ac, model, model_H, par1, par2)
             Delta.append(dc)
             # print(Deltavir)
-        plt.plot(ac_arr, Delta, c=colors[j][i], alpha=0.5, lw=1)
+        plt.plot(ac_arr, Delta, c=colors[j][i], alpha=1, lw=1)
 
 
 norm = plt.Normalize(pars2.min(), pars2.max())

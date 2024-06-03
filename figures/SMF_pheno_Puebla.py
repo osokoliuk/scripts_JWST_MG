@@ -292,7 +292,7 @@ fig = plt.figure(figsize=(4.25*2*.95, 2*4*1.05))
 
 
 nn = 1
-z_smf_arr = [0,1,1.75,4,5,6,7,8]
+z_smf_arr = [0]
 
 for z_smf in z_smf_arr:
     ax_Pk = plt.subplot(4,2,nn)
@@ -338,7 +338,9 @@ for z_smf in z_smf_arr:
                         capsize=0,ecolor=color,color='w',marker=marker,markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor=color)
             
             j_data +=1
-
+        
+        color = 'k'
+        ax_Pk.errorbar(1,1,yerr=1,label=r'$\rm JWST$',capsize=0,ecolor=color,color='w',marker='v',markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor=color)
 
     if z_smf in [4,5,6,7,8]:
         path = '../observational_data/GSMF'
@@ -347,38 +349,42 @@ for z_smf in z_smf_arr:
         y = 1e-4*Navarro[:,1]
         yerr = 1e-4*Navarro[:,2]
         color = 'k'
-        ax_Pk.errorbar(x,y,yerr=yerr,label=r'$\rm JWST$',capsize=0,ecolor=color,color='w',marker='v',markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor=color)
+        ax_Pk.errorbar(x,y,yerr=yerr,capsize=0,ecolor=color,color='w',marker='v',markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor=color)
     
     pool_cpu = Pool(8)
 
-    model = 'nDGP'
-    model_H = 'nDGP'
-    model_SFR = 'double_power'
-    pars1 = np.logspace(2.25, 5, 10)
-    par2 = 0
-    f0 = 0.21
-    n = len(pars1)
+    model = 'E11'
+    model_H = 'LCDM'
+    model_SFR = 'Puebla'
+
+    pars2 = np.linspace(-1, 1, 10)
+    pars1 = np.array([-1, 0, 1])
+    n = len(pars2)
+    cmap1 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#66c2a5"]) 
+    cmap2 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#fc8d62"]) 
     cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
 
-    colors = cmap3(np.linspace(0, 1, n))    
-    SMF_library = SMF(1/(1+z_smf), model, model_H, model_SFR, pars1, par2, 1e8, f0)
-    Pk_arr = []
-    for par1 in pars1:
-        HMF_library = HMF(1/(1+z_smf), model, model_H, par1, par2, 1e8)
-        Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_smf), model, par1, par2))*h**3)
-    k = kvec/h
-    Masses = np.logspace(6,16,200)
+    colors = np.array([cmap1(np.linspace(0, 1, n)), cmap2(np.linspace(0, 1, n)), cmap3(np.linspace(0, 1, n))])
+    f0 = 0.21
+    
+    for j, par1 in enumerate(pars1):
+        SMF_library = SMF(1/(1+z_smf), model, model_H, model_SFR, pars1, pars2, 1e8, f0)
+        Pk_arr = []
+        for par2 in pars2:
+            HMF_library = HMF(1/(1+z_smf), model, model_H, par1, par2, 1e8)
+            Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_smf), model, par1, par2))*h**3)
+        k = kvec/h
+        Masses = np.logspace(6,18,100)
 
 
-    iterable = [(Masses, rhom, 1/(1+z_smf), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,par1 in enumerate(pars1)]
-    Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(pars1))))
-    for i in range(len(SMF_obs)):
-        ax_Pk.plot(Masses_star[i], SMF_obs[i], c = colors[i], lw=  1)
+        iterable = [(Masses, rhom, 1/(1+z_smf), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,par2 in enumerate(pars2)]
+        Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(pars2))))
+        for i in range(len(SMF_obs)):
+            ax_Pk.plot(Masses_star[i], SMF_obs[i],c=colors[j][i], alpha=0.5)
     
-    
-    norm = colorss.LogNorm(pars1.min(), pars1.max())
-    cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=cmap3, norm=norm), ax=ax_Pk)
-    cbar.set_label(r'$r_c$', fontsize=16)
+    norm = plt.Normalize(pars2.min(), pars2.max())
+    cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=pl.cm.Grays, norm=norm), ax=ax_Pk)
+    cbar.set_label(r'$E_{22}$', fontsize=16)
 
     #plt.errorbar(x.get('Duncan'),y.get('Duncan'),yerr=[yerr_down.get('Duncan'),yerr_up.get('Duncan')], c = 'tab:orange', capsize = 2, ls = 'None', marker = '.', label = r'$\rm Duncan+14$')
     #plt.errorbar(x.get('Song'),y.get('Song'),yerr=[yerr_down.get('Song'),yerr_up.get('Song')], c = 'tab:orange', capsize = 2, ls = 'None', marker = 's', label = r'$\rm Song+16$')
@@ -405,11 +411,30 @@ for z_smf in z_smf_arr:
     
     ax_Pk.text(10**11,0.065,r'$z='+str(int(round(z_smf)))+r'$', size = '15')
     
-    legend1 = ax_Pk.legend(loc='lower left',fancybox=True, fontsize=10)
-    legend1.get_frame().set_facecolor('none')
-    legend1.get_frame().set_linewidth(0.0)
-    ax_Pk.add_artist(legend1)
-    
+    if nn == 1:
+        hhh, llll = ax_Pk.get_legend_handles_labels()
+        hhh = [hhh[0],hhh[4]]
+        kw = dict(ncol=2, loc="lower center",fancybox=True, fontsize=10,frameon=False)    
+        leg1 = fig.legend(hhh[:],llll[:], bbox_to_anchor=[0.5,1],**kw, bbox_transform=fig.transFigure)
+        ax_Pk.add_artist(leg1)
+        
+
+
+
+    #hhh, llll = ax_Pk.get_legend_handles_labels()
+    hhh = []
+
+    line1 = Line2D([0], [0], label=r'$E_{11}=-1$', color='tab:blue')
+    line2 = Line2D([0], [0], label=r'$E_{11}=0$', color='tab:red')
+    line3 = Line2D([0], [0], label=r'$E_{11}=1$', color='tab:purple')
+    hhh.extend([line1, line2, line3])
+    kw = dict(ncol=1,
+            fancybox=True, fontsize=10, frameon=False)
+    # leg1 = ax.legend(h[:], l[:], bbox_to_anchor=[0.5, 1.08], **kw)
+    ax_Pk.legend(handles=hhh, **kw,loc='lower left')
+
+
+
     nn += 1
 
 """ac_arr = np.linspace(0.01, 1, 15)
@@ -525,10 +550,9 @@ plt.axhline(1.688, c='tab:blue', ls=':')
 
 
 par1 = 500
-par2 = 0
-ac_arr = np.linspace(0.01, 1, 15)
+model_H = 'nDGP'
+model_SFR = 'Puebla'
 
-for ac in ac_arr:
     deltac = delta_c(ac, model, model_H, par1, par2)
     dc = deltac.delta_c_at_ac(ac, model, model_H, par1, par2)
     plt.scatter(ac, dc, c='tab:orange')
@@ -648,4 +672,4 @@ plt.grid(".")
 
 
 plt.tight_layout()
-plt.savefig('SMF_nDGP_double_power.pdf', bbox_inches='tight')
+plt.savefig('SMF_pheno_Puebla.pdf', bbox_inches='tight')

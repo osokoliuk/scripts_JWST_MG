@@ -78,7 +78,7 @@ plt.tick_params(axis='both', which='minor',
 
 
 model = 'E11'
-model_H = 'LCDM'
+model_H = 'LCDM'   
 model_SFR = 'toy'
 
 pars1 = np.linspace(-1, 1, 10)
