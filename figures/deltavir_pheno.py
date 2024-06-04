@@ -89,24 +89,24 @@ ac_arr = np.linspace(0.05, 1, 20)
 par2 = 0
 
 n = len(pars1)
-colors = pl.cm.Blues(np.linspace(0, 1, n))
+cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
 
+colors = cmap3(np.linspace(0, 1, n))
 for i in range(len(pars1)):
-    Delta = []
     par1 = pars1[i]
-    for ac in ac_arr:
-        a_arr = np.linspace(ai, ac, 10000)
-        reion = reionization(a_arr, model, model_H, par1, par2)
-        a_vir, Deltavir = reion.Delta_vir(
-            model, model_H, par1, par2, a_arr)
-        print(Deltavir)
-        Delta.append(Deltavir)
-        # print(Deltavir)
-    plt.plot(ac_arr, Delta, c=colors[i], lw=1)
+    reion_arr = [reionization(np.linspace(ai, ac, 10000), model, model_H, par1, par2) for ac in ac_arr]
+    
+    def reion(i, model,model_H,par1,par2,a_arr):
+        return reion_arr[i].Delta_vir(model,model_H,par1,par2,a_arr)
+    pool_cpu = Pool(8)
+    iterable = [(i, model,model_H,par1,par2,np.linspace(ai, ac, 10000)) for i, ac in enumerate(ac_arr)]
+    a_vir, Deltavir, a_arr, mu_arr = zip(*pool_cpu.starmap(reion,tqdm(iterable, total=len(ac_arr))))
+    print(Deltavir)
+    plt.plot(ac_arr, Deltavir, c=colors[i], lw=1)
 
 
 norm = plt.Normalize(pars1.min(), pars1.max())
-cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=pl.cm.Blues, norm=norm), ax=ax)
+cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=cmap3, norm=norm), ax=ax)
 cbar.set_label(r'$E_{11}$', fontsize=16)
 
 plt.ylabel(r'$\Delta_{\rm vir}(a_c)$', size='16')
@@ -151,24 +151,25 @@ ac_arr = np.linspace(0.05, 1, 20)
 par2 = 0
 
 n = len(pars1)
-colors = pl.cm.Blues(np.linspace(0, 1, n))
+cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
 
+colors = cmap3(np.linspace(0, 1, n))
 for i in range(len(pars1)):
     Delta = []
     par1 = pars1[i]
-    for ac in ac_arr:
-        a_arr = np.linspace(ai, ac, 10000)
-        reion = reionization(a_arr, model, model_H, par1, par2)
-        a_vir, Deltavir = reion.Delta_vir(
-            model, model_H, par1, par2, a_arr)
-        print(Deltavir)
-        Delta.append(Deltavir)
-        # print(Deltavir)
-    plt.plot(ac_arr, Delta, c=colors[i], lw=1)
+    reion_arr = [reionization(np.linspace(ai, ac, 10000), model, model_H, par1, par2) for ac in ac_arr]
+    
+    def reion(i, model,model_H,par1,par2,a_arr):
+        return reion_arr[i].Delta_vir(model,model_H,par1,par2,a_arr)
+    pool_cpu = Pool(8)
+    iterable = [(i, model,model_H,par1,par2,np.linspace(ai, ac, 10000)) for i, ac in enumerate(ac_arr)]
+    a_vir, Deltavir, a_arr, mu_arr = zip(*pool_cpu.starmap(reion,tqdm(iterable, total=len(ac_arr))))
+    print(Deltavir)
+    plt.plot(ac_arr, Deltavir, c=colors[i], lw=1)
 
 
 norm = plt.Normalize(pars1.min(), pars1.max())
-cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=pl.cm.Blues, norm=norm), ax=ax)
+cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=cmap3, norm=norm), ax=ax)
 cbar.set_label(r'$g_\mu$', fontsize=16)
 
 plt.ylabel(r'$\Delta_{\rm vir}(a_c)$', size='16')
@@ -213,23 +214,27 @@ ac_arr = np.linspace(0.05, 1, 20)
 pars1 = np.array([0, 1, -1])
 
 n = len(pars2)
-colors = np.array([pl.cm.Blues(np.linspace(0, 1, n)), pl.cm.Reds(
-    np.linspace(0, 1, n)), pl.cm.Purples(np.linspace(0, 1, n))])
+cmap1 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#66c2a5"]) 
+cmap2 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#fc8d62"]) 
+cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
+
+colors = np.array([cmap1(np.linspace(0, 1, n)), cmap2(np.linspace(0, 1, n)), cmap3(np.linspace(0, 1, n))])
 
 for j in range(len(pars1)):
     par1 = pars1[j]
     for i in range(len(pars2)):
         Delta = []
         par2 = pars2[i]
-        for ac in ac_arr:
-            a_arr = np.linspace(ai, ac, 10000)
-            reion = reionization(a_arr, model, model_H, par1, par2)
-            a_vir, Deltavir = reion.Delta_vir(
-                model, model_H, par1, par2, a_arr)
-            print(Deltavir)
-            Delta.append(Deltavir)
-            # print(Deltavir)
-        plt.plot(ac_arr, Delta, c=colors[j][i], alpha=0.5, lw=1)
+        reion_arr = [reionization(np.linspace(ai, ac, 10000), model, model_H, par1, par2) for ac in ac_arr]
+        
+        def reion(i, model,model_H,par1,par2,a_arr):
+            return reion_arr[i].Delta_vir(model,model_H,par1,par2,a_arr)
+        pool_cpu = Pool(8)
+        iterable = [(i, model,model_H,par1,par2,np.linspace(ai, ac, 10000)) for i, ac in enumerate(ac_arr)]
+        a_vir, Deltavir = zip(*pool_cpu.starmap(reion,tqdm(iterable, total=len(ac_arr))))
+    
+        plt.plot(ac_arr, Deltavir, c=colors[j][i], lw=1, alpha =0.5)
+
 
 
 norm = plt.Normalize(pars2.min(), pars2.max())
@@ -246,9 +251,11 @@ ax.set_xticklabels([])
 h, l = ax.get_legend_handles_labels()
 
 
-line1 = Line2D([0], [0], label=r'$T_2=0$', color='tab:blue')
-line2 = Line2D([0], [0], label=r'$T_2=1$', color='tab:red')
-line3 = Line2D([0], [0], label=r'$T_2=-1$', color='tab:purple')
+line1 = Line2D([0], [0], label=r'$T_2=0$', color='#66c2a5')
+line2 = Line2D([0], [0], label=r'$T_2=1$', color='#fc8d62')
+line3 = Line2D([0], [0], label=r'$T_2=-1$', color='#8da0cb')
+
+
 h.extend([line1, line2, line3])
 kw = dict(ncol=1,
           fancybox=True, fontsize=10, frameon=False)
@@ -289,23 +296,26 @@ ac_arr = np.linspace(0.05, 1, 20)
 pars1 = np.array([-1.5, -1, -0.5])
 
 n = len(pars2)
-colors = np.array([pl.cm.Blues(np.linspace(0, 1, n)), pl.cm.Reds(
-    np.linspace(0, 1, n)), pl.cm.Purples(np.linspace(0, 1, n))])
+cmap1 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#66c2a5"]) 
+cmap2 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#fc8d62"]) 
+cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
+
+colors = np.array([cmap1(np.linspace(0, 1, n)), cmap2(np.linspace(0, 1, n)), cmap3(np.linspace(0, 1, n))])
 
 for j in range(len(pars1)):
     par1 = pars1[j]
     for i in range(len(pars2)):
         Delta = []
         par2 = pars2[i]
-        for ac in ac_arr:
-            a_arr = np.linspace(ai, ac, 10000)
-            reion = reionization(a_arr, model, model_H, par1, par2)
-            a_vir, Deltavir = reion.Delta_vir(
-                model, model_H, par1, par2, a_arr)
-            print(Deltavir)
-            Delta.append(Deltavir)
-            # print(Deltavir)
-        plt.plot(ac_arr, Delta, c=colors[j][i], alpha=0.5, lw=1)
+        reion_arr = [reionization(np.linspace(ai, ac, 10000), model, model_H, par1, par2) for ac in ac_arr]
+        
+        def reion(i, model,model_H,par1,par2,a_arr):
+            return reion_arr[i].Delta_vir(model,model_H,par1,par2,a_arr)
+        pool_cpu = Pool(8)
+        iterable = [(i, model,model_H,par1,par2,np.linspace(ai, ac, 10000)) for i, ac in enumerate(ac_arr)]
+        a_vir, Deltavir = zip(*pool_cpu.starmap(reion,tqdm(iterable, total=len(ac_arr))))
+    
+        plt.plot(ac_arr, Deltavir, c=colors[j][i], lw=1, alpha =0.5)
 
 
 norm = plt.Normalize(pars2.min(), pars2.max())
@@ -320,10 +330,12 @@ plt.grid(".")
 
 h, l = ax.get_legend_handles_labels()
 
+line1 = Line2D([0], [0], label=r'$w_\Lambda=-1.5$', color='#66c2a5')
+line2 = Line2D([0], [0], label=r'$w_\Lambda=-1$', color='#fc8d62')
+line3 = Line2D([0], [0], label=r'$w_\Lambda=-0.5$', color='#8da0cb')
 
-line1 = Line2D([0], [0], label=r'$w_\Lambda=-1.5$', color='tab:blue')
-line2 = Line2D([0], [0], label=r'$w_\Lambda=-1$', color='tab:red')
-line3 = Line2D([0], [0], label=r'$w_\Lambda=-0.5$', color='tab:purple')
+
+
 h.extend([line1, line2, line3])
 kw = dict(ncol=1,
           fancybox=True, fontsize=10, frameon=False)

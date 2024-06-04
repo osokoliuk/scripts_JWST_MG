@@ -332,10 +332,10 @@ for z_smf in z_smf_arr:
         if datatype == 'data':
             if  ii == 0:
                 ax_Pk.errorbar(10**data[:,0],  data[:,1],yerr = np.abs([data[:,1]-data[:,3],data[:,2]- data[:,1]]),\
-                        label=r'$\rm pre-JWST$',capsize=0,ecolor=color,color='w',marker=marker,markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor=color)
+                        label=r'$\rm pre-JWST$',capsize=0,ecolor=color,color='w',marker=marker,markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor=color, zorder= 3)
             else:
                 ax_Pk.errorbar(10**data[:,0],  data[:,1],yerr = np.abs([data[:,1]-data[:,3],data[:,2]- data[:,1]]),\
-                        capsize=0,ecolor=color,color='w',marker=marker,markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor=color)
+                        capsize=0,ecolor=color,color='w',marker=marker,markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor=color, zorder= 3)
             
             j_data +=1
 
@@ -347,7 +347,7 @@ for z_smf in z_smf_arr:
         y = 1e-4*Navarro[:,1]
         yerr = 1e-4*Navarro[:,2]
         color = 'k'
-        ax_Pk.errorbar(x,y,yerr=yerr,label=r'$\rm JWST$',capsize=0,ecolor=color,color='w',marker='v',markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor=color)
+        ax_Pk.errorbar(x,y,yerr=yerr,label=r'$\rm JWST$',capsize=0,ecolor=color,color='w',marker='v',markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor=color, zorder= 3)
     
     pool_cpu = Pool(8)
 
