@@ -89,7 +89,7 @@ ac_arr = np.linspace(0.05, 1, 20)
 par2 = 0
 
 n = len(pars1)
-cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
+cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#48639e"])
 
 colors = cmap3(np.linspace(0, 1, n))
 for i in range(len(pars1)):
@@ -100,7 +100,7 @@ for i in range(len(pars1)):
         return reion_arr[i].Delta_vir(model,model_H,par1,par2,a_arr)
     pool_cpu = Pool(8)
     iterable = [(i, model,model_H,par1,par2,np.linspace(ai, ac, 10000)) for i, ac in enumerate(ac_arr)]
-    a_vir, Deltavir, a_arr, mu_arr = zip(*pool_cpu.starmap(reion,tqdm(iterable, total=len(ac_arr))))
+    a_vir, Deltavir = zip(*pool_cpu.starmap(reion,tqdm(iterable, total=len(ac_arr))))
     print(Deltavir)
     plt.plot(ac_arr, Deltavir, c=colors[i], lw=1)
 
@@ -151,7 +151,7 @@ ac_arr = np.linspace(0.05, 1, 20)
 par2 = 0
 
 n = len(pars1)
-cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
+cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#48639e"])
 
 colors = cmap3(np.linspace(0, 1, n))
 for i in range(len(pars1)):
@@ -163,7 +163,7 @@ for i in range(len(pars1)):
         return reion_arr[i].Delta_vir(model,model_H,par1,par2,a_arr)
     pool_cpu = Pool(8)
     iterable = [(i, model,model_H,par1,par2,np.linspace(ai, ac, 10000)) for i, ac in enumerate(ac_arr)]
-    a_vir, Deltavir, a_arr, mu_arr = zip(*pool_cpu.starmap(reion,tqdm(iterable, total=len(ac_arr))))
+    a_vir, Deltavir = zip(*pool_cpu.starmap(reion,tqdm(iterable, total=len(ac_arr))))
     print(Deltavir)
     plt.plot(ac_arr, Deltavir, c=colors[i], lw=1)
 
@@ -214,9 +214,9 @@ ac_arr = np.linspace(0.05, 1, 20)
 pars1 = np.array([0, 1, -1])
 
 n = len(pars2)
-cmap1 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#66c2a5"]) 
-cmap2 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#fc8d62"]) 
-cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
+cmap1 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#398e73"]) 
+cmap2 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#e64304"]) 
+cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#48639e"])
 
 colors = np.array([cmap1(np.linspace(0, 1, n)), cmap2(np.linspace(0, 1, n)), cmap3(np.linspace(0, 1, n))])
 
@@ -251,9 +251,9 @@ ax.set_xticklabels([])
 h, l = ax.get_legend_handles_labels()
 
 
-line1 = Line2D([0], [0], label=r'$T_2=0$', color='#66c2a5')
-line2 = Line2D([0], [0], label=r'$T_2=1$', color='#fc8d62')
-line3 = Line2D([0], [0], label=r'$T_2=-1$', color='#8da0cb')
+line1 = Line2D([0], [0], label=r'$T_2=0$', color='#398e73')
+line2 = Line2D([0], [0], label=r'$T_2=1$', color='#e64304')
+line3 = Line2D([0], [0], label=r'$T_2=-1$', color='#48639e')
 
 
 h.extend([line1, line2, line3])
@@ -296,9 +296,9 @@ ac_arr = np.linspace(0.05, 1, 20)
 pars1 = np.array([-1.5, -1, -0.5])
 
 n = len(pars2)
-cmap1 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#66c2a5"]) 
-cmap2 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#fc8d62"]) 
-cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
+cmap1 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#398e73"]) 
+cmap2 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#e64304"]) 
+cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#48639e"])
 
 colors = np.array([cmap1(np.linspace(0, 1, n)), cmap2(np.linspace(0, 1, n)), cmap3(np.linspace(0, 1, n))])
 
@@ -330,9 +330,9 @@ plt.grid(".")
 
 h, l = ax.get_legend_handles_labels()
 
-line1 = Line2D([0], [0], label=r'$w_\Lambda=-1.5$', color='#66c2a5')
-line2 = Line2D([0], [0], label=r'$w_\Lambda=-1$', color='#fc8d62')
-line3 = Line2D([0], [0], label=r'$w_\Lambda=-0.5$', color='#8da0cb')
+line1 = Line2D([0], [0], label=r'$w_\Lambda=-1.5$', color='#398e73')
+line2 = Line2D([0], [0], label=r'$w_\Lambda=-1$', color='#e64304')
+line3 = Line2D([0], [0], label=r'$w_\Lambda=-0.5$', color='#48639e')
 
 
 

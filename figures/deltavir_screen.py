@@ -88,7 +88,7 @@ ac_arr = np.linspace(0.05, 1, 20)
 par2 = 0
 
 n = len(pars1)
-cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
+cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#48639e"])
 
 colors = cmap3(np.linspace(0, 1, n))
 
@@ -153,9 +153,9 @@ ac_arr = np.linspace(0.05, 1, 20)
 pars1 = np.array([0.1, 0.3, 0.5])
 
 n = len(pars2)
-cmap1 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#66c2a5"]) 
-cmap2 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#fc8d62"]) 
-cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
+cmap1 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#398e73"]) 
+cmap2 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#e64304"]) 
+cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#48639e"])
 
 colors = np.array([cmap1(np.linspace(0, 1, n)), cmap2(np.linspace(0, 1, n)), cmap3(np.linspace(0, 1, n))])
 
@@ -187,9 +187,9 @@ plt.grid(".")
 h, l = ax.get_legend_handles_labels()
 
 
-line1 = Line2D([0], [0], label=r'$\beta=0.1$', color='#66c2a5')
-line2 = Line2D([0], [0], label=r'$\beta=0.3$', color='#fc8d62')
-line3 = Line2D([0], [0], label=r'$\beta=0.5$', color='#8da0cb')
+line1 = Line2D([0], [0], label=r'$\beta=0.1$', color='#398e73')
+line2 = Line2D([0], [0], label=r'$\beta=0.3$', color='#e64304')
+line3 = Line2D([0], [0], label=r'$\beta=0.5$', color='#48639e')
 h.extend([line1, line2, line3])
 kw = dict(ncol=1,
           fancybox=True, fontsize=10, frameon=False)

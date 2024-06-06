@@ -86,8 +86,9 @@ ac_arr = np.linspace(0.15, 1, 20)
 par2 = 0
 
 n = len(pars1)
-colors = pl.cm.Blues(np.linspace(0, 1, n))
+cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#48639e"])
 
+colors = cmap3(np.linspace(0, 1, n))
 for i in tqdm(range(len(pars1))):
     Delta = []
     par1 = pars1[i]
@@ -100,7 +101,7 @@ for i in tqdm(range(len(pars1))):
 
 
 norm = plt.Normalize(pars1.min(), pars1.max())
-cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=pl.cm.Blues, norm=norm), ax=ax)
+cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=cmap3, norm=norm), ax=ax)
 cbar.set_label(r'$E_{11}$', fontsize=16)
 
 plt.ylabel(r'$\delta_{\rm l}(a_c)$', size='16')
@@ -139,8 +140,9 @@ ac_arr = np.linspace(0.15, 1, 20)
 par2 = 0
 
 n = len(pars1)
-colors = pl.cm.Blues(np.linspace(0, 1, n))
+cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#48639e"])
 
+colors = cmap3(np.linspace(0, 1, n))
 for i in tqdm(range(len(pars1))):
     Delta = []
     par1 = pars1[i]
@@ -153,7 +155,7 @@ for i in tqdm(range(len(pars1))):
 
 
 norm = plt.Normalize(pars1.min(), pars1.max())
-cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=pl.cm.Blues, norm=norm), ax=ax)
+cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=cmap3, norm=norm), ax=ax)
 cbar.set_label(r'$g_\mu$', fontsize=16)
 
 plt.ylabel(r'$\delta_{\rm l}(a_c)$', size='16')
@@ -192,8 +194,11 @@ ac_arr = np.linspace(0.15, 1, 20)
 pars1 = np.array([0, 1, -1])
 
 n = len(pars2)
-colors = np.array([pl.cm.Blues(np.linspace(0, 1, n)), pl.cm.Reds(
-    np.linspace(0, 1, n)), pl.cm.Purples(np.linspace(0, 1, n))])
+cmap1 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#398e73"]) 
+cmap2 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#e64304"]) 
+cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#48639e"])
+
+colors = np.array([cmap1(np.linspace(0, 1, n)), cmap2(np.linspace(0, 1, n)), cmap3(np.linspace(0, 1, n))])
 
 for j in tqdm(range(len(pars1))):
     par1 = pars1[j]
@@ -222,9 +227,11 @@ ax.set_xticklabels([])
 h, l = ax.get_legend_handles_labels()
 
 
-line1 = Line2D([0], [0], label=r'$T_2=0$', color='tab:blue')
-line2 = Line2D([0], [0], label=r'$T_2=1$', color='tab:red')
-line3 = Line2D([0], [0], label=r'$T_2=-1$', color='tab:purple')
+line1 = Line2D([0], [0], label=r'$T_2=0$', color='#398e73')
+line2 = Line2D([0], [0], label=r'$T_2=1$', color='#e64304')
+line3 = Line2D([0], [0], label=r'$T_2=-1$', color='#48639e')
+
+
 h.extend([line1, line2, line3])
 kw = dict(ncol=1,
           fancybox=True, fontsize=10, frameon=False)
@@ -259,8 +266,11 @@ ac_arr = np.linspace(0.15, 1, 20)
 pars1 = np.array([-1.5, -1, -0.5])
 
 n = len(pars2)
-colors = np.array([pl.cm.Blues(np.linspace(0, 1, n)), pl.cm.Reds(
-    np.linspace(0, 1, n)), pl.cm.Purples(np.linspace(0, 1, n))])
+cmap1 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#398e73"]) 
+cmap2 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#e64304"]) 
+cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#48639e"])
+
+colors = np.array([cmap1(np.linspace(0, 1, n)), cmap2(np.linspace(0, 1, n)), cmap3(np.linspace(0, 1, n))])
 
 for j in tqdm(range(len(pars1))):
     par1 = pars1[j]
@@ -291,6 +301,13 @@ h, l = ax.get_legend_handles_labels()
 line1 = Line2D([0], [0], label=r'$w_\Lambda=-1.5$', color='tab:blue')
 line2 = Line2D([0], [0], label=r'$w_\Lambda=-1$', color='tab:red')
 line3 = Line2D([0], [0], label=r'$w_\Lambda=-0.5$', color='tab:purple')
+
+
+line1 = Line2D([0], [0], label=r'$w_\Lambda=-1.5$', color='#398e73')
+line2 = Line2D([0], [0], label=r'$w_\Lambda=-1$', color='#e64304')
+line3 = Line2D([0], [0], label=r'$w_\Lambda=-0.5$', color='#48639e')
+
+
 h.extend([line1, line2, line3])
 kw = dict(ncol=1,
           fancybox=True, fontsize=10, frameon=False)
