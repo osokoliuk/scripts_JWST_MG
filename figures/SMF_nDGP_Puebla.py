@@ -358,7 +358,7 @@ for z_smf in z_smf_arr:
     par2 = 0
     f0 = 0.21
     n = len(pars1)
-    cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
+    cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#48639e"])
 
     colors = cmap3(np.linspace(0, 1, n))
     
