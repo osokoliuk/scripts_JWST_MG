@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(0, "../")
+sys.path.insert(0, "../../")
 from JWST_MG.UVLF import UVLF
 from JWST_MG.constants import *
 from JWST_MG.HMF import HMF
@@ -7,16 +7,15 @@ from JWST_MG.HMF import HMF
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-import commah
 ax = plt.subplot(111)
 model = 'nDGP'
 model_H = 'nDGP'
-model_SFR = 'double_power'
+model_SFR = 'toy'
 
 par1 = 1e9
 par2 = 1
 
-f0 = 0.1
+f0 = 0.05
 
 ######################################################################
 
@@ -33,22 +32,19 @@ k = kvec/h
 
 SMD_obs = UVLF(a, model, model_H, model_SFR, par1, par2, Masses, f0)
 MUV, UVLF = SMD_obs.compute_uv_luminosity_function(
-    a, rhom, model, model_H, model_SFR, par1, par2, Masses, k, Pk, f0, sigma_uv=0)
+    a, rhom, model, model_H, model_SFR, par1, par2, Masses, k, Pk, f0, dust_norm ="fixed", include_dust=False, sigma_uv=0.4)
 
 plt.plot(MUV, np.log10(UVLF))
 # print(alpha, beta)
 
 data = np.loadtxt(
-    'test.txt'
+    'data.txt'
 )
 x = data[:, 0]
 y = data[:, 1]
 plt.plot(x, np.log10(y))
 def halo_accretion_rate(mhalo, redshift):
-    # Fakhouri 2010
-    # Mhalo in Msun
-    # mhalo_dot = 46.1 * (1 + 1.11*redshift) * np.sqrt(Omegam0*(1+redshift)**3 + (1-Omegam0))  \
-    # * (mhalo / 1e12)**(1.1)
+    # Fakhouri 2010^Z
     mhalo_dot = 25.3 * (1 + 1.65*redshift) * np.sqrt(Omegam0*(1+redshift)**3 + (1-Omegam0))  \
         * (mhalo / 1e12)**(1.1)
     # corr = 10**(-0.1) # down 0.1 dex consider the drop of sigma8
@@ -64,7 +60,7 @@ def load_harikane2023_specz(redshift, type=0):
     Load the data from Harikane et al. 2023 
     """
     f = np.genfromtxt(
-        '../observational_data/Harikane2023_Specz.dat', names=True, delimiter=',')
+        '../../observational_data/Harikane2023_Specz.dat', names=True, delimiter=',')
     select = (f['z'] == redshift) & (f['type'] == type)
     log_density = np.log10(f['density'][select])
     density_lower = np.array(
@@ -94,7 +90,7 @@ def load_harikane_2023_photoz_digit(redshift):
     Load the data from Harikane et al. 2023 
     """
     f = np.genfromtxt(
-        '../observational_data/Harikane2023_Photoz_digit.dat', names=True)
+        '../../observational_data/Harikane2023_Photoz_digit.dat', names=True)
     select = (f['z'] == redshift)
     log_phi_err = (f["logPhi"][select] - f["lo"][select],
                    f["hi"][select] - f["logPhi"][select])
@@ -105,7 +101,7 @@ def load_harikane_2023_photoz_digit(redshift):
 
 
 def plot_photoz_constraints(redshift, ax=None, **kwargs):
-    basepath = "./../observational_data/UVLF_photoz/"
+    basepath = "./../../observational_data/UVLF_photoz/"
 
     ########################################################
     f = np.genfromtxt(basepath + "Bouwens2021+Oesch2018.dat", names=True)
@@ -268,7 +264,7 @@ def plot_photoz_constraints(redshift, ax=None, **kwargs):
 
 # just for comparison at z<=8
 def mv2020_plt_obdata(fname, papername, color, label=True):
-    obdataPath = "../observational_data/obdata_MV2020_archived/"
+    obdataPath = "../../observational_data/obdata_MV2020_archived/"
     obdata = np.genfromtxt(obdataPath+fname, names=True, comments='#')
     x_ob = obdata['m']
     phi = obdata['phi']

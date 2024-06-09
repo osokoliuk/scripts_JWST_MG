@@ -360,10 +360,11 @@ for z_smf in z_smf_arr:
     pars2 = np.linspace(0.0, 1, 10)
     pars1 = np.array([0.1, 0.3, 0.5])
     n = len(pars2)
-    cmap1 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#66c2a5"]) 
-    cmap2 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#fc8d62"]) 
-    cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
+    cmap1 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#398e73"]) 
+    cmap2 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#e64304"]) 
+    cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#48639e"])
 
+    
     colors = np.array([cmap1(np.linspace(0, 1, n)), cmap2(np.linspace(0, 1, n)), cmap3(np.linspace(0, 1, n))])
     f0 = 0.21
     
@@ -380,7 +381,7 @@ for z_smf in z_smf_arr:
         iterable = [(Masses, rhom, 1/(1+z_smf), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,par2 in enumerate(pars2)]
         Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(pars2))))
         for i in range(len(SMF_obs)):
-            ax_Pk.plot(Masses_star[i], SMF_obs[i],c=colors[j][i])
+            ax_Pk.plot(Masses_star[i], SMF_obs[i],c=colors[j][i], alpha = 0.5)
     
     norm = plt.Normalize(pars2.min(), pars2.max())
     cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=pl.cm.Grays, norm=norm), ax=ax_Pk)
@@ -424,9 +425,9 @@ for z_smf in z_smf_arr:
     #hhh, llll = ax_Pk.get_legend_handles_labels()
     hhh = []
 
-    line1 = Line2D([0], [0], label=r'$\beta=0.1$', color='#66c2a5')
-    line2 = Line2D([0], [0], label=r'$\beta=0.3$', color='#fc8d62')
-    line3 = Line2D([0], [0], label=r'$\beta=0.5$', color='#8da0cb')
+    line1 = Line2D([0], [0], label=r'$\beta=0.1$', color='#398e73')
+    line2 = Line2D([0], [0], label=r'$\beta=0.3$', color='#e64304')
+    line3 = Line2D([0], [0], label=r'$\beta=0.5$', color='#48639e')
     hhh.extend([line1, line2, line3])
     kw = dict(ncol=1,
             fancybox=True, fontsize=10, frameon=False)

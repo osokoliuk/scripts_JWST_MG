@@ -326,62 +326,11 @@ pool_cpu = Pool(8)
 model = 'nDGP'
 model_H = 'nDGP'
 model_SFR = 'Puebla'
-par1=1e4
-par2 = 0.55
-f0 = 1
-z_int = np.array([8]) #np.linspace(12,5,35)
-SMD_library = SMD(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
-Pk_arr = []
-for i, z_i in enumerate(z_int):
-    HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
-    Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3)
-k = kvec/h
-Masses = np.logspace(8,16,1000)
-
-
-iterable = [(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
-Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMD_library.SMD,tqdm(iterable, total=len(z_int))))
-
-
-#print(SMF)
-#Masses_star = SMF[0]
-#SMF_obs = SMF[1]
-
-plt.loglog(Masses_star[0], SMF_obs[0], c = 'tab:blue', ls = '-', lw = 1.25)
-
-
-
-model = 'nDGP'
-model_H = 'nDGP'
-model_SFR = 'Puebla'
-par1=10**2.5
-par2 = 0.55
-f0 = 1
-z_int = np.array([8]) #np.linspace(12,5,35)
-SMD_library = SMD(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
-Pk_arr = []
-for i, z_i in enumerate(z_int):
-    HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
-    Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3)
-k = kvec/h
-Masses = np.logspace(8,16,1000)
-
-
-iterable = [(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
-Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMD_library.SMD,tqdm(iterable, total=len(z_int))))
-
-
-#print(SMF)
-#Masses_star = SMF[0]
-#SMF_obs = SMF[1]
-
-plt.loglog(Masses_star[0], SMF_obs[0], c = 'tab:blue', ls = '--', lw = 1.25)
-
 
 par1=1e5
 par2 = 0.55
 f0 = 1
-z_int = np.array([8]) #np.linspace(12,5,35)
+z_int = np.linspace(0,6,40)
 SMD_library = SMD(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
 Pk_arr = []
 for i, z_i in enumerate(z_int):
@@ -398,125 +347,25 @@ Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMD_library.SMD,tqdm(iterable, tota
 #print(SMF)
 #Masses_star = SMF[0]
 #SMF_obs = SMF[1]
+for i in range(len(z_int)):
+    idx = (np.abs(Masses_star[i] - 10**9.5)).argmin()
+    plt.scatter(z_int[i], SMF_obs[i][idx], c = 'tab:blue')
 
-plt.loglog(Masses_star[0], SMF_obs[0], c = 'tab:blue', ls = ':', lw = 1.25)
-
-
-
-data = np.loadtxt('/home/oleksii/codes/scripts_JWST_MG/observational_data/SMD/JWST_z8.txt')
-x = data[:,0]
-y = data[:,1]
-yerr = data[:,2]/2
-plt.errorbar(x,y,yerr=yerr)
-
-plt.ylim(1e5,1e9)
-plt.ylim(1e3,10**6.5)
-
-
-
-
-
-plt.subplot(122)
-
-
-
-
-model = 'nDGP'
-model_H = 'nDGP'
-model_SFR = 'Puebla'
-par1=1e4
-par2 = 0.55
-f0 = 1
-z_int = np.array([9]) #np.linspace(12,5,35)
-SMD_library = SMD(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
-Pk_arr = []
-for i, z_i in enumerate(z_int):
-    HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
-    Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3)
-k = kvec/h
-Masses = np.logspace(8,18,1000)
-
-
-iterable = [(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
-Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMD_library.SMD,tqdm(iterable, total=len(z_int))))
-
-
-#print(SMF)
-#Masses_star = SMF[0]
-#SMF_obs = SMF[1]
-
-plt.loglog(Masses_star[0], SMF_obs[0], c = 'tab:blue', ls = '-', lw = 1.25)
-
-
-
-model = 'nDGP'
-model_H = 'nDGP'
-model_SFR = 'Puebla'
-par1=10**2.5
-par2 = 0.55
-f0 = 1
-z_int = np.array([9]) #np.linspace(12,5,35)
-SMD_library = SMD(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
-Pk_arr = []
-for i, z_i in enumerate(z_int):
-    HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
-    Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3)
-k = kvec/h
-Masses = np.logspace(8,18,1000)
-
-
-iterable = [(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
-Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMD_library.SMD,tqdm(iterable, total=len(z_int))))
-
-
-#print(SMF)
-#Masses_star = SMF[0]
-#SMF_obs = SMF[1]
-
-plt.loglog(Masses_star[0], SMF_obs[0], c = 'tab:blue', ls = '--', lw = 1.25)
-
-
-par1=1e5
-par2 = 0.55
-f0 = 1
-z_int = np.array([9]) #np.linspace(12,5,35)
-SMD_library = SMD(1/(1+z_int), model, model_H, model_SFR, par1, par2, 1e8, f0)
-Pk_arr = []
-for i, z_i in enumerate(z_int):
-    HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
-    Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3)
-k = kvec/h
-Masses = np.logspace(8,18,1000)
-
-
-iterable = [(Masses, rhom, 1/(1+z), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
-Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMD_library.SMD,tqdm(iterable, total=len(z_int))))
-
-
-#print(SMF)
-#Masses_star = SMF[0]
-#SMF_obs = SMF[1]
-
-plt.loglog(Masses_star[0], SMF_obs[0], c = 'tab:blue', ls = ':', lw = 1.25)
-
-
-
-data = np.loadtxt('/home/oleksii/codes/scripts_JWST_MG/observational_data/SMD/JWST_z9.txt')
-x = data[:,0]
-y = data[:,1]
-yerr = data[:,2]/2
-plt.errorbar(x,y,yerr=yerr, color = 'tab:blue')
-
+plt.xscale('log')
 plt.yscale('log')
-plt.grid(".")
-ax_Pk.set_xlabel(r'$M_\star\;[M_\odot]$', size = '16')
-ax_Pk.set_ylabel(r'$\phi_{\star}\;[\rm Mpc^{-3}\;dex^{-1}]$', size = '16')
-legend1 = ax_Pk.legend(loc='lower left',fancybox=True, fontsize=9)
-legend1.get_frame().set_facecolor('none')
-legend1.get_frame().set_linewidth(0.0)
-ax_Pk.add_artist(legend1)
-plt.xlim(1e8,1e12)
-plt.ylim(1e3,10**6.5)
+
+
+data = np.loadtxt('/home/oleksii/codes/scripts_JWST_MG/observational_data/SMD/SMD_all_lowz.txt')
+x = data[:,0]
+x_err = data[:,1]
+y = data[:,2]
+y_err_lo = data[:,3]
+y_err_hi = data[:,4]
+plt.errorbar(x,10**y,yerr=[10**y_err_lo,10**y_err_hi],xerr=x_err, ls = 'None', c = 'tab:orange', marker = 'o')
+
+plt.ylim(1e2,1e9)
+
+
 
 """ac_arr = np.linspace(0.01, 1, 15)
 par1 = 500
