@@ -292,7 +292,7 @@ fig = plt.figure(figsize=(4.25*2*.95, 2*4*1.05))
 
 
 nn = 1
-z_smf_arr = [12] #,10,9,8,7,6,5,4]
+z_smf_arr = [12, 10]
 
 for z_smf in z_smf_arr:
     ax_Pk = plt.subplot(4,2,nn)
@@ -589,10 +589,10 @@ for z_smf in z_smf_arr:
 
     model = 'nDGP'
     model_H = 'nDGP'
-    model_SFR = 'Puebla'
-    pars1 = np.logspace(2.5, 5, 10)
+    model_SFR = 'toy'
+    pars1 = np.logspace(3, 5, 4)
     par2 = 0
-    f0 = 0.21
+    f0 = 0.05
     n = len(pars1)
     cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#48639e"])
 
@@ -602,7 +602,7 @@ for z_smf in z_smf_arr:
         HMF_library = HMF(1/(1+z_smf), model, model_H, par1, par2, 1e8)
         Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_smf), model, par1, par2))*h**3)
     k = kvec/h
-    Masses = np.logspace(8,16,100)
+    Masses = np.logspace(8,16,150)
 
     UVLF_library = UVLF(1/(1+z_smf), model, model_H, model_SFR, pars1, par2, Masses, f0)
 
@@ -616,7 +616,7 @@ for z_smf in z_smf_arr:
     iterable = [(1/(1+z_smf), rhom, model, model_H, model_SFR, par1, par2, Masses, k, Pk_arr[i], f0, sigma_uv) for i,par1 in enumerate(pars1)]
     MUV, UVLF_obs = zip(*pool_cpu.starmap(UVLF_library.compute_uv_luminosity_function,tqdm(iterable, total=len(pars1))))
     for i in range(len(UVLF_obs)):
-        ax_Pk.plot(MUV[i], UVLF_obs[i], c = colors[i], lw=  1, ls = ':')
+        ax_Pk.plot(MUV[i], UVLF_obs[i], c = colors[i], lw=  1, ls = '--')
 
     norm = colorss.LogNorm(pars1.min(), pars1.max())
     cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=cmap3, norm=norm), ax=ax_Pk)
