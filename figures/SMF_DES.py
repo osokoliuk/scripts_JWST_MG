@@ -96,7 +96,7 @@ for i in range(len(pars1)):
 
 norm = plt.Normalize(pars1.min(), pars1.max())
 cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=pl.cm.Blues, norm=norm), ax=ax)
-cbar.set_label(r'$g_\mu$', fontsize=16)
+cbar.set_label(r'$T_1$', fontsize=16)
 
 plt.ylabel(r'$\delta_{\rm m}(a)$', size='16')
 
@@ -353,12 +353,12 @@ for z_smf in z_smf_arr:
     
     pool_cpu = Pool(8)
 
-    model = 'gmu'
+    model = 'DES'
     model_H = 'LCDM'
     model_SFR = 'Puebla'
 
     pars2 = np.linspace(-1, 1, 10)
-    pars1 = np.array([-1, 0, 1])
+    pars1 = np.array([-0.75, 0, 1])
     n = len(pars2)
     cmap1 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#66c2a5"]) 
     cmap2 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#fc8d62"]) 
@@ -384,7 +384,7 @@ for z_smf in z_smf_arr:
     
     norm = plt.Normalize(pars2.min(), pars2.max())
     cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=pl.cm.Grays, norm=norm), ax=ax_Pk)
-    cbar.set_label(r'$g_\gamma$', fontsize=16)
+    cbar.set_label(r'$T_2$', fontsize=16)
 
     #plt.errorbar(x.get('Duncan'),y.get('Duncan'),yerr=[yerr_down.get('Duncan'),yerr_up.get('Duncan')], c = 'tab:orange', capsize = 2, ls = 'None', marker = '.', label = r'$\rm Duncan+14$')
     #plt.errorbar(x.get('Song'),y.get('Song'),yerr=[yerr_down.get('Song'),yerr_up.get('Song')], c = 'tab:orange', capsize = 2, ls = 'None', marker = 's', label = r'$\rm Song+16$')
@@ -411,9 +411,9 @@ for z_smf in z_smf_arr:
     #hhh, llll = ax_Pk.get_legend_handles_labels()
     hhh = []
 
-    line1 = Line2D([0], [0], label=r'$g_\mu=-1$', color='#398e73')
-    line2 = Line2D([0], [0], label=r'$g_\mu=0$', color='#e64304')
-    line3 = Line2D([0], [0], label=r'$g_\mu=1$', color='#48639e')
+    line1 = Line2D([0], [0], label=r'$T_1=-1$', color='#398e73')
+    line2 = Line2D([0], [0], label=r'$T_1=0$', color='#e64304')
+    line3 = Line2D([0], [0], label=r'$T_1=1$', color='#48639e')
     hhh.extend([line1, line2, line3])
     kw = dict(ncol=1,
             fancybox=True, fontsize=10, frameon=False)
@@ -486,12 +486,12 @@ for z_smf in z_smf_arr:
     
     pool_cpu = Pool(8)
 
-    model = 'gmu'
+    model = 'DES'
     model_H = 'LCDM'
     model_SFR = 'double_power'
 
     pars2 = np.linspace(-1, 1, 10)
-    pars1 = np.array([-1, 0, 1])
+    pars1 = np.array([-0.75, 0, 1])
     n = len(pars2)
     cmap1 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#66c2a5"]) 
     cmap2 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#fc8d62"]) 
@@ -517,7 +517,7 @@ for z_smf in z_smf_arr:
     
     norm = plt.Normalize(pars2.min(), pars2.max())
     cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=pl.cm.Grays, norm=norm), ax=ax_Pk)
-    cbar.set_label(r'$g_\gamma$', fontsize=16)
+    cbar.set_label(r'$T_2$', fontsize=16)
 
     #plt.errorbar(x.get('Duncan'),y.get('Duncan'),yerr=[yerr_down.get('Duncan'),yerr_up.get('Duncan')], c = 'tab:orange', capsize = 2, ls = 'None', marker = '.', label = r'$\rm Duncan+14$')
     #plt.errorbar(x.get('Song'),y.get('Song'),yerr=[yerr_down.get('Song'),yerr_up.get('Song')], c = 'tab:orange', capsize = 2, ls = 'None', marker = 's', label = r'$\rm Song+16$')
@@ -544,9 +544,9 @@ for z_smf in z_smf_arr:
 
     #hhh, llll = ax_Pk.get_legend_handles_labels()
     hhh = []
-    line1 = Line2D([0], [0], label=r'$g_\mu=-1$', color='#398e73')
-    line2 = Line2D([0], [0], label=r'$g_\mu=0$', color='#e64304')
-    line3 = Line2D([0], [0], label=r'$g_\mu=1$', color='#48639e')
+    line1 = Line2D([0], [0], label=r'$T_1=-1$', color='#398e73')
+    line2 = Line2D([0], [0], label=r'$T_1=0$', color='#e64304')
+    line3 = Line2D([0], [0], label=r'$T_1=1$', color='#48639e')
     hhh.extend([line1, line2, line3])
     kw = dict(ncol=1,
             fancybox=True, fontsize=10, frameon=False)
@@ -793,4 +793,4 @@ plt.grid(".")
 
 
 plt.tight_layout()
-plt.savefig('SMF_gmu.pdf', bbox_inches='tight')
+plt.savefig('SMF_DES.pdf', bbox_inches='tight')
