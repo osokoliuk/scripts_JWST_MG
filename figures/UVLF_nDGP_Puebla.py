@@ -587,10 +587,10 @@ for z_smf in z_smf_arr:
 
     model = 'nDGP'
     model_H = 'nDGP'
-    model_SFR = 'Puebla'
+    model_SFR = 'double_power'
     pars1 = np.logspace(2.5, 5, 10)
     par2 = 0
-    f0 = 0.05
+    f0 = 0.21
     n = len(pars1)
     cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#48639e"])
 
@@ -604,7 +604,7 @@ for z_smf in z_smf_arr:
 
     UVLF_library = UVLF(1/(1+z_smf), model, model_H, model_SFR, pars1, par2, Masses, f0)
 
-    sigma_uv = 0.45
+    sigma_uv = 0
     iterable = [(1/(1+z_smf), rhom, model, model_H, model_SFR, par1, par2, Masses, k, Pk_arr[i], f0, sigma_uv) for i,par1 in enumerate(pars1)]
     MUV, UVLF_obs = zip(*pool_cpu.starmap(UVLF_library.compute_uv_luminosity_function,tqdm(iterable, total=len(pars1))))
     for i in range(len(UVLF_obs)):
@@ -613,6 +613,34 @@ for z_smf in z_smf_arr:
     norm = colorss.LogNorm(pars1.min(), pars1.max())
     cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=cmap3, norm=norm), ax=ax_Pk)
     cbar.set_label(r'$r_c$', fontsize=16)
+
+    pars1 = np.array([1e8])
+    Pk_arr = []
+    for par1 in pars1:
+        HMF_library = HMF(1/(1+z_smf), model, model_H, par1, par2, 1e8)
+        Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_smf), model, par1, par2))*h**3)
+    k = kvec/h
+    Masses = np.logspace(7,16,250)
+
+    UVLF_library = UVLF(1/(1+z_smf), model, model_H, model_SFR, pars1, par2, Masses, f0)
+
+    sigmas = np.array([2,4])
+    iterable = [(1/(1+z_smf), rhom, model, model_H, model_SFR, par1, par2, Masses, k, Pk_arr[0], f0, sigma_uv) for sigma_uv in sigmas]
+    MUV, UVLF_obs = zip(*pool_cpu.starmap(UVLF_library.compute_uv_luminosity_function,tqdm(iterable, total=len(sigmas))))
+    for i in range(len(UVLF_obs)):
+        ax_Pk.plot(MUV[i], UVLF_obs[i], c = 'k', lw=4, alpha=0.2)
+
+        if sigmas[i] == 2:
+            id = np.arange(len(MUV[i]))[np.log10(UVLF_obs[i]) > -4.75][-1]
+            if MUV[i][id] + 0.1 < -22.5:
+                plt.text( MUV[i][id] + 0.1, UVLF_obs[i][id]*0.4, r"$\sigma_{\rm UV} = "+str(sigmas[i]) + "$", fontsize=10, color='tab:gray', rotation=22, zorder=-1)
+        else:
+            id = np.arange(len(MUV[i]))[np.log10(UVLF_obs[i]) > -3.5][-1]
+            if MUV[i][id] + 0.1 < -20:
+                plt.text( MUV[i][id] + 0.1, UVLF_obs[i][id]*2.5, r"$\sigma_{\rm UV} = "+str(sigmas[i]) + "$", fontsize=10, color='tab:gray', rotation=15.7, zorder=-1)
+
+
+
 
     #plt.errorbar(x.get('Duncan'),y.get('Duncan'),yerr=[yerr_down.get('Duncan'),yerr_up.get('Duncan')], c = 'tab:orange', capsize = 2, ls = 'None', marker = '.', label = r'$\rm Duncan+14$')
     #plt.errorbar(x.get('Song'),y.get('Song'),yerr=[yerr_down.get('Song'),yerr_up.get('Song')], c = 'tab:orange', capsize = 2, ls = 'None', marker = 's', label = r'$\rm Song+16$')
@@ -713,11 +741,11 @@ for z_smf in z_smf_arr:
         HMF_library = HMF(1/(1+z_smf), model, model_H, par1, par2, 1e8)
         Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_smf), model, par1, par2))*h**3)
     k = kvec/h
-    Masses = np.logspace(8,16,150)
+    Masses = np.logspace(6,18,250)
 
     UVLF_library = UVLF(1/(1+z_smf), model, model_H, model_SFR, pars1, par2, Masses, f0)
 
-    sigma_uv = 0.45
+    sigma_uv = 0
     iterable = [(1/(1+z_smf), rhom, model, model_H, model_SFR, par1, par2, Masses, k, Pk_arr[i], f0, sigma_uv) for i,par1 in enumerate(pars1)]
     MUV, UVLF_obs = zip(*pool_cpu.starmap(UVLF_library.compute_uv_luminosity_function,tqdm(iterable, total=len(pars1))))
     for i in range(len(UVLF_obs)):
@@ -726,6 +754,33 @@ for z_smf in z_smf_arr:
     norm = colorss.LogNorm(pars1.min(), pars1.max())
     cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=cmap3, norm=norm), ax=ax_Pk)
     cbar.set_label(r'$r_c$', fontsize=16)
+
+    pars1 = np.array([1e8])
+    Pk_arr = []
+    for par1 in pars1:
+        HMF_library = HMF(1/(1+z_smf), model, model_H, par1, par2, 1e8)
+        Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_smf), model, par1, par2))*h**3)
+    k = kvec/h
+    Masses = np.logspace(6,18,250)
+
+    UVLF_library = UVLF(1/(1+z_smf), model, model_H, model_SFR, pars1, par2, Masses, f0)
+
+    sigmas = np.array([2,4])
+    iterable = [(1/(1+z_smf), rhom, model, model_H, model_SFR, par1, par2, Masses, k, Pk_arr[0], f0, sigma_uv) for sigma_uv in sigmas]
+    MUV, UVLF_obs = zip(*pool_cpu.starmap(UVLF_library.compute_uv_luminosity_function,tqdm(iterable, total=len(sigmas))))
+    for i in range(len(UVLF_obs)):
+        ax_Pk.plot(MUV[i], UVLF_obs[i], c = 'k', lw=4, alpha=0.2)
+
+        if sigmas[i] == 2:
+            id = np.arange(len(MUV[i]))[np.log10(UVLF_obs[i]) > -4.75][-1]
+            if MUV[i][id] + 0.1 < -22.5:
+                plt.text( MUV[i][id] + 0.1, UVLF_obs[i][id]*0.4, r"$\sigma_{\rm UV} = "+str(sigmas[i]) + "$", fontsize=10, color='tab:gray', rotation=22, zorder=-1)
+        else:
+            id = np.arange(len(MUV[i]))[np.log10(UVLF_obs[i]) > -3.5][-1]
+            if MUV[i][id] + 0.1 < -20:
+                plt.text( MUV[i][id] + 0.1, UVLF_obs[i][id]*2.5, r"$\sigma_{\rm UV} = "+str(sigmas[i]) + "$", fontsize=10, color='tab:gray', rotation=15.7, zorder=-1)
+
+
 
     #plt.errorbar(x.get('Duncan'),y.get('Duncan'),yerr=[yerr_down.get('Duncan'),yerr_up.get('Duncan')], c = 'tab:orange', capsize = 2, ls = 'None', marker = '.', label = r'$\rm Duncan+14$')
     #plt.errorbar(x.get('Song'),y.get('Song'),yerr=[yerr_down.get('Song'),yerr_up.get('Song')], c = 'tab:orange', capsize = 2, ls = 'None', marker = 's', label = r'$\rm Song+16$')
