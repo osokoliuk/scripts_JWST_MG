@@ -629,11 +629,11 @@ def plot_photoz_constraints(redshift, ax=None, **kwargs):
 plt.cla()
 plt.figure()
 plt.rcParams.update({"text.usetex": True})
-fig = plt.figure(figsize=(4.25*2*.95, 2*4*1.05))
+fig = plt.figure(figsize=(4.25*2*.95*1.05, 2*4*1.05*1.05))
 
 
 nn = 1
-z_smf_arr = [9]
+z_smf_arr = [4]
 
 for z_smf in z_smf_arr:
     ax_Pk = plt.subplot(4,2,1)
@@ -716,7 +716,7 @@ for z_smf in z_smf_arr:
         HMF_library = HMF(1/(1+z_smf), model, model_H, par1, par2, 1e8)
         Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_smf), model, par1, par2))*h**3)
     k = kvec/h
-    Masses = np.logspace(7,16,250)
+    Masses = np.logspace(5,19,250)
 
     UVLF_library = UVLF(1/(1+z_smf), model, model_H, model_SFR, pars1, par2, Masses, f0)
 
@@ -736,7 +736,7 @@ for z_smf in z_smf_arr:
         HMF_library = HMF(1/(1+z_smf), model, model_H, par1, par2, 1e8)
         Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_smf), model, par1, par2))*h**3)
     k = kvec/h
-    Masses = np.logspace(7,16,250)
+    Masses = np.logspace(5,19,250)
 
     UVLF_library = UVLF(1/(1+z_smf), model, model_H, model_SFR, pars1, par2, Masses, f0)
 
@@ -760,7 +760,7 @@ for z_smf in z_smf_arr:
     # plt.scatter(1/a_vir-1, vir2, c = 'tab:orange')
     #plt.xscale('log')
     plt.yscale('log')
-    plt.xlim(-25,-12)
+    plt.xlim(-26,-12)
     plt.ylim(10**(-8),10**(-0.5))
 
     ax_Pk.set_xticklabels([])
@@ -769,7 +769,7 @@ for z_smf in z_smf_arr:
 
     plt.grid(".")
     
-    ax_Pk.text(-24.5,10**(-1.75),r'$z='+str(int(round(z_smf)))+r'$', size = '15')
+    ax_Pk.text(-25,10**(-1.75),r'$z='+str(int(round(z_smf)))+r'$', size = '15')
     
     legend1 = ax_Pk.legend(loc='lower right',fancybox=True, fontsize=10)
     legend1.get_frame().set_facecolor('none')
@@ -835,10 +835,10 @@ for z_smf in z_smf_arr:
 
     model = 'nDGP'
     model_H = 'nDGP'
-    model_SFR = 'Puebla'
+    model_SFR = 'double_power'
     pars1 = np.logspace(2.5, 5, 10)
     par2 = 0
-    f0 = 0.05
+    f0 = 0.21
     n = len(pars1)
     cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#48639e"])
 
@@ -848,7 +848,7 @@ for z_smf in z_smf_arr:
         HMF_library = HMF(1/(1+z_smf), model, model_H, par1, par2, 1e8)
         Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_smf), model, par1, par2))*h**3)
     k = kvec/h
-    Masses = np.logspace(6,18,250)
+    Masses = np.logspace(5,19,250)
 
     UVLF_library = UVLF(1/(1+z_smf), model, model_H, model_SFR, pars1, par2, Masses, f0)
 
@@ -868,7 +868,7 @@ for z_smf in z_smf_arr:
         HMF_library = HMF(1/(1+z_smf), model, model_H, par1, par2, 1e8)
         Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_smf), model, par1, par2))*h**3)
     k = kvec/h
-    Masses = np.logspace(6,18,250)
+    Masses = np.logspace(5,19,250)
 
     UVLF_library = UVLF(1/(1+z_smf), model, model_H, model_SFR, pars1, par2, Masses, f0)
 
@@ -876,9 +876,12 @@ for z_smf in z_smf_arr:
     iterable = [(1/(1+z_smf), rhom, model, model_H, model_SFR, par1, par2, Masses, k, Pk_arr[0], f0, sigma_uv) for sigma_uv in sigmas]
     MUV, UVLF_obs = zip(*pool_cpu.starmap(UVLF_library.compute_uv_luminosity_function,tqdm(iterable, total=len(sigmas))))
     for i in range(len(UVLF_obs)):
-        ax_Pk.plot(MUV[i], UVLF_obs[i], c = 'k', lw=4, alpha=0.2)
-        line_annotate(r'$\sigma_{\rm UV}=' + str(sigmas[i]) + '$',line,-23, c = 'tab:gray', fontsize = 9)
-
+        line, = ax_Pk.plot(MUV[i], UVLF_obs[i], c = 'k', lw=4, alpha=0.2)
+        if nn == 8:
+            line_annotate(r'$\sigma_{\rm UV}=' + str(sigmas[i]) + '$',line,-22.5, c = 'tab:gray', fontsize = 9)
+        else:
+            line_annotate(r'$\sigma_{\rm UV}=' + str(sigmas[i]) + '$',line,-23, c = 'tab:gray', fontsize = 9)
+        
 
     #plt.errorbar(x.get('Duncan'),y.get('Duncan'),yerr=[yerr_down.get('Duncan'),yerr_up.get('Duncan')], c = 'tab:orange', capsize = 2, ls = 'None', marker = '.', label = r'$\rm Duncan+14$')
     #plt.errorbar(x.get('Song'),y.get('Song'),yerr=[yerr_down.get('Song'),yerr_up.get('Song')], c = 'tab:orange', capsize = 2, ls = 'None', marker = 's', label = r'$\rm Song+16$')
@@ -891,9 +894,9 @@ for z_smf in z_smf_arr:
     # plt.scatter(1/a_vir-1, vir2, c = 'tab:orange')
     #plt.xscale('log')
     plt.yscale('log')
-    plt.xlim(-25,-12)
+    plt.xlim(-26,-12)
     plt.ylim(10**(-8),10**(-0.5))
-    if nn == len(z_smf_arr) or nn == len(z_smf_arr)-1:
+    if nn == 7 or nn == 8:
         ax_Pk.set_xlabel(r'$M_{\rm UV}\;[\rm mag]$', size = '16')
         ax_Pk.set_ylabel(r'$\phi_{\rm UV}\;[\rm Mpc^{-3}\;mag^{-1}]$', size = '16')
     else:
@@ -903,7 +906,7 @@ for z_smf in z_smf_arr:
 
     plt.grid(".")
     
-    ax_Pk.text(-24.5,10**(-1.75),r'$z='+str(int(round(z_smf)))+r'$', size = '15')
+    ax_Pk.text(-25,10**(-1.75),r'$z='+str(int(round(z_smf)))+r'$', size = '15')
     
     legend1 = ax_Pk.legend(loc='lower right',fancybox=True, fontsize=10)
     legend1.get_frame().set_facecolor('none')
