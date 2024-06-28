@@ -331,11 +331,12 @@ for z_smf in z_smf_arr:
         marker     = 's'
         linestyle  = linestyles[k_func]
         if datatype == 'data':
+            data[:,1:] = np.log10(data[:,1:])
             if  ii == 0:
-                ax_Pk.errorbar(data[:,0],  np.log10(data[:,1]),yerr = np.abs(np.log10([data[:,1]-data[:,3],data[:,2]- data[:,1]])),\
+                ax_Pk.errorbar(data[:,0],  data[:,1],yerr = np.abs([data[:,1]-data[:,3],data[:,2]- data[:,1]]),\
                         label=r'$\rm pre-JWST$',capsize=3,ecolor=color,color='w',marker=marker,markersize=6,markeredgewidth=1, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3, fillstyle='none')
             else:
-                ax_Pk.errorbar(data[:,0],  np.log10(data[:,1]),yerr = np.abs(np.log10([data[:,1]-data[:,3],data[:,2]- data[:,1]])),\
+                ax_Pk.errorbar(data[:,0],  data[:,1],yerr = np.abs([data[:,1]-data[:,3],data[:,2]- data[:,1]]),\
                         capsize=3,ecolor=color,color='w',marker=marker,markersize=6,markeredgewidth=1, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3, fillstyle='none')
             
             j_data +=1
@@ -348,7 +349,7 @@ for z_smf in z_smf_arr:
         y = 1e-4*Navarro[:,1]
         yerr = 1e-4*Navarro[:,2]
         color = 'tab:red'
-        ax_Pk.errorbar(np.log10(x),np.log10(y),yerr=np.abs(np.log10(yerr)),label=r'$\rm JWST$',capsize=3,ecolor=color,color='w',marker='^',markersize=6,markeredgewidth=1, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3, fillstyle='none')
+        ax_Pk.errorbar(np.log10(x),np.log10(y),yerr=np.abs(np.log10((y-yerr)/y)),label=r'$\rm JWST$',capsize=3,ecolor=color,color='w',marker='^',markersize=6,markeredgewidth=1, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3, fillstyle='none')
     
     pool_cpu = Pool(8)
 
@@ -415,7 +416,7 @@ for z_smf in z_smf_arr:
 
     plt.grid(".")
     
-    ax_Pk.text(11,np.log10(0.065),r'$z='+str(int(round(z_smf)))+r'$', size = '15')
+    ax_Pk.text(0.9,0.9,r'$z='+str(int(round(z_smf)))+r'$', size = '15')
     
     legend1 = ax_Pk.legend(loc='lower left',fancybox=True, fontsize=10)
     legend1.get_frame().set_facecolor('none')
