@@ -624,7 +624,11 @@ def plot_photoz_constraints(redshift, ax=None, **kwargs):
     ylo = np.log10(f['Phi'][sel] - f['dPhi'][sel])
     ax.errorbar(x, 10**y, yerr=(10**(y-ylo), 10**(yup-y)), **kwargs)
     
-
+def MUV_lim(z):
+    z_arr = [4,5,6,7,8]
+    MUV_arr = [-22.6,-23,-22.5,-22.75,-22]
+    MUV_lim_interp = scipy.interpolate.interp1d(z_arr,MUV_arr, fill_value='extrapolate')
+    return MUV_lim_interp(z)
     
 plt.cla()
 plt.figure()
@@ -674,6 +678,8 @@ for z_smf in z_smf_arr:
             if  ii == 0:
                 ax_Pk.errorbar(data[:,0],  data[:,1],yerr = np.abs([data[:,1]-data[:,3],data[:,2]- data[:,1]]),\
                         label=r'$\rm pre-JWST$',capsize=0,ecolor=color,color='w',marker=marker,markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor=color, zorder= 3)
+                color = 'k'
+                ax_Pk.errorbar(1,1,yerr=1,label=r'$\rm JWST$',capsize=0,ecolor=color,color='w',marker='v',markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor=color)
             else:
                 ax_Pk.errorbar(data[:,0],  data[:,1],yerr = np.abs([data[:,1]-data[:,3],data[:,2]- data[:,1]]),\
                         capsize=0,ecolor=color,color='w',marker=marker,markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor=color, zorder= 3)
@@ -697,13 +703,13 @@ for z_smf in z_smf_arr:
     plot_specz_constraints(redshift=int(z_smf), ax=ax_Pk,capsize=0,ecolor=color,color='w',marker=marker,markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor=color, zorder= 3)
 
     if z_smf in [12,10,9]:
-        ax_Pk.errorbar(-100, 1, yerr=1, capsize=0,ecolor=color,color='w',marker=marker,markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor=color, zorder= 3, label = r'$\rm JWST$')
+        ax_Pk.errorbar(-100, 1, yerr=1, capsize=0,ecolor=color,color='w',marker=marker,markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor=color, zorder= 3)
 
     pool_cpu = Pool(8)
 
     model = 'kmoufl'
     model_H = 'kmoufl'
-    model_SFR = 'double_power'
+    model_SFR = 'Puebla'
     pars2 = np.linspace(0.0, 1, 10)
     pars1 = np.array([0.1, 0.3, 0.5])
     n = len(pars2)
@@ -739,7 +745,7 @@ for z_smf in z_smf_arr:
 
     model = 'nDGP'
     model_H = 'nDGP'
-    model_SFR = 'double_power'
+    model_SFR = 'Puebla'
 
     pars1 = np.array([1e8])
     pars2 = 0
@@ -757,9 +763,13 @@ for z_smf in z_smf_arr:
     MUV, UVLF_obs = zip(*pool_cpu.starmap(UVLF_library.compute_uv_luminosity_function,tqdm(iterable, total=len(sigmas))))
     for i in range(len(UVLF_obs)):
         line, = ax_Pk.plot(MUV[i], UVLF_obs[i], c = 'k', lw=4, alpha=0.2)
-        line_annotate(r'$\sigma_{\rm UV}=' + str(sigmas[i]) + '$',line,-23, c = 'tab:gray', fontsize = 9)
+        line_annotate(r'$\sigma_{\rm UV}=' + str(sigmas[i]) + '$',line,MUV_lim(z_smf) + 0.25, c = 'tab:gray', fontsize = 9)
 
-
+    hhh, llll = ax_Pk.get_legend_handles_labels()
+    hhh = [hhh[0],hhh[0]]
+    kw = dict(ncol=2, loc="lower center",fancybox=True, fontsize=10,frameon=False)    
+    leg1 = fig.legend(hhh[:],llll[:], bbox_to_anchor=[0.5,1],**kw, bbox_transform=fig.transFigure)
+    ax_Pk.add_artist(leg1)
 
     #plt.errorbar(x.get('Duncan'),y.get('Duncan'),yerr=[yerr_down.get('Duncan'),yerr_up.get('Duncan')], c = 'tab:orange', capsize = 2, ls = 'None', marker = '.', label = r'$\rm Duncan+14$')
     #plt.errorbar(x.get('Song'),y.get('Song'),yerr=[yerr_down.get('Song'),yerr_up.get('Song')], c = 'tab:orange', capsize = 2, ls = 'None', marker = 's', label = r'$\rm Song+16$')
@@ -783,10 +793,17 @@ for z_smf in z_smf_arr:
     
     ax_Pk.text(-25,10**(-1.75),r'$z='+str(int(round(z_smf)))+r'$', size = '15')
     
-    legend1 = ax_Pk.legend(loc='lower right',fancybox=True, fontsize=10)
-    legend1.get_frame().set_facecolor('none')
-    legend1.get_frame().set_linewidth(0.0)
-    ax_Pk.add_artist(legend1)
+    hhh = []
+
+    line1 = Line2D([0], [0], label=r'$\beta=0.1$', color='#398e73')
+    line2 = Line2D([0], [0], label=r'$\beta=0.3$', color='#e64304')
+    line3 = Line2D([0], [0], label=r'$\beta=0.5$', color='#48639e')
+    hhh.extend([line1, line2, line3])
+    kw = dict(ncol=1,
+            fancybox=True, fontsize=10, frameon=False)
+    # leg1 = ax.legend(h[:], l[:], bbox_to_anchor=[0.5, 1.08], **kw)
+    ax_Pk.legend(handles=hhh, **kw,loc='lower right')
+
     
     nn += 1
 
@@ -847,7 +864,7 @@ for z_smf in z_smf_arr:
 
     model = 'kmoufl'
     model_H = 'kmoufl'
-    model_SFR = 'double_power'
+    model_SFR = 'Puebla'
     pars2 = np.linspace(0.0, 1, 10)
     pars1 = np.array([0.1, 0.3, 0.5])
     n = len(pars2)
@@ -874,6 +891,8 @@ for z_smf in z_smf_arr:
 
         MUV, UVLF_obs = zip(*pool_cpu.starmap(UVLF_library.compute_uv_luminosity_function,tqdm(iterable, total=len(pars2))))
         for i in range(len(UVLF_obs)):
+            MUV[i][MUV[i] < MUV_lim(z_smf)] = MUV_lim(z_smf)
+            UVLF_obs[i][MUV[i] < MUV_lim(z_smf)] = 1e-8
             ax_Pk.plot(MUV[i], UVLF_obs[i],c=colors[j][i], alpha = 0.5)
     
     norm = plt.Normalize(pars2.min(), pars2.max())
@@ -883,7 +902,7 @@ for z_smf in z_smf_arr:
 
     model = 'nDGP'
     model_H = 'nDGP'
-    model_SFR = 'double_power'
+    model_SFR = 'Puebla'
 
     pars1 = np.array([1e8])
     pars2 = 0
@@ -901,7 +920,7 @@ for z_smf in z_smf_arr:
     MUV, UVLF_obs = zip(*pool_cpu.starmap(UVLF_library.compute_uv_luminosity_function,tqdm(iterable, total=len(sigmas))))
     for i in range(len(UVLF_obs)):
         line, = ax_Pk.plot(MUV[i], UVLF_obs[i], c = 'k', lw=4, alpha=0.2)
-        line_annotate(r'$\sigma_{\rm UV}=' + str(sigmas[i]) + '$',line,-23, c = 'tab:gray', fontsize = 9)
+        line_annotate(r'$\sigma_{\rm UV}=' + str(sigmas[i]) + '$',line,MUV_lim(z_smf) + 0.25, c = 'tab:gray', fontsize = 9)
 
         
 
@@ -930,10 +949,17 @@ for z_smf in z_smf_arr:
     
     ax_Pk.text(-25,10**(-1.75),r'$z='+str(int(round(z_smf)))+r'$', size = '15')
     
-    legend1 = ax_Pk.legend(loc='lower right',fancybox=True, fontsize=10)
-    legend1.get_frame().set_facecolor('none')
-    legend1.get_frame().set_linewidth(0.0)
-    ax_Pk.add_artist(legend1)
+    hhh = []
+
+    line1 = Line2D([0], [0], label=r'$\beta=0.1$', color='#398e73')
+    line2 = Line2D([0], [0], label=r'$\beta=0.3$', color='#e64304')
+    line3 = Line2D([0], [0], label=r'$\beta=0.5$', color='#48639e')
+    hhh.extend([line1, line2, line3])
+    kw = dict(ncol=1,
+            fancybox=True, fontsize=10, frameon=False)
+    # leg1 = ax.legend(h[:], l[:], bbox_to_anchor=[0.5, 1.08], **kw)
+    ax_Pk.legend(handles=hhh, **kw,loc='lower right')
+
     
     nn += 1
 
@@ -1174,4 +1200,4 @@ plt.grid(".")
 
 
 plt.tight_layout()
-plt.savefig('UVLF_kmoufl_double_power.pdf', bbox_inches='tight')
+plt.savefig('UVLF_kmoufl_Puebla.pdf', bbox_inches='tight')
