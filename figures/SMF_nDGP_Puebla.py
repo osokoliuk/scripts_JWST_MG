@@ -25,7 +25,7 @@ from JWST_MG.HMF import HMF
 from JWST_MG.SMF import SMF
 import matplotlib.colors as colorss
 from matplotlib.ticker import MaxNLocator
-
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 plt.rcParams.update({"text.usetex": True})
 
 
@@ -334,10 +334,10 @@ for z_smf in z_smf_arr:
             data[:,1:] = np.log10(data[:,1:])
             if  ii == 0:
                 ax_Pk.errorbar(data[:,0],  data[:,1],yerr = np.abs([data[:,1]-data[:,3],data[:,2]- data[:,1]]),\
-                        label=r'$\rm pre-JWST$',capsize=3,ecolor=color,color='w',marker=marker,markersize=6,markeredgewidth=1, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3, fillstyle='none')
+                        label=r'$\rm pre-JWST$',capsize=3,ecolor=color,color='w',marker=marker,markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3, fillstyle='none')
             else:
                 ax_Pk.errorbar(data[:,0],  data[:,1],yerr = np.abs([data[:,1]-data[:,3],data[:,2]- data[:,1]]),\
-                        capsize=3,ecolor=color,color='w',marker=marker,markersize=6,markeredgewidth=1, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3, fillstyle='none')
+                        capsize=3,ecolor=color,color='w',marker=marker,markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3, fillstyle='none')
             
             j_data +=1
 
@@ -349,7 +349,7 @@ for z_smf in z_smf_arr:
         y = 1e-4*Navarro[:,1]
         yerr = 1e-4*Navarro[:,2]
         color = 'tab:red'
-        ax_Pk.errorbar(np.log10(x),np.log10(y),yerr=np.abs(np.log10((y-yerr)/y)),label=r'$\rm JWST$',capsize=3,ecolor=color,color='w',marker='^',markersize=6,markeredgewidth=1, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3, fillstyle='none')
+        ax_Pk.errorbar(np.log10(x),np.log10(y),yerr=np.abs(np.log10((y-yerr)/y)),label=r'$\rm JWST$',capsize=3,ecolor=color,color='w',marker='^',markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3, fillstyle='none')
     
     pool_cpu = Pool(8)
 
@@ -360,7 +360,7 @@ for z_smf in z_smf_arr:
     par2 = 0
     f0 = 0.21
     n = len(pars1)
-    cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#48639e"])
+    cmap3 = pl.cm.Greys
 
     colors = cmap3(np.linspace(0, 1, n))
     
@@ -395,28 +395,40 @@ for z_smf in z_smf_arr:
         if nn % 2 == 0:
             ax_Pk.set_xticklabels([])
             ax_Pk.set_yticklabels([])
+            if nn == 2:
+                p1 = ax_Pk.get_position().get_points().flatten()
+                norm = colorss.LogNorm(pars1.min(), pars1.max())
+                ax_cbar = fig.add_axes([p0[0], 0, p1[2]-p0[0], 0.05])
+                plt.colorbar(mpl.cm.ScalarMappable(cmap=cmap3, norm=norm), cax=ax_cbar, orientation='horizontal', location = 'top')
+                """ax_divider = make_axes_locatable(ax_Pk)
+                norm = colorss.LogNorm(pars1.min(), pars1.max())
+                cax = ax_divider.append_axes("top", size="7%", pad="2%")
+                cb = fig.colorbar(mpl.cm.ScalarMappable(cmap=cmap3, norm=norm), cax=cax, orientation="horizontal", location = 'top')
+                cb.set_label(r'$r_c$', fontsize=16)
+                fig.colorbar(mappable, ax=axs)"""
         else:
             if nn == 1:
+                p0 = ax_Pk.get_position().get_points().flatten()
                 nbins = len(ax_Pk.get_yticklabels())
                 ax_Pk.yaxis.set_major_locator(MaxNLocator(nbins=nbins,prune='lower'))
             else:
                 nbins = len(ax_Pk.get_yticklabels())
                 ax_Pk.yaxis.set_major_locator(MaxNLocator(nbins=nbins,prune='both'))
             ax_Pk.set_xticklabels([])
-            ax_Pk.set_ylabel(r'$\log_{10}\phi_{\star}\;[\rm Mpc^{-3}\;dex^{-1}]$', size = '16')
+            ax_Pk.set_ylabel(r'$\log_{10}\phi_{\star}\;[\rm Mpc^{-3}]$', size = '16')
     else:
         if nn % 2 == 0:
             ax_Pk.set_xlabel(r'$\log_{10}M_\star\;[M_\odot]$', size = '16')
             ax_Pk.set_yticklabels([])
         else:
             ax_Pk.set_xlabel(r'$\log_{10}M_\star\;[M_\odot]$', size = '16')
-            ax_Pk.set_ylabel(r'$\log_{10}\phi_{\star}\;[\rm Mpc^{-3}\;dex^{-1}]$', size = '16')
+            ax_Pk.set_ylabel(r'$\log_{10}\phi_{\star}\;[\rm Mpc^{-3}]$', size = '16')
             nbins = len(ax_Pk.get_yticklabels())
             ax_Pk.yaxis.set_major_locator(MaxNLocator(nbins=nbins,prune='upper'))
 
     plt.grid(".")
     
-    ax_Pk.text(0.9,0.9,r'$z='+str(int(round(z_smf)))+r'$', size = '15')
+    ax_Pk.text(0.8,0.85,r'$z='+str(int(round(z_smf)))+r'$', size = '15', transform=ax_Pk.transAxes)
     
     legend1 = ax_Pk.legend(loc='lower left',fancybox=True, fontsize=10)
     legend1.get_frame().set_facecolor('none')
