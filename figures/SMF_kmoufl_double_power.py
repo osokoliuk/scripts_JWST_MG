@@ -254,7 +254,7 @@ h, l = ax.get_legend_handles_labels()
 
 line1 = Line2D([0], [0], label=r'$T_2=0$', color='tab:blue')
 line2 = Line2D([0], [0], label=r'$T_2=5$', color='tab:red')
-line3 = Line2D([0], [0], label=r'$T_2=-5$', color='tab:purple')
+line3 = Line2D([0], [0], label=r'$T_2=-5$', color='tab:red')
 h.extend([line1, line2, line3])
 kw = dict(ncol=1,
           fancybox=True, fontsize=10, frameon=False)
@@ -329,17 +329,17 @@ for z_smf in z_smf_arr:
         data       = obs.target_observation['Data'][ii]
         label      = obs.target_observation.index[ii]
         datatype   = obs.target_observation['DataType'][ii]
-        color = 'tab:blue'
-        marker     = 's'
+        color = 'tab:gray'
+        marker     = '.'
         linestyle  = linestyles[k_func]
         if datatype == 'data':
             data[:,1:] = np.log10(data[:,1:])
             if  ii == 0:
                 ax_Pk.errorbar(data[:,0],  data[:,1],yerr = np.abs([data[:,1]-data[:,3],data[:,2]- data[:,1]]),\
-                        label=r'$\rm pre-JWST$',capsize=2,ecolor=color,color='w',marker=marker,markersize=4,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3, fillstyle='none')
+                        label=r'$\rm pre-JWST$',capsize=2,ecolor=color,color='w',marker=marker,markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3)
             else:
                 ax_Pk.errorbar(data[:,0],  data[:,1],yerr = np.abs([data[:,1]-data[:,3],data[:,2]- data[:,1]]),\
-                        capsize=2,ecolor=color,color='w',marker=marker,markersize=4,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3, fillstyle='none')
+                        capsize=2,ecolor=color,color='w',marker=marker,markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3)
             
             j_data +=1
 
@@ -350,23 +350,29 @@ for z_smf in z_smf_arr:
         x = 10**Navarro[:,0]
         y = 1e-4*Navarro[:,1]
         yerr = 1e-4*Navarro[:,2]
-        color = 'tab:red'
-        ax_Pk.errorbar(np.log10(x),np.log10(y),yerr=np.abs(np.log10((y-yerr)/y)),label=r'$\rm JWST$',capsize=2,ecolor=color,color='w',marker='^',markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3, fillstyle='none')
+        color = 'k'
+        ax_Pk.errorbar(np.log10(x),np.log10(y),yerr=np.abs(np.log10((y-yerr)/y)),label=r'$\rm JWST$',capsize=2,ecolor=color,color='w',marker='^',markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3)
     
+
     pool_cpu = Pool(8)
 
     model = 'kmoufl'
     model_H = 'kmoufl'
     model_SFR = 'double_power'
-    pars2 = np.array([0, 0.33, 0.67,1])
+    pars2 = np.linspace(0,1,10)
     pars1 = np.array([0.1, 0.3, 0.5])
     n = len(pars2)
-
     f0 = 0.21
-    cmap3 = [ matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","tab:grey"]),  matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#f3b62a"]),  matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#ff165d"])]
+    cmap1 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#66c2a5"]) 
+    cmap2 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#fc8d62"]) 
+    cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
 
-    colors = [cmap3[0](np.linspace(0, 1, n)),cmap3[1](np.linspace(0, 1, n)),cmap3[2](np.linspace(0, 1, n))]
-    
+    cmap = np.array([cmap1, cmap2, cmap3])
+    colors = [None]*3
+    colors[0] = cmap[0]((np.linspace(0, 1, n)))
+    colors[1] = cmap[1]((np.linspace(0, 1, n)))
+    colors[2] = cmap[2]((np.linspace(0, 1, n)))
+
     for j, par1 in enumerate(pars1):
         SMF_library = SMF(1/(1+z_smf), model, model_H, model_SFR, par1, pars2, 1e8, f0)
         Pk_arr = []
@@ -381,16 +387,8 @@ for z_smf in z_smf_arr:
         Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(pars2))))
         #for i in range(len(SMF_obs)):
         
-        x = Masses_star[0]
-        y = pars2 
-        xx, yy = np.meshgrid(x, y)
-        z = SMF_obs
-        f = interpolate.interp2d(x, y, z, kind='linear')
-        pars_span = np.linspace(0,1,500)
-        znew = f(Masses_star[0], pars_span)
-        colors = cmap3[j](np.linspace(0, 1, 500))
-        for i in range(len(pars_span)):
-            ax_Pk.plot(np.log10(Masses_star[0]), np.log10(znew[i]), c = colors[i], lw=  1)
+        for i in range(len(SMF_obs)):
+            ax_Pk.plot(np.log10(Masses_star[i]), np.log10(SMF_obs[i]), c = colors[j][i], lw=  1)
     #ax_Pk.fill_between(np.log10(Masses_star[2]), np.log10(SMF_obs[0]), np.log10(SMF_obs[2]), color='tab:gray', alpha=0.3)
 
     #plt.errorbar(x.get('Duncan'),y.get('Duncan'),yerr=[yerr_down.get('Duncan'),yerr_up.get('Duncan')], c = 'tab:blue', capsize = 2, ls = 'None', marker = '.', label = r'$\rm Duncan+14$')
@@ -440,10 +438,10 @@ for z_smf in z_smf_arr:
     
     ax_Pk.text(0.8,0.85,r'$z='+str(int(round(z_smf)))+r'$', size = '15', transform=ax_Pk.transAxes)
     
-   
-    line1 = ax_Pk.plot([0], [0], label=r'$\beta=0.1$', color='tab:gray')
-    line2 = ax_Pk.plot([0], [0], label=r'$\beta=0.3$', color='#f3b62a')
-    line3 = ax_Pk.plot([0], [0], label=r'$\beta=0.5$', color='#ff165d')
+
+    line3 = ax_Pk.plot([0], [0], label=r'$\beta=0.1$', color='#66c2a5')   
+    line2 = ax_Pk.plot([0], [0], label=r'$\beta=0.3$', color='#fc8d62')
+    line1 = ax_Pk.plot([0], [0], label=r'$\beta=0.5$', color='#8da0cb')
 
     legend1 = ax_Pk.legend(loc='lower left',fancybox=True, fontsize=10)
     legend1.get_frame().set_facecolor('none')
@@ -457,7 +455,7 @@ for z_smf in z_smf_arr:
 mpl.rcParams['font.family'] = 'sans-serif'
 
 #norm = colorss.Norm(pars1.min(), pars1.max())
-norm = mpl.colors.Normalize(vmin=np.log10(pars1.min()), vmax=np.log10(pars1.max()))
+norm = mpl.colors.Normalize(vmin=pars2.min(), vmax=pars2.max())
 ax_cbar = fig.add_axes([0.101, 0.9775, 0.8785, 0.01])
 cbar_ax = plt.colorbar(mpl.cm.ScalarMappable(cmap=mpl.cm.Greys, norm=norm), cax=ax_cbar, orientation='horizontal', location = 'top', ticks=LinearLocator(numticks=8))
 cbar_ax.set_label(r'$K_0$', fontsize=16)

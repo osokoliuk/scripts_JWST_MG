@@ -58,7 +58,7 @@ ax = plt.subplot(4, 1, 1)
 ax.xaxis.set_ticks([0, 0.25, 0.5, 0.75, 1])
 ax.yaxis.set_ticks([0, 0.5, 1, 1.5])
 
-
+figures/SMF_E11_1.py
 ax.xaxis.set_minor_locator(AutoMinorLocator())
 ax.yaxis.set_minor_locator(AutoMinorLocator())
 
@@ -141,7 +141,7 @@ plt.tick_params(axis='both', which='minor',
                 direction="in", labelsize=11, length=4)
 
 
-model = 'gmu'
+model = 'E11'
 model_H = 'LCDM'
 model_SFR = 'toy'
 
@@ -254,7 +254,7 @@ h, l = ax.get_legend_handles_labels()
 
 line1 = Line2D([0], [0], label=r'$T_2=0$', color='tab:blue')
 line2 = Line2D([0], [0], label=r'$T_2=5$', color='tab:red')
-line3 = Line2D([0], [0], label=r'$T_2=-5$', color='tab:purple')
+line3 = Line2D([0], [0], label=r'$T_2=-5$', color='tab:red')
 h.extend([line1, line2, line3])
 kw = dict(ncol=1,
           fancybox=True, fontsize=10, frameon=False)
@@ -295,7 +295,7 @@ fig = plt.figure(figsize=(4.25*2*.95*0.9, 2*5*1.05*0.9))
 
 
 nn = 1
-z_smf_arr = [0,1,1.75,4,5,6,7,8]
+z_smf_arr = [0,1,0,1]
 
 for z_smf in z_smf_arr:
     ax_Pk = plt.subplot(4,2,nn)
@@ -313,7 +313,6 @@ for z_smf in z_smf_arr:
                     direction="in", labelsize=14, length=5, width = 1.5)
     plt.tick_params(axis='both', which='minor',
                     direction="in", labelsize=11, length=4, width = 1.1)
-
 
 
 
@@ -351,48 +350,67 @@ for z_smf in z_smf_arr:
         x = 10**Navarro[:,0]
         y = 1e-4*Navarro[:,1]
         yerr = 1e-4*Navarro[:,2]
-        color = 'k'
+        color = 'tab:black'
         ax_Pk.errorbar(np.log10(x),np.log10(y),yerr=np.abs(np.log10((y-yerr)/y)),label=r'$\rm JWST$',capsize=2,ecolor=color,color='w',marker='^',markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3)
     
     pool_cpu = Pool(8)
 
-    model = 'nDGP'
-    model_H = 'nDGP'
-    model_SFR = 'Puebla'
-    pars1 = np.logspace(2.5,4,10)
-    par2 = 0
+    model = 'E11'
+    model_H = 'LCDM'
+    if nn > 2:
+        model_SFR = 'double_power'
+    else:
+        model_SFR = 'Puebla'
+
+    pars2 = np.linspace(-1,1,10)
+    pars1 = np.array([-1,0,1])
+    n = len(pars2)
     f0 = 0.21
-    n = len(pars1)
+    cmap1 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#66c2a5"]) 
+    cmap2 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#fc8d62"]) 
     cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
 
-    colors = cmap3(np.linspace(0, 1, n))
-    
-    SMF_library = SMF(1/(1+z_smf), model, model_H, model_SFR, pars1, par2, 1e8, f0)
-    Pk_arr = []
-    for par1 in pars1:
-        HMF_library = HMF(1/(1+z_smf), model, model_H, par1, par2, 1e8)
-        Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_smf), model, par1, par2))*h**3)
-    k = kvec/h
-    Masses = np.logspace(6,16,150)
+    cmap = np.array([cmap1, cmap2, cmap3])
+    colors = [None]*3
+    colors[0] = cmap[0]((np.linspace(0, 1, n)))
+    colors[1] = cmap[1]((np.linspace(0, 1, n)))
+    colors[2] = cmap[2]((np.linspace(0, 1, n)))
+
+    for j, par1 in enumerate(pars1):
+        SMF_library = SMF(1/(1+z_smf), model, model_H, model_SFR, par1, pars2, 1e8, f0)
+        Pk_arr = []
+        for par2 in pars2:
+            HMF_library = HMF(1/(1+z_smf), model, model_H, par1, par2, 1e8)
+            Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_smf), model, par1, par2))*h**3)
+        k = kvec/h
+        Masses = np.logspace(6,16,150)
 
 
-    iterable = [(Masses, rhom, 1/(1+z_smf), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,par1 in enumerate(pars1)]
-    Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(pars1))))
-    #for i in range(len(SMF_obs)):
-    
-    for i in range(len(Masses_star)):
-        ax_Pk.plot(np.log10(Masses_star[i]), np.log10(SMF_obs[i]), c = colors[i], lw=  1.5)
+        iterable = [(Masses, rhom, 1/(1+z_smf), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,par2 in enumerate(pars2)]
+        Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(pars2))))
+        #for i in range(len(SMF_obs)):
+        
+        x = Masses_star[0]
+        y = pars2 
+        xx, yy = np.meshgrid(x, y)
+        z = SMF_obs
+        f = interpolate.interp2d(x, y, z, kind='linear')
+        pars_span = np.linspace(0,1,25)
+        znew = f(Masses_star[0], pars_span)
+        colorss = cmap[j](np.linspace(0, 1, 25))
+        for i in range(len(pars_span)):
+            ax_Pk.plot(np.log10(Masses_star[0]), np.log10(znew[i]), c = colorss[i], lw=  1.5, alpha = 0.3)
     #ax_Pk.fill_between(np.log10(Masses_star[2]), np.log10(SMF_obs[0]), np.log10(SMF_obs[2]), color='tab:gray', alpha=0.3)
 
-    #plt.errorbar(x.get('Duncan'),y.get('Duncan'),yerr=[yerr_down.get('Duncan'),yerr_up.get('Duncan')], c = 'tab:orange', capsize = 2, ls = 'None', marker = '.', label = r'$\rm Duncan+14$')
-    #plt.errorbar(x.get('Song'),y.get('Song'),yerr=[yerr_down.get('Song'),yerr_up.get('Song')], c = 'tab:orange', capsize = 2, ls = 'None', marker = 's', label = r'$\rm Song+16$')
+    #plt.errorbar(x.get('Duncan'),y.get('Duncan'),yerr=[yerr_down.get('Duncan'),yerr_up.get('Duncan')], c = 'tab:blue', capsize = 2, ls = 'None', marker = '.', label = r'$\rm Duncan+14$')
+    #plt.errorbar(x.get('Song'),y.get('Song'),yerr=[yerr_down.get('Song'),yerr_up.get('Song')], c = 'tab:blue', capsize = 2, ls = 'None', marker = 's', label = r'$\rm Song+16$')
     #plines = plt.errorbar(x.get('Duncan'),y.get('Duncan'),yerr=[yerr_down.get('Duncan'),yerr_up.get('Duncan')],capsize=0,ecolor='tab:blue',color='w',marker='o',markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor='tab:blue')
-    #plines = plt.errorbar(x.get('Song'),y.get('Song'),yerr=[yerr_down.get('Song'),yerr_up.get('Song')],capsize=0,ecolor='tab:orange',color='w',marker='s',markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor='tab:orange')
+    #plines = plt.errorbar(x.get('Song'),y.get('Song'),yerr=[yerr_down.get('Song'),yerr_up.get('Song')],capsize=0,ecolor='tab:blue',color='w',marker='s',markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor='tab:blue')
 
 
     #plines = plt.errorbar(x.get('Navarro'),y.get('Navarro'),yerr=[yerr_down.get('Navarro'),yerr_up.get('Navarro')],capsize=0,ecolor='k',color='w',marker=markers[j_data+1],markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor='k', label = r'$\rm Navarro+2024$')
 
-    # plt.scatter(1/a_vir-1, vir2, c = 'tab:orange')
+    # plt.scatter(1/a_vir-1, vir2, c = 'tab:blue')
     plt.tight_layout()
     plt.ylim(-8,0)
     plt.xlim(6,12.5)
@@ -431,25 +449,34 @@ for z_smf in z_smf_arr:
     
     ax_Pk.text(0.8,0.85,r'$z='+str(int(round(z_smf)))+r'$', size = '15', transform=ax_Pk.transAxes)
     
+    line3 = ax_Pk.plot([0], [0], label=r'$E_{11}=-1$', color=colors[0][-1])   
+    line2 = ax_Pk.plot([0], [0], label=r'$E_{11}=0$', color=colors[1][-1])
+    line1 = ax_Pk.plot([0], [0], label=r'$E_{1}=1$', color=colors[2][-1])
+
     legend1 = ax_Pk.legend(loc='lower left',fancybox=True, fontsize=10)
     legend1.get_frame().set_facecolor('none')
     legend1.get_frame().set_linewidth(0.0)
     ax_Pk.add_artist(legend1)
     
+
     nn += 1
 
 
 mpl.rcParams['font.family'] = 'sans-serif'
 
 #norm = colorss.Norm(pars1.min(), pars1.max())
-norm = mpl.colors.Normalize(vmin=np.log10(pars1.min()), vmax=np.log10(pars1.max()))
+norm = mpl.colors.Normalize(vmin=pars2.min(), vmax=pars2.max())
 ax_cbar = fig.add_axes([0.101, 0.9775, 0.8785, 0.01])
-cbar_ax = plt.colorbar(mpl.cm.ScalarMappable(cmap=cmap3, norm=norm), cax=ax_cbar, orientation='horizontal', location = 'top', ticks=LinearLocator(numticks=8))
-cbar_ax.set_label(r'$\log_{10}r_c$', fontsize=16)
+cbar_ax = plt.colorbar(mpl.cm.ScalarMappable(cmap=mpl.cm.Greys, norm=norm), cax=ax_cbar, orientation='horizontal', location = 'top', ticks=LinearLocator(numticks=8))
+cbar_ax.set_label(r'$E_{22}$', fontsize=16)
 cbar_ax.ax.tick_params(width=1.5, length=5, which = 'major')
 cbar_ax.ax.tick_params(width=1.1, length=4, which = 'minor')
 cbar_ax.ax.xaxis.set_minor_locator(AutoMinorLocator())
 cbar_ax.ax.xaxis.set_major_formatter(mpl.ticker.FormatStrFormatter(r'$'+'%.2g'+r'$'))
+
+
+
+
 plt.subplots_adjust(wspace=0, hspace=0)
 
 """ac_arr = np.linspace(0.01, 1, 15)
@@ -526,8 +553,8 @@ plt.yscale('log')"""
 # plt.plot(a, mu)
 """
 
-model = 'kmoufl'
-model_H = 'kmoufl'
+model = 'E11'
+model_H = 'E11'
 par2 = 0.5
 ac_arr = np.array([0.1, 0.5, 0.75, 1])
 pars1 = np.linspace(0.1, 0.3, 10)
@@ -571,9 +598,9 @@ ac_arr = np.linspace(0.01, 1, 15)
 for ac in ac_arr:
     deltac = delta_c(ac, model, model_H, par1, par2)
     dc = deltac.delta_c_at_ac(ac, model, model_H, par1, par2)
-    plt.scatter(ac, dc, c='tab:orange')
+    plt.scatter(ac, dc, c='tab:blue')
 
-plt.axhline(1.687, c='tab:orange', ls=':')
+plt.axhline(1.687, c='tab:blue', ls=':')
 """
 """
 model = 'nDGP'
@@ -629,11 +656,11 @@ RRV = (epsilon*delta)**(-1/3)
 mu = cosmological_library.mu(
     a, model, model_H, par1, par2, type='nonlinear', x=RRV)
 
-plt.plot(a, mu, ls='-', c='tab:orange')
+plt.plot(a, mu, ls='-', c='tab:blue')
 mu = cosmological_library.mu(
     a, model, model_H, par1, par2, type='linear', x=RRV)
 
-plt.plot(a, mu, ls=':', c='tab:orange')
+plt.plot(a, mu, ls=':', c='tab:blue')
 
 
 par2 = 0.3
@@ -688,4 +715,4 @@ plt.grid(".")
 
 
 #plt.tight_layout()
-plt.savefig('SMF_nDGP_Puebla.pdf', bbox_inches='tight')
+plt.savefig('SMF_E11.pdf', bbox_inches='tight')

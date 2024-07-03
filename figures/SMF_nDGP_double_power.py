@@ -316,6 +316,7 @@ for z_smf in z_smf_arr:
 
 
 
+
     obs = number_density(feature='GSMF', z_target=z_smf, h=h)
     j_data = 0
     k_func = 0
@@ -329,17 +330,17 @@ for z_smf in z_smf_arr:
         data       = obs.target_observation['Data'][ii]
         label      = obs.target_observation.index[ii]
         datatype   = obs.target_observation['DataType'][ii]
-        color = 'tab:blue'
-        marker     = 's'
+        color = 'tab:gray'
+        marker     = '.'
         linestyle  = linestyles[k_func]
         if datatype == 'data':
             data[:,1:] = np.log10(data[:,1:])
             if  ii == 0:
                 ax_Pk.errorbar(data[:,0],  data[:,1],yerr = np.abs([data[:,1]-data[:,3],data[:,2]- data[:,1]]),\
-                        label=r'$\rm pre-JWST$',capsize=2,ecolor=color,color='w',marker=marker,markersize=4,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3, fillstyle='none')
+                        label=r'$\rm pre-JWST$',capsize=2,ecolor=color,color='w',marker=marker,markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3)
             else:
                 ax_Pk.errorbar(data[:,0],  data[:,1],yerr = np.abs([data[:,1]-data[:,3],data[:,2]- data[:,1]]),\
-                        capsize=2,ecolor=color,color='w',marker=marker,markersize=4,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3, fillstyle='none')
+                        capsize=2,ecolor=color,color='w',marker=marker,markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3)
             
             j_data +=1
 
@@ -350,19 +351,19 @@ for z_smf in z_smf_arr:
         x = 10**Navarro[:,0]
         y = 1e-4*Navarro[:,1]
         yerr = 1e-4*Navarro[:,2]
-        color = 'tab:red'
-        ax_Pk.errorbar(np.log10(x),np.log10(y),yerr=np.abs(np.log10((y-yerr)/y)),label=r'$\rm JWST$',capsize=2,ecolor=color,color='w',marker='^',markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3, fillstyle='none')
+        color = 'k'
+        ax_Pk.errorbar(np.log10(x),np.log10(y),yerr=np.abs(np.log10((y-yerr)/y)),label=r'$\rm JWST$',capsize=2,ecolor=color,color='w',marker='^',markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3)
     
     pool_cpu = Pool(8)
 
     model = 'nDGP'
     model_H = 'nDGP'
     model_SFR = 'double_power'
-    pars1 = np.array([10**2.5, 10**2.75, 10**3,10**3.25,10**3.5,10**4])
+    pars1 = np.logspace(2.5,4,10)
     par2 = 0
     f0 = 0.21
     n = len(pars1)
-    cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","tab:grey"])
+    cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
 
     colors = cmap3(np.linspace(0, 1, n))
     
@@ -379,16 +380,8 @@ for z_smf in z_smf_arr:
     Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(pars1))))
     #for i in range(len(SMF_obs)):
     
-    x = Masses_star[0]
-    y = pars1 
-    xx, yy = np.meshgrid(x, y)
-    z = SMF_obs
-    f = interpolate.interp2d(x, y, z, kind='linear')
-    pars_span = np.logspace(2.5,4,500)
-    znew = f(Masses_star[0], pars_span)
-    colors = cmap3(np.linspace(0, 1, 500))
-    for i in range(len(pars_span)):
-        ax_Pk.plot(np.log10(Masses_star[0]), np.log10(znew[i]), c = colors[i], lw=  1)
+    for i in range(len(Masses_star)):
+        ax_Pk.plot(np.log10(Masses_star[i]), np.log10(SMF_obs[i]), c = colors[i], lw=  1.5)
     #ax_Pk.fill_between(np.log10(Masses_star[2]), np.log10(SMF_obs[0]), np.log10(SMF_obs[2]), color='tab:gray', alpha=0.3)
 
     #plt.errorbar(x.get('Duncan'),y.get('Duncan'),yerr=[yerr_down.get('Duncan'),yerr_up.get('Duncan')], c = 'tab:orange', capsize = 2, ls = 'None', marker = '.', label = r'$\rm Duncan+14$')
