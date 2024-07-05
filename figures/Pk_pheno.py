@@ -556,7 +556,7 @@ norm = mpl.colors.Normalize(vmin=K0_arr.min(), vmax=K0_arr.max())
 x = 0.0167
 ax_cbar = fig.add_axes([p2[0]-0.0218+x, 0.9845, p2[2]-p2[0]+0.085, 0.01])
 cbar_ax = plt.colorbar(mpl.cm.ScalarMappable(cmap=mpl.cm.Greys, norm=norm), cax=ax_cbar, orientation='horizontal', location = 'top', ticks=LinearLocator(numticks=8))
-cbar_ax.set_label(r'$K_0$', fontsize=16)
+cbar_ax.set_label(r'$g_\gamma$', fontsize=16)
 cbar_ax.ax.tick_params(width=1.5, length=5, which = 'major')
 cbar_ax.ax.tick_params(width=1.1, length=4, which = 'minor')
 cbar_ax.ax.xaxis.set_minor_locator(AutoMinorLocator())

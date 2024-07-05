@@ -83,8 +83,8 @@ alpha_B = 2.5*1e-13
 sigma_T = 6.6525e-25
 
 kvec = np.logspace(np.log10(0.000001), np.log10(1000.0), 10000)
-delta_ini = np.logspace(-5, 0, 100000)
-abs_err = 1e-5
+delta_ini = np.logspace(-5, 0, 50000)
+abs_err = 1e-4
 ai = 1e-5
 beta_arr = np.linspace(0, 0.5, 15)
 K0_arr = np.linspace(0.1, 1, 15)

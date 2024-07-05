@@ -78,14 +78,13 @@ plt.tick_params(axis='both', which='minor',
                 direction="in", labelsize=11, length=4, width = 1.1)
 
 
-model = 'E11'
-model_H = 'LCDM'   
+model = 'nDGP'
+model_H = 'nDGP'
 model_SFR = 'toy'
 
-pars1 = np.linspace(-1, 1, 10)
+pars1 = np.logspace(3,5, 10)
 ac_arr = np.linspace(0.1, 1, 20)
 par2 = 0
-
 n = len(pars1)
 cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#48639e"])
 
@@ -99,12 +98,13 @@ for i in tqdm(range(len(pars1))):
     plt.plot(ac_arr, Delta, c=colors[i], lw=1)
 
 
-norm = plt.Normalize(pars1.min(), pars1.max())
+norm = plt.Normalize(np.log10(pars1).min(), np.log10(pars1).max())
 cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=cmap3, norm=norm), ax=ax, pad = 0)
 cbar.ax.tick_params(width=1.5, length=5, which = 'major')
 cbar.ax.tick_params(width=1.1, length=4, which = 'minor')
-cbar.set_label(r'$E_{11}$', fontsize=16)
-
+cbar.set_label(r'$\log_{10}r_c$', fontsize=16)
+labels = cbar.ax.get_yticklabels()
+cbar.ax.set_yticklabels(labels)
 plt.ylabel(r'$\delta_{\rm l}(a_c)$', size='16')
 
 # plt.xlim(10**(-3),1)
@@ -131,142 +131,13 @@ plt.tick_params(axis='both', which='minor',
                 direction="in", labelsize=11, length=4, width = 1.1)
 
 
-model = 'gmu'
-model_H = 'LCDM'
+model = 'kmoufl'
+model_H = 'kmoufl'
 model_SFR = 'toy'
 
-pars1 = np.linspace(-1,1, 10)
-ac_arr = np.linspace(0.1, 1, 20)
-par2 = 0
-
-n = len(pars1)
-cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#48639e"])
-
-colors = cmap3(np.linspace(0, 1, n))
-for i in tqdm(range(len(pars1))):
-    par1 = pars1[i]
-    deltac = delta_c(ac_arr, model, model_H, par1, par2)
-    pool_cpu = Pool(8)
-    iterable = [(ac, model, model_H, par1, par2) for ac in ac_arr]
-    Delta = pool_cpu.starmap(deltac.delta_c_at_ac,tqdm(iterable, total=len(ac_arr)))
-    plt.plot(ac_arr, Delta, c=colors[i], lw=1)
-
-
-norm = plt.Normalize(pars1.min(), pars1.max())
-cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=cmap3, norm=norm), ax=ax, pad = 0)
-cbar.ax.tick_params(width=1.5, length=5, which = 'major')
-cbar.ax.tick_params(width=1.1, length=4, which = 'minor')
-cbar.set_label(r'$g_\mu$', fontsize=16)
-labels = cbar.ax.get_yticklabels()
-labels[0] = labels[-1] = ""
-cbar.ax.set_yticklabels(labels)
-plt.ylabel(r'$\delta_{\rm l}(a_c)$', size='16')
-
-# plt.xlim(10**(-3),1)
-# plt.legend(loc='best')
-plt.grid(".")
-
-
-plt.xlim(0, 1.1)
-
-
-ax = plt.subplot(4, 1, 3)
-
-ax.xaxis.set_minor_locator(AutoMinorLocator())
-ax.yaxis.set_minor_locator(AutoMinorLocator())
-
-
-plt.tick_params(axis='both', which='major', direction="in",
-                labelsize=14, length=5, top=True, right=True)
-plt.tick_params(axis='both', which='minor', direction="in",
-                labelsize=11, length=4, top=True, right=True)
-plt.tick_params(axis='both', which='major',
-                direction="in", labelsize=14, length=5, width = 1.5)
-plt.tick_params(axis='both', which='minor',
-                direction="in", labelsize=11, length=4, width = 1.1)
-
-
-model = 'DES'
-model_H = 'LCDM'
-model_SFR = 'toy'
-
-pars2 = np.linspace(-0.75, 1, 10)
-ac_arr = np.linspace(0.1, 1, 20)
-pars1 = np.array([-1,0,1])
-
-n = len(pars2)
-cmap1 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#398e73"]) 
-cmap2 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#e64304"]) 
-cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#48639e"])
-
-colors = np.array([cmap1(np.linspace(0, 1, n)), cmap2(np.linspace(0, 1, n)), cmap3(np.linspace(0, 1, n))])
-
-for j in tqdm(range(len(pars1))):
-    par1 = pars1[j]
-    for i in range(len(pars2)):
-        Delta = []
-        par2 = pars2[i]
-        deltac = delta_c(ac_arr, model, model_H, par1, par2)
-        pool_cpu = Pool(8)
-        iterable = [(ac, model, model_H, par1, par2) for ac in ac_arr]
-        Delta = pool_cpu.starmap(deltac.delta_c_at_ac,tqdm(iterable, total=len(ac_arr)))
-
-        plt.plot(ac_arr, Delta, c=colors[j][i], alpha=0.5, lw=1)
-
-norm = plt.Normalize(pars2.min(), pars2.max())
-cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=pl.cm.Grays, norm=norm), ax=ax, pad = 0)
-cbar.ax.tick_params(width=1.5, length=5, which = 'major')
-cbar.ax.tick_params(width=1.1, length=4, which = 'minor')
-cbar.set_label(r'$T_1$', fontsize=16)
-labels = cbar.ax.get_yticklabels()
-labels[0] = labels[-1] = ""
-cbar.ax.set_yticklabels(labels)
-plt.ylabel(r'$\delta_{\rm l}(a_c)$', size='16')
-
-# plt.xlim(10**(-3),1)
-# plt.legend(loc='best')
-plt.grid(".")
-
-h, l = ax.get_legend_handles_labels()
-
-
-line1 = Line2D([0], [0], label=r'$T_2=-1$', color='#398e73')
-line2 = Line2D([0], [0], label=r'$T_2=0$', color='#e64304')
-line3 = Line2D([0], [0], label=r'$T_2=1$', color='#48639e')
-
-
-h.extend([line1, line2, line3])
-kw = dict(ncol=1,
-          fancybox=True, fontsize=10, frameon=False)
-# leg1 = ax.legend(h[:], l[:], bbox_to_anchor=[0.5, 1.08], **kw)
-ax.legend(handles=h, **kw)
-
-plt.xlim(0, 1.1)
-
-
-ax = plt.subplot(4, 1, 4)
-
-ax.xaxis.set_minor_locator(AutoMinorLocator())
-ax.yaxis.set_minor_locator(AutoMinorLocator())
-
-
-plt.tick_params(axis='both', which='major', direction="in",
-                labelsize=14, length=5, top=True, right=True)
-plt.tick_params(axis='both', which='minor', direction="in",
-                labelsize=11, length=4, top=True, right=True)
-plt.tick_params(axis='both', which='major',
-                direction="in", labelsize=14, length=5, width = 1.5)
-plt.tick_params(axis='both', which='minor',
-                direction="in", labelsize=11, length=4, width = 1.1)
-
-
-model = 'wCDM'
-model_H = 'wCDM'
-model_SFR = 'toy'
-
-pars2 = np.linspace(0.4, 0.6, 10)
-ac_arr = np.linspace(0.1, 1, 20)
-pars1 = np.array([-1.5, -1, -0.5])
+pars2 = np.linspace(0,1,10)
+ac_arr = np.linspace(0.1, 1, 10)
+pars1 = np.array([0.1,0.2,0.3])
 
 n = len(pars2)
 cmap1 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#398e73"]) 
@@ -292,9 +163,9 @@ norm = plt.Normalize(pars2.min(), pars2.max())
 cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=pl.cm.Grays, norm=norm), ax=ax, pad = 0)
 cbar.ax.tick_params(width=1.5, length=5, which = 'major')
 cbar.ax.tick_params(width=1.1, length=4, which = 'minor')
-cbar.set_label(r'$\gamma$', fontsize=16)
+cbar.set_label(r'$K_0$', fontsize=16)
 labels = cbar.ax.get_yticklabels()
-labels[0] = ""
+labels[-1] = ""
 cbar.ax.set_yticklabels(labels)
 plt.ylabel(r'$\delta_{\rm l}(a_c)$', size='16')
 plt.xlabel(r'$a_c$', size=16)
@@ -302,17 +173,16 @@ plt.xlabel(r'$a_c$', size=16)
 # plt.legend(loc='best')
 plt.grid(".")
 
+
+
+
 h, l = ax.get_legend_handles_labels()
 
 
-line1 = Line2D([0], [0], label=r'$w_\Lambda=-1.5$', color='tab:blue')
-line2 = Line2D([0], [0], label=r'$w_\Lambda=-1$', color='tab:red')
-line3 = Line2D([0], [0], label=r'$w_\Lambda=-0.5$', color='tab:purple')
 
-
-line1 = Line2D([0], [0], label=r'$w_\Lambda=-1.5$', color='#398e73')
-line2 = Line2D([0], [0], label=r'$w_\Lambda=-1$', color='#e64304')
-line3 = Line2D([0], [0], label=r'$w_\Lambda=-0.5$', color='#48639e')
+line1 = Line2D([0], [0], label=r'$\beta=0.1$', color='#398e73')
+line2 = Line2D([0], [0], label=r'$\beta=0.2$', color='#e64304')
+line3 = Line2D([0], [0], label=r'$\beta=0.3$', color='#48639e')
 
 
 h.extend([line1, line2, line3])
@@ -422,4 +292,4 @@ ax.add_artist(leg1)
 plt.tight_layout()
 """
 
-plt.savefig('deltac_pheno.pdf', bbox_inches='tight')
+plt.savefig('deltac_screen.pdf', bbox_inches='tight')

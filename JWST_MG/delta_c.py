@@ -192,7 +192,7 @@ class delta_c:
     """
 
     def linear(self, deltai_collapse, a, model, model_H, par1, par2):
-        dt = 0.00001
+        dt = 0.000001
         ddeltai = deltai_collapse/ai
         init = [deltai_collapse, ddeltai]
         system = ode(self.delta_l_ODE)
