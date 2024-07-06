@@ -83,7 +83,7 @@ model_H = 'nDGP'
 model_SFR = 'toy'
 
 pars1 = np.logspace(3,5, 10)
-ac_arr = np.linspace(0.1, 1, 20)
+ac_arr = np.linspace(0.05, 1, 20)
 par2 = 0
 n = len(pars1)
 cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#48639e"])
@@ -91,11 +91,15 @@ cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#48639
 colors = cmap3(np.linspace(0, 1, n))
 for i in tqdm(range(len(pars1))):
     par1 = pars1[i]
-    deltac = delta_c(ac_arr, model, model_H, par1, par2)
+    reion_arr = [reionization(np.linspace(ai, ac, 10000), model, model_H, par1, par2) for ac in ac_arr]
+    
+    def reion(i, model,model_H,par1,par2,a_arr):
+        return reion_arr[i].Delta_vir(model,model_H,par1,par2,a_arr)
     pool_cpu = Pool(8)
-    iterable = [(ac, model, model_H, par1, par2) for ac in ac_arr]
-    Delta = pool_cpu.starmap(deltac.delta_c_at_ac,tqdm(iterable, total=len(ac_arr)))
-    plt.plot(ac_arr, Delta, c=colors[i], lw=1)
+    iterable = [(i, model,model_H,par1,par2,np.linspace(ai, ac, 10000)) for i, ac in enumerate(ac_arr)]
+    a_vir, Deltavir, a_arr, mu_arr = zip(*pool_cpu.starmap(reion,tqdm(iterable, total=len(ac_arr))))
+    print(Deltavir)
+    plt.plot(ac_arr, Deltavir, c=colors[i], lw=1)
 
 
 norm = plt.Normalize(np.log10(pars1).min(), np.log10(pars1).max())
@@ -105,8 +109,18 @@ cbar.ax.tick_params(width=1.1, length=4, which = 'minor')
 cbar.set_label(r'$\log_{10}r_c$', fontsize=16)
 labels = cbar.ax.get_yticklabels()
 cbar.ax.set_yticklabels(labels)
-plt.ylabel(r'$\delta_{\rm l}(a_c)$', size='16')
+plt.ylabel(r'$\Delta_{\rm vir}(a_c)$', size='16')
 
+# plt.xlim(10**(-3),1)
+# plt.legend(loc='best')
+plt.grid(".")
+ax.set_xticklabels([])
+
+plt.axhline(18*np.pi**2, c='tab:gray', lw=0.8)
+plt.text(0.72, 191, r'$\Delta_{\rm vir}|_{G_{\rm eff}=1}$',
+         fontsize=11, c='tab:grey')
+ax.fill_between([-0.1, 1.1], 18*np.pi**2-2.5, 18*np.pi**2 +
+                2.5, alpha=0.25, color='tab:gray')
 # plt.xlim(10**(-3),1)
 # plt.legend(loc='best')
 plt.grid(".")
@@ -136,7 +150,7 @@ model_H = 'kmoufl'
 model_SFR = 'toy'
 
 pars2 = np.linspace(0,1,10)
-ac_arr = np.linspace(0.1, 1, 10)
+ac_arr = np.linspace(0.05, 1, 10)
 pars1 = np.array([0.1,0.3,0.5])
 
 n = len(pars2)
@@ -146,17 +160,19 @@ cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#48639
 
 colors = np.array([cmap1(np.linspace(0, 1, n)), cmap2(np.linspace(0, 1, n)), cmap3(np.linspace(0, 1, n))])
 
-for j in tqdm(range(len(pars1))):
+for j in range(len(pars1)):
     par1 = pars1[j]
     for i in range(len(pars2)):
-        Delta = []
         par2 = pars2[i]
-        deltac = delta_c(ac_arr, model, model_H, par1, par2)
+        reion_arr = [reionization(np.linspace(ai, ac, 10000), model, model_H, par1, par2) for ac in ac_arr]
+        
+        def reion(i, model,model_H,par1,par2,a_arr):
+            return reion_arr[i].Delta_vir(model,model_H,par1,par2,a_arr)
         pool_cpu = Pool(8)
-        iterable = [(ac, model, model_H, par1, par2) for ac in ac_arr]
-        Delta = pool_cpu.starmap(deltac.delta_c_at_ac,tqdm(iterable, total=len(ac_arr)))
-
-        plt.plot(ac_arr, Delta, c=colors[j][i], alpha=0.5, lw=1)
+        iterable = [(i, model,model_H,par1,par2,np.linspace(ai, ac, 10000)) for i, ac in enumerate(ac_arr)]
+        a_vir, Deltavir = zip(*pool_cpu.starmap(reion,tqdm(iterable, total=len(ac_arr))))
+    
+        plt.plot(ac_arr, Deltavir, c=colors[j][i], lw=1, alpha =0.5)
 
 
 norm = plt.Normalize(pars2.min(), pars2.max())
@@ -167,11 +183,20 @@ cbar.set_label(r'$K_0$', fontsize=16)
 labels = cbar.ax.get_yticklabels()
 labels[-1] = ""
 cbar.ax.set_yticklabels(labels)
-plt.ylabel(r'$\delta_{\rm l}(a_c)$', size='16')
+plt.ylabel(r'$\Delta_{\rm vir}(a_c)$', size='16')
 plt.xlabel(r'$a_c$', size=16)
 # plt.xlim(10**(-3),1)
 # plt.legend(loc='best')
 plt.grid(".")
+
+h, l = ax.get_legend_handles_labels()
+
+plt.axhline(18*np.pi**2, c='tab:gray', lw=0.8)
+plt.text(0.72, 191, r'$\Delta_{\rm vir}|_{G_{\rm eff}=1}$',
+         fontsize=11, c='tab:grey')
+ax.fill_between([-0.1, 1.1], 18*np.pi**2-2.5, 18*np.pi**2 +
+                2.5, alpha=0.25, color='tab:gray')
+
 
 
 
@@ -292,4 +317,4 @@ ax.add_artist(leg1)
 plt.tight_layout()
 """
 
-plt.savefig('deltac_screen.pdf', bbox_inches='tight')
+plt.savefig('deltavir_screen.pdf', bbox_inches='tight')
