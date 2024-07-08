@@ -430,6 +430,11 @@ def plot_specz_constraints(redshift, ax=None, capsize=0, **kwargs):
     ax.errorbar( x, y, yerr=(ylo, yup), uplims=True,  capsize = 0, **kwargs)
     ax.errorbar( x, y, yerr=(ylo, yup), **kwargs)
 
+def MUV_lim(z):
+    z_arr = [4,5,6,7,8]
+    MUV_arr = [-22.6,-23,-22.5,-22.75,-22]
+    MUV_lim_interp = scipy.interpolate.interp1d(z_arr,MUV_arr, fill_value='extrapolate')
+    return MUV_lim_interp(z)
 
 
 
@@ -510,7 +515,7 @@ for z_smf in z_smf_arr:
 
     model = 'nDGP'
     model_H = 'nDGP'
-    model_SFR = 'double_power'
+    model_SFR = 'Puebla'
     pars1 = np.logspace(2.5,4,10)
     par2 = 0
     f0 = 0.21
@@ -524,7 +529,7 @@ for z_smf in z_smf_arr:
         HMF_library = HMF(1/(1+z_smf), model, model_H, par1, par2, 1e8)
         Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_smf), model, par1, par2))*h**3)
     k = kvec/h
-    Masses = np.logspace(6,16,150)
+    Masses = np.logspace(5,15,150)
 
 
     UVLF_library = UVLF(1/(1+z_smf), model, model_H, model_SFR, pars1, par2, Masses, f0)
@@ -533,6 +538,8 @@ for z_smf in z_smf_arr:
     iterable = [(1/(1+z_smf), rhom, model, model_H, model_SFR, par1, par2, Masses, k, Pk_arr[i], f0, sigma_uv) for i,par1 in enumerate(pars1)]
     MUV, UVLF_obs = zip(*pool_cpu.starmap(UVLF_library.compute_uv_luminosity_function,tqdm(iterable, total=len(pars1))))
     for i in range(len(UVLF_obs)):
+        MUV[i][MUV[i] < MUV_lim(z_smf)] = MUV_lim(z_smf)
+        UVLF_obs[i][MUV[i] < MUV_lim(z_smf)] = 1e-8
         ax_Pk.plot(MUV[i], np.log10(UVLF_obs[i]), c = colors[i], lw=  1)
 
     pars1 = np.array([1e8])
@@ -541,7 +548,7 @@ for z_smf in z_smf_arr:
         HMF_library = HMF(1/(1+z_smf), model, model_H, par1, par2, 1e8)
         Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_smf), model, par1, par2))*h**3)
     k = kvec/h
-    Masses = np.logspace(5,19,250)
+    Masses = np.logspace(5,15,150)
 
     UVLF_library = UVLF(1/(1+z_smf), model, model_H, model_SFR, pars1, par2, Masses, f0)
 
@@ -550,11 +557,8 @@ for z_smf in z_smf_arr:
     MUV, UVLF_obs = zip(*pool_cpu.starmap(UVLF_library.compute_uv_luminosity_function,tqdm(iterable, total=len(sigmas))))
     for i in range(len(UVLF_obs)):
         line, = ax_Pk.plot(MUV[i], np.log10(UVLF_obs[i]), c = 'k', lw=4, alpha=0.2)
-        if nn == 8:
-            line_annotate(r'$\sigma_{\rm UV}=' + str(sigmas[i]) + '$',line,-22.5, c = 'tab:gray', fontsize = 9)
-        else:
-            line_annotate(r'$\sigma_{\rm UV}=' + str(sigmas[i]) + '$',line,-23, c = 'tab:gray', fontsize = 9)
-    
+        line_annotate(r'$\sigma_{\rm UV}=' + str(sigmas[i]) + '$',line,MUV_lim(z_smf) + 0.25, c = 'tab:gray', fontsize = 9)
+
 
 
     #ax_Pk.fill_between(np.log10(Masses_star[2]), np.log10(SMF_obs[0]), np.log10(SMF_obs[2]), color='tab:gray', alpha=0.3)
@@ -569,7 +573,7 @@ for z_smf in z_smf_arr:
 
     # plt.scatter(1/a_vir-1, vir2, c = 'tab:orange')
     ax_Pk.set_xlim(-26,-11)
-    plt.ylim(-8,0)
+    plt.ylim(-7,0)
 
 
 
@@ -676,7 +680,7 @@ for z_smf in z_smf_arr:
 
     model = 'nDGP'
     model_H = 'nDGP'
-    model_SFR = 'double_power'
+    model_SFR = 'Puebla'
     pars1 = np.logspace(2.5,4,10)
     par2 = 0
     f0 = 0.21
@@ -690,7 +694,7 @@ for z_smf in z_smf_arr:
         HMF_library = HMF(1/(1+z_smf), model, model_H, par1, par2, 1e8)
         Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_smf), model, par1, par2))*h**3)
     k = kvec/h
-    Masses = np.logspace(6,16,150)
+    Masses = np.logspace(5,15,150)
 
 
     UVLF_library = UVLF(1/(1+z_smf), model, model_H, model_SFR, pars1, par2, Masses, f0)
@@ -699,6 +703,8 @@ for z_smf in z_smf_arr:
     iterable = [(1/(1+z_smf), rhom, model, model_H, model_SFR, par1, par2, Masses, k, Pk_arr[i], f0, sigma_uv) for i,par1 in enumerate(pars1)]
     MUV, UVLF_obs = zip(*pool_cpu.starmap(UVLF_library.compute_uv_luminosity_function,tqdm(iterable, total=len(pars1))))
     for i in range(len(UVLF_obs)):
+        MUV[i][MUV[i] < MUV_lim(z_smf)] = MUV_lim(z_smf)
+        UVLF_obs[i][MUV[i] < MUV_lim(z_smf)] = 1e-8
         ax_Pk.plot(MUV[i], np.log10(UVLF_obs[i]), c = colors[i], lw=  1)
 
     pars1 = np.array([1e8])
@@ -707,7 +713,7 @@ for z_smf in z_smf_arr:
         HMF_library = HMF(1/(1+z_smf), model, model_H, par1, par2, 1e8)
         Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_smf), model, par1, par2))*h**3)
     k = kvec/h
-    Masses = np.logspace(5,19,250)
+    Masses = np.logspace(5,15,150)
 
     UVLF_library = UVLF(1/(1+z_smf), model, model_H, model_SFR, pars1, par2, Masses, f0)
 
@@ -716,11 +722,8 @@ for z_smf in z_smf_arr:
     MUV, UVLF_obs = zip(*pool_cpu.starmap(UVLF_library.compute_uv_luminosity_function,tqdm(iterable, total=len(sigmas))))
     for i in range(len(UVLF_obs)):
         line, = ax_Pk.plot(MUV[i], np.log10(UVLF_obs[i]), c = 'k', lw=4, alpha=0.2)
-        if nn == 8:
-            line_annotate(r'$\sigma_{\rm UV}=' + str(sigmas[i]) + '$',line,-22.5, c = 'tab:gray', fontsize = 9)
-        else:
-            line_annotate(r'$\sigma_{\rm UV}=' + str(sigmas[i]) + '$',line,-23, c = 'tab:gray', fontsize = 9)
-    
+        line_annotate(r'$\sigma_{\rm UV}=' + str(sigmas[i]) + '$',line,MUV_lim(z_smf) + 0.25, c = 'tab:gray', fontsize = 9)
+
 
     
     #ax_Pk.fill_between(np.log10(Masses_star[2]), np.log10(SMF_obs[0]), np.log10(SMF_obs[2]), color='tab:gray', alpha=0.3)
@@ -735,7 +738,7 @@ for z_smf in z_smf_arr:
 
     # plt.scatter(1/a_vir-1, vir2, c = 'tab:orange')
     ax_Pk.set_xlim(-26,-11)
-    plt.ylim(-8,0)
+    plt.ylim(-7,0)
 
     if nn != 7 and nn != 8:
         if nn % 2 == 0:
@@ -1026,4 +1029,4 @@ plt.grid(".")
 
 
 #plt.tight_layout()
-plt.savefig('SMF_nDGP_double_power.pdf', bbox_inches='tight')
+plt.savefig('UVLF_nDGP_Puebla.pdf', bbox_inches='tight')
