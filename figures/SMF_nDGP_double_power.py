@@ -335,6 +335,10 @@ for z_smf in z_smf_arr:
         linestyle  = linestyles[k_func]
         if datatype == 'data':
             data[:,1:] = np.log10(data[:,1:])
+            ind_3 = np.argwhere(np.isnan(data[:,3]))
+            ind_2 = np.argwhere(np.isnan(data[:,2]))
+            data[ind_3,3] = data[ind_3,2]
+            data[ind_2,2] = data[ind_2,3]
             if  ii == 0:
                 ax_Pk.errorbar(data[:,0],  data[:,1],yerr = np.abs([data[:,1]-data[:,3],data[:,2]- data[:,1]]),\
                         label=r'$\rm pre-JWST$',capsize=2,ecolor=color,color='w',marker=marker,markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3)
@@ -444,7 +448,7 @@ mpl.rcParams['font.family'] = 'sans-serif'
 #norm = colorss.Norm(pars1.min(), pars1.max())
 norm = mpl.colors.Normalize(vmin=np.log10(pars1.min()), vmax=np.log10(pars1.max()))
 ax_cbar = fig.add_axes([0.101, 0.9775, 0.8785, 0.01])
-cbar_ax = plt.colorbar(mpl.cm.ScalarMappable(cmap=cmap3, norm=norm), cax=ax_cbar, orientation='horizontal', location = 'top', ticks=LinearLocator(numticks=8))
+cbar_ax = plt.colorbar(mpl.cm.ScalarMappable(cmap=mpl.cm.Greys, norm=norm), cax=ax_cbar, orientation='horizontal', location = 'top', ticks=LinearLocator(numticks=8))
 cbar_ax.set_label(r'$\log_{10}r_c$', fontsize=16)
 cbar_ax.ax.tick_params(width=1.5, length=5, which = 'major')
 cbar_ax.ax.tick_params(width=1.1, length=4, which = 'minor')

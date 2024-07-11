@@ -336,6 +336,10 @@ for z_smf in z_smf_arr:
         if datatype == 'data':
             data[:,1:] = np.log10(data[:,1:])
             if  ii == 0:
+                ind_3 = np.argwhere(np.isnan(data[:,3]))
+                ind_2 = np.argwhere(np.isnan(data[:,2]))
+                data[ind_3,3] = data[ind_3,2]
+                data[ind_2,2] = data[ind_2,3]
                 ax_Pk.errorbar(data[:,0],  data[:,1],yerr = np.abs([data[:,1]-data[:,3],data[:,2]- data[:,1]]),\
                         label=r'$\rm pre-JWST$',capsize=2,ecolor=color,color='w',marker=marker,markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3)
             else:

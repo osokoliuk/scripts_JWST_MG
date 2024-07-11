@@ -322,9 +322,8 @@ for z_smf in z_smf_arr:
     ye_low = data[:,2]
     ye_upp =  data[:,3]
 
-    color = 'tab:gray'
-    marker = '.'
-    ax_Pk.errorbar(np.log10(x),np.log10(y),yerr=c_[ye_low, ye_upp].T,capsize=2,ecolor=color,color='w',marker=marker,markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3, label = r'$\rm JWST$')
+    color = 'k'
+    ax_Pk.errorbar(np.log10(x),np.log10(y),yerr=np.abs(c_[np.log10((y-ye_low)/y), np.log10(ye_upp)-np.log10(y)].T),label=r'$\rm JWST$',capsize=2,ecolor=color,color='w',marker='^',markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3)
 
     pool_cpu = Pool(8)
 
@@ -386,12 +385,6 @@ for z_smf in z_smf_arr:
                 cb.set_label(r'$r_c$', fontsize=16)
                 fig.colorbar(mappable, ax=axs)"""
         else:
-            if nn == 1:
-                nbins = len(ax_Pk.get_yticklabels())
-                ax_Pk.yaxis.set_major_locator(MaxNLocator(nbins=nbins,prune='lower'))
-            else:
-                nbins = len(ax_Pk.get_yticklabels())
-                ax_Pk.yaxis.set_major_locator(MaxNLocator(nbins=nbins,prune='both'))
             ax_Pk.set_xticklabels([])
             ax_Pk.set_ylabel(r'$\log_{10}\rho_\star\;[M_\odot\;\rm Mpc^{-3}]$', size='16')
     else:
@@ -401,8 +394,6 @@ for z_smf in z_smf_arr:
         else:
             ax_Pk.set_xlabel(r'$ \log_{10}M_\star\;[M_\odot]$', size = '16')
             ax_Pk.set_ylabel(r'$\log_{10}\rho_\star\;[M_\odot\;\rm Mpc^{-3}]$', size='16')
-            nbins = len(ax_Pk.get_yticklabels())
-            ax_Pk.yaxis.set_major_locator(MaxNLocator(nbins=nbins,prune='upper'))
 
     plt.grid(".")
     
@@ -421,14 +412,16 @@ mpl.rcParams['font.family'] = 'sans-serif'
 
 #norm = colorss.Norm(pars1.min(), pars1.max())
 norm = mpl.colors.Normalize(vmin=np.log10(pars1.min()), vmax=np.log10(pars1.max()))
-ax_cbar = fig.add_axes([0.101, 0.9775, 0.8785, 0.01])
+ax_cbar = fig.add_axes([0.0805, 0.9835, 0.899, 0.01])
 cbar_ax = plt.colorbar(mpl.cm.ScalarMappable(cmap=cmap3, norm=norm), cax=ax_cbar, orientation='horizontal', location = 'top', ticks=LinearLocator(numticks=8))
 cbar_ax.set_label(r'$\log_{10}r_c$', fontsize=16)
 cbar_ax.ax.tick_params(width=1.5, length=5, which = 'major')
 cbar_ax.ax.tick_params(width=1.1, length=4, which = 'minor')
 cbar_ax.ax.xaxis.set_minor_locator(AutoMinorLocator())
 cbar_ax.ax.xaxis.set_major_formatter(mpl.ticker.FormatStrFormatter(r'$'+'%.2g'+r'$'))
-plt.subplots_adjust(wspace=0, hspace=0)
+
+plt.tight_layout()
+plt.subplots_adjust(wspace=0, hspace=-0.0)
 
 
 
@@ -666,5 +659,4 @@ plt.grid(".")
 """
 
 
-plt.tight_layout()
-plt.savefig('SMF_E11_Puebla.pdf', bbox_inches='tight')
+plt.savefig('SMD_nDGP.pdf', bbox_inches='tight')

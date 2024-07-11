@@ -529,7 +529,7 @@ for z_smf in z_smf_arr:
         HMF_library = HMF(1/(1+z_smf), model, model_H, par1, par2, 1e8)
         Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_smf), model, par1, par2))*h**3)
     k = kvec/h
-    Masses = np.logspace(5,15,150)
+    Masses = np.logspace(6,18,150)
 
 
     UVLF_library = UVLF(1/(1+z_smf), model, model_H, model_SFR, pars1, par2, Masses, f0)
@@ -538,8 +538,6 @@ for z_smf in z_smf_arr:
     iterable = [(1/(1+z_smf), rhom, model, model_H, model_SFR, par1, par2, Masses, k, Pk_arr[i], f0, sigma_uv) for i,par1 in enumerate(pars1)]
     MUV, UVLF_obs = zip(*pool_cpu.starmap(UVLF_library.compute_uv_luminosity_function,tqdm(iterable, total=len(pars1))))
     for i in range(len(UVLF_obs)):
-        MUV[i][MUV[i] < MUV_lim(z_smf)] = MUV_lim(z_smf)
-        UVLF_obs[i][MUV[i] < MUV_lim(z_smf)] = 1e-8
         ax_Pk.plot(MUV[i], np.log10(UVLF_obs[i]), c = colors[i], lw=  1)
 
     pars1 = np.array([1e8])
@@ -548,7 +546,7 @@ for z_smf in z_smf_arr:
         HMF_library = HMF(1/(1+z_smf), model, model_H, par1, par2, 1e8)
         Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_smf), model, par1, par2))*h**3)
     k = kvec/h
-    Masses = np.logspace(5,15,150)
+    Masses = np.logspace(6,18,150)
 
     UVLF_library = UVLF(1/(1+z_smf), model, model_H, model_SFR, pars1, par2, Masses, f0)
 
@@ -558,7 +556,7 @@ for z_smf in z_smf_arr:
     for i in range(len(UVLF_obs)):
         line, = ax_Pk.plot(MUV[i], np.log10(UVLF_obs[i]), c = 'k', lw=4, alpha=0.2)
         line_annotate(r'$\sigma_{\rm UV}=' + str(sigmas[i]) + '$',line,MUV_lim(z_smf) + 0.25, c = 'tab:gray', fontsize = 9)
-
+    
 
 
     #ax_Pk.fill_between(np.log10(Masses_star[2]), np.log10(SMF_obs[0]), np.log10(SMF_obs[2]), color='tab:gray', alpha=0.3)
@@ -579,6 +577,8 @@ for z_smf in z_smf_arr:
 
     if nn != 7 and nn != 8:
         if nn % 2 == 0:
+            nbins = len(ax_Pk.get_yticklabels())
+            ax_Pk.yaxis.set_major_locator(MaxNLocator(nbins=nbins,prune='lower'))
             ax_Pk.set_xticklabels([])
             ax_Pk.set_yticklabels([])
         else:
@@ -594,6 +594,8 @@ for z_smf in z_smf_arr:
         if nn % 2 == 0:
             ax_Pk.set_xlabel(r'$M_{\rm UV}\;[\rm mag]$', size = '16')
             ax_Pk.set_yticklabels([])
+            nbins = len(ax_Pk.get_yticklabels())
+            ax_Pk.yaxis.set_major_locator(MaxNLocator(nbins=nbins,prune='upper'))
         else:
             ax_Pk.set_xlabel(r'$M_{\rm UV}\;[\rm mag]$', size = '16')
             ax_Pk.set_ylabel(r'$\log_{10}\phi_{\rm UV}\;[\rm Mpc^{-3}]$', size = '16')
@@ -722,8 +724,8 @@ for z_smf in z_smf_arr:
     MUV, UVLF_obs = zip(*pool_cpu.starmap(UVLF_library.compute_uv_luminosity_function,tqdm(iterable, total=len(sigmas))))
     for i in range(len(UVLF_obs)):
         line, = ax_Pk.plot(MUV[i], np.log10(UVLF_obs[i]), c = 'k', lw=4, alpha=0.2)
-        line_annotate(r'$\sigma_{\rm UV}=' + str(sigmas[i]) + '$',line,MUV_lim(z_smf) + 0.25, c = 'tab:gray', fontsize = 9)
-
+        line_annotate(r'$\sigma_{\rm UV}=' + str(sigmas[i]) + '$',line,MUV_lim(z_smf) + 1.5, c = 'tab:gray', fontsize = 9)
+    
 
     
     #ax_Pk.fill_between(np.log10(Masses_star[2]), np.log10(SMF_obs[0]), np.log10(SMF_obs[2]), color='tab:gray', alpha=0.3)
@@ -742,6 +744,8 @@ for z_smf in z_smf_arr:
 
     if nn != 7 and nn != 8:
         if nn % 2 == 0:
+            nbins = len(ax_Pk.get_yticklabels())
+            ax_Pk.yaxis.set_major_locator(MaxNLocator(nbins=nbins,prune='lower'))
             ax_Pk.set_xticklabels([])
             ax_Pk.set_yticklabels([])
         else:
@@ -755,6 +759,8 @@ for z_smf in z_smf_arr:
             ax_Pk.set_ylabel(r'$\log_{10}\phi_{\rm UV}\;[\rm Mpc^{-3}]$', size = '16')
     else:
         if nn % 2 == 0:
+            nbins = len(ax_Pk.get_yticklabels())
+            ax_Pk.yaxis.set_major_locator(MaxNLocator(nbins=nbins,prune='upper'))
             ax_Pk.set_xlabel(r'$M_{\rm UV}\;[\rm mag]$', size = '16')
             ax_Pk.set_yticklabels([])
         else:
@@ -780,7 +786,7 @@ mpl.rcParams['font.family'] = 'sans-serif'
 
 #norm = colorss.Norm(pars1.min(), pars1.max())
 norm = mpl.colors.Normalize(vmin=2.5, vmax=4)
-ax_cbar = fig.add_axes([0.101, 0.9775, 0.8725, 0.01])
+ax_cbar = fig.add_axes([0.121, 0.9775, 0.8525, 0.01])
 cbar_ax = plt.colorbar(mpl.cm.ScalarMappable(cmap=cmap3, norm=norm), cax=ax_cbar, orientation='horizontal', location = 'top', ticks=LinearLocator(numticks=8))
 cbar_ax.set_label(r'$\log_{10}r_c$', fontsize=16)
 cbar_ax.ax.tick_params(width=1.5, length=5, which = 'major')
