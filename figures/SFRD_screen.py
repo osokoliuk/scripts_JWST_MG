@@ -16,14 +16,15 @@ import matplotlib
 from scipy import interpolate
 import scipy
 import sys
-sys.path.insert(0, "../../")
-sys.path.insert(0,'../../observational_data/GSMF')
+sys.path.insert(0, "../")
+sys.path.insert(0,'../observational_data/GSMF')
 from JWST_MG.reionization import reionization
 from JWST_MG.cosmological_functions import cosmological_functions
 from JWST_MG.constants import *
 from JWST_MG.HMF import HMF
-from JWST_MG.SMF import SMF
+from JWST_MG.SMD import SMD
 from JWST_MG.UVLF import UVLF
+import matplotlib.colors as colorss
 
 plt.rcParams.update({"text.usetex": True})
 
@@ -163,9 +164,7 @@ for i in range(len(pars1)):
 
 
 norm = plt.Normalize(pars1.min(), pars1.max())
-cbar = plt.colorbar(mpl.cm.ScalarMappable(cmap=pl.cm.Blues, norm=norm), ax=ax)
-cbar.set_label(r'$g_{\mu}$', fontsize=16)
-
+cbar = plt.colorbar(mpfigures/SMF_E11.py
 plt.ylabel(r'$\delta_{\rm m}(a)$', size='16')
 
 # plt.xlim(10**(-3),1)
@@ -267,25 +266,6 @@ plt.xlim(-0.05, 1.05)
 """
 
 
-ax = plt.subplot(1, 1, 1)
-
-
-ax.xaxis.set_minor_locator(AutoMinorLocator())
-ax.yaxis.set_minor_locator(AutoMinorLocator())
-
-
-plt.tick_params(axis='both', which='major', direction="in",
-                labelsize=14, length=5, top=True, right=True)
-plt.tick_params(axis='both', which='minor', direction="in",
-                labelsize=11, length=4, top=True, right=True)
-plt.tick_params(axis='both', which='major',
-                direction="in", labelsize=14, length=5)
-plt.tick_params(axis='both', which='minor',
-                direction="in", labelsize=11, length=4)
-
-
-
-
 
 #plt.errorbar(x, y, yerr=yerr, xerr=xerr, fmt='.')
 from multiprocessing import Pool
@@ -301,93 +281,235 @@ from scipy.integrate import odeint
 from scipy import integrate
 from scipy.special import lambertw
 from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
+from matplotlib.ticker import MaxNLocator
+from matplotlib.ticker import LinearLocator
 import matplotlib.pylab as pl
+mpl.rcParams['axes.linewidth'] = 1.5
 
+plt.clf()
 plt.figure()
-plt.rcParams.update({"text.usetex":True})
-fig = plt.figure(figsize=(4.25*0.9*2,3*0.9*1.75))
-ax_Pk = plt.subplot(221)
-
-ax_Pk.xaxis.set_minor_locator(AutoMinorLocator())
-ax_Pk.yaxis.set_minor_locator(AutoMinorLocator())
+plt.rcParams.update({"text.usetex": True})
+fig = plt.figure(figsize=(4.25*2*.95*0.9, 2*5*1.05*0.9))
 
 
-ax_Pk.tick_params(axis='both', which='major',direction="in", labelsize=14, length = 5, top=True,right=True)
-ax_Pk.tick_params(axis='both', which='minor',direction="in", labelsize=12, length = 4, top=True,right=True)
-ax_Pk.tick_params(axis='both', which='major',direction="in", labelsize=14, length = 5)
-ax_Pk.tick_params(axis='both', which='minor',direction="in", labelsize=12, length = 4)
+nn = 1
+z_smf_arr = [0]
+
+for z_smf in z_smf_arr:
+    ax_Pk = plt.subplot(4,2,nn)
+
+    
+    ax_Pk.xaxis.set_minor_locator(AutoMinorLocator())
+    ax_Pk.yaxis.set_minor_locator(AutoMinorLocator())
 
 
-pool_cpu = Pool(8)
+    plt.tick_params(axis='both', which='major', direction="in",
+                    labelsize=14, length=5, top=True, right=True, width = 1.5)
+    plt.tick_params(axis='both', which='minor', direction="in",
+                    labelsize=11, length=4, top=True, right=True, width = 1.1)
+    plt.tick_params(axis='both', which='major',
+                    direction="in", labelsize=14, length=5, width = 1.5)
+    plt.tick_params(axis='both', which='minor',
+                    direction="in", labelsize=11, length=4, width = 1.1)
 
 
-data = np.loadtxt('/home/oleksii/codes/scripts_JWST_MG/observational_data/SFRD/sfrd_MD14.txt')
-x = data[:,0]
-xerr = data[:,1]
-y = data[:,2]
-yerr = data[:,3]
-marker = '.'
-color = 'tab:gray'
-plt.errorbar(x,y,yerr=yerr,xerr=xerr, capsize=2,ecolor=color,color='w',marker=marker,markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3)
+    #data = np.loadtxt('/home/oleksii/codes/scripts_JWST_MG/observational_data/SFRD/sfrd_MD14.txt')
+    #x = data[:,0]
+    #xerr = data[:,1]
+    #y = data[:,2]
+    #yerr = data[:,3]
+    
+    data = np.loadtxt('/home/oleksii/codes/scripts_JWST_MG/observational_data/SFRD/csfrs_new.dat')
+    x = data[:,0]
+    y = data[:,1]
+    yerr = [data[:,2], data[:,3]]
+    xerr = 0
+    marker = '.'
+    color = 'tab:gray'
+    plt.errorbar(x,y,yerr=yerr,xerr=xerr, capsize=2,ecolor=color,color='w',marker=marker,markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3, label = r'$\rm pre-JWST$')
 
 
-data = np.loadtxt('/home/oleksii/codes/scripts_JWST_MG/observational_data/SFRD/sfrd_jwst.txt')
-x = data[:,0]
-y = data[:,1]
-yerr = [data[:,3], data[:,2]]
+    data = np.loadtxt('/home/oleksii/codes/scripts_JWST_MG/observational_data/SFRD/sfrd_jwst.txt')
+    x = data[:,0]
+    y = data[:,1]
+    yerr = [data[:,3], data[:,2]]
 
-color = 'k'
-marker='^'
+    color = 'k'
+    marker='^'
 
-plt.errorbar(x,y,yerr=yerr, capsize=2,ecolor=color,color='w',marker='^',markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3)
-
-
-model = 'nDGP'
-model_H = 'nDGP'
-model_SFR = 'Puebla'
-pars1 = np.logspace(2.5,4,10)
-par2 = 0.55
-f0 = 0.1
-n = len(pars1)
-cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
-colors = cmap3(np.linspace(0, 1, n))
-
-z_int = np.linspace(0,12,13) #np.linspace(12,5,35)
-a_arr = 1/(1+z_int)
-
-UVLF_library = UVLF(1/(1+z_int), model, model_H, model_SFR, pars1, par2, 1e8, f0)
-Pk_arr = np.empty(shape=(len(pars1), len(z_int)), dtype='object')
-for j, par1 in enumerate(pars1):
-    for i, z_i in enumerate(z_int):
-        HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
-        Pk_arr[j][i] = np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3
-k = kvec/h
-Masses = np.logspace(6,14,100)
-
-
-iterable = [(a_arr, rhom, model, model_H, model_SFR, par1, par2, Masses, k, Pk_arr[i], f0) for i,par1 in enumerate(pars1)]
-SFRD_obs = pool_cpu.starmap( UVLF_library.SFRD,tqdm(iterable, total=len(pars1)))
-
-
-#print(SMF)
-#Masses_star = SMF[0]
-#SMF_obs = SMF[1]
-for i in range(len(SFRD_obs)):
-    plt.plot(z_int, np.log10(SFRD_obs[i]), c = colors[i], lw = 1)
+    plt.errorbar(x,y,yerr=yerr, capsize=2,ecolor=color,color='w',marker='^',markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3, label = r'$\rm JWST$')
 
 
 
+    pool_cpu = Pool(8)
+
+    if nn % 2 == 0:
+        model_SFR = 'double_power'
+    else:
+        model_SFR = 'double_power'
+
+    if nn >= 3:
+        model = 'kmoufl'
+        model_H = 'kmoufl'
+        pars2 = np.linspace(0,1,10)
+        pars1 = np.array([0.1, 0.3, 0.5])
+        n = len(pars2)
+        f0 = 0.21
+        cmap1 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#66c2a5"]) 
+        cmap2 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#fc8d62"]) 
+        cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
+
+        cmap = np.array([cmap1, cmap2, cmap3])
+        colors = [None]*3
+        colors[0] = cmap[0]((np.linspace(0, 1, n)))
+        colors[1] = cmap[1]((np.linspace(0, 1, n)))
+        colors[2] = cmap[2]((np.linspace(0, 1, n)))
+    else:
+        model = 'nDGP'
+        model_H = 'nDGP'
+        pars1 = np.logspace(2.5,4,10)
+        par2 = 0
+        f0 = 0.21
+        n = len(pars1)
+        cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
+
+        colors = cmap3(np.linspace(0, 1, n))
+
+
+    if nn >= 3:
+        for j, par1 in enumerate(pars1):
+            z_int = np.linspace(0,12,13) #np.linspace(12,5,35)
+            a_arr = 1/(1+z_int)
+
+            UVLF_library = UVLF(1/(1+z_int), model, model_H, model_SFR, pars1, pars2, 1e8, f0)
+            Pk_arr = np.empty(shape=(len(pars2), len(z_int)), dtype='object')
+            for j, par2 in enumerate(pars2):
+                for i, z_i in enumerate(z_int):
+                    HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
+                    Pk_arr[j][i] = np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3
+            k = kvec/h
+            Masses = np.logspace(6,14,150)
+
+
+            iterable = [(a_arr, rhom, model, model_H, model_SFR, par1, par2, Masses, k, Pk_arr[i], f0) for i,par2 in enumerate(pars2)]
+            SFRD_obs = pool_cpu.starmap( UVLF_library.SFRD,tqdm(iterable, total=len(pars2)))
+
+
+            #print(SMF)
+            #Masses_star = SMF[0]
+            #SMF_obs = SMF[1]
+            for i in range(len(SFRD_obs)):
+                plt.plot(z_int, np.log10(SFRD_obs[i]), c = colors[j][i], lw = 1)
+                
+        line3 = ax_Pk.plot([0], [0], label=r'$\beta=0.1$', color='#66c2a5')   
+        line2 = ax_Pk.plot([0], [0], label=r'$\beta=0.3$', color='#fc8d62')
+        line1 = ax_Pk.plot([0], [0], label=r'$\beta=0.5$', color='#8da0cb')
+
+        legend1 = ax_Pk.legend(loc='upper right',fancybox=True, fontsize=10)
+        legend1.get_frame().set_facecolor('none')
+        legend1.get_frame().set_linewidth(0.0)
+        ax_Pk.add_artist(legend1)
+    else:
+        z_int = np.linspace(0,18,15) #np.linspace(12,5,35)
+        a_arr = 1/(1+z_int)
+
+        UVLF_library = UVLF(1/(1+z_int), model, model_H, model_SFR, pars1, par2, 1e8, f0)
+        Pk_arr = np.empty(shape=(len(pars1), len(z_int)), dtype='object')
+        for j, par1 in enumerate(pars1):
+            for i, z_i in enumerate(z_int):
+                HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
+                Pk_arr[j][i] = np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3
+        k = kvec/h
+        Masses = np.logspace(6,14,150)
+
+
+        iterable = [(a_arr, rhom, model, model_H, model_SFR, par1, par2, Masses, k, Pk_arr[i], f0) for i,par1 in enumerate(pars1)]
+        SFRD_obs = pool_cpu.starmap( UVLF_library.SFRD,tqdm(iterable, total=len(pars1)))
+
+
+        #print(SMF)
+        #Masses_star = SMF[0]
+        #SMF_obs = SMF[1]
+        for i in range(len(SFRD_obs)):
+            plt.plot(z_int, np.log10(SFRD_obs[i]), c = 'tab:blue', lw = 1)
+        
+        legend1 = ax_Pk.legend(loc='upper right',fancybox=True, fontsize=10)
+        legend1.get_frame().set_facecolor('none')
+        legend1.get_frame().set_linewidth(0.0)
+        ax_Pk.add_artist(legend1)
+            
+    #plt.errorbar(x.get('Duncan'),y.get('Duncan'),yerr=[yerr_down.get('Duncan'),yerr_up.get('Duncan')], c = 'tab:orange', capsize = 2, ls = 'None', marker = '.', label = r'$\rm Duncan+14$')
+    #plt.errorbar(x.get('Song'),y.get('Song'),yerr=[yerr_down.get('Song'),yerr_up.get('Song')], c = 'tab:orange', capsize = 2, ls = 'None', marker = 's', label = r'$\rm Song+16$')
+    #plines = plt.errorbar(x.get('Duncan'),y.get('Duncan'),yerr=[yerr_down.get('Duncan'),yerr_up.get('Duncan')],capsize=0,ecolor='tab:blue',color='w',marker='o',markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor='tab:blue')
+    #plines = plt.errorbar(x.get('Song'),y.get('Song'),yerr=[yerr_down.get('Song'),yerr_up.get('Song')],capsize=0,ecolor='tab:orange',color='w',marker='s',markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor='tab:orange')
+
+
+    #plines = plt.errorbar(x.get('Navarro'),y.get('Navarro'),yerr=[yerr_down.get('Navarro'),yerr_up.get('Navarro')],capsize=0,ecolor='k',color='w',marker=markers[j_data+1],markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor='k', label = r'$\rm Navarro+2024$')
+
+    # plt.scatter(1/a_vir-1, vir2, c = 'tab:orange')
+    plt.tight_layout()
+    plt.xlim(-1,19)
+    plt.ylim(-4.5,0)
+    if nn != 3 and nn != 4:
+        if nn % 2 == 0:
+            ax_Pk.set_xticklabels([])
+            ax_Pk.set_yticklabels([])
+            if nn == 2:
+                #cbar.ax.tick_params(size=8, width=2, direction='in')
+                """ax_divider = make_axes_locatable(ax_Pk)
+                norm = colorss.LogNorm(pars1.min(), pars1.max())
+                cax = ax_divider.append_axes("top", size="7%", pad="2%")
+                cb = fig.colorbar(mpl.cm.ScalarMappable(cmap=cmap3, norm=norm), cax=cax, orientation="horizontal", location = 'top')
+                cb.set_label(r'$r_c$', fontsize=16)
+                fig.colorbar(mappable, ax=axs)"""
+        else:
+            ax_Pk.set_xticklabels([])
+            ax_Pk.set_ylabel(r'$\log_{10}\rho_{\rm SFR}\;[M_\odot\;\rm Mpc^{-3}]$', size='16')
+    else:
+        if nn % 2 == 0:
+            ax_Pk.set_xlabel(r'$ \mathrm{Redshift}\;z$', size = '16')
+            ax_Pk.set_yticklabels([])
+        else:
+            ax_Pk.set_xlabel(r'$ \mathrm{Redshift}\;z$', size = '16')
+            ax_Pk.set_ylabel(r'$\log_{10}\rho_{\rm SFR}\;[M_\odot\;\rm Mpc^{-3}]$', size='16')
+
+    plt.grid(".")
+    
+    
+    
+    nn += 1
+
+
+
+mpl.rcParams['font.family'] = 'sans-serif'
+
+#norm = colorss.Norm(pars1.min(), pars1.max())
+norm = mpl.colors.Normalize(vmin=2.5, vmax = 4)
+ax_cbar = fig.add_axes([0.101, 0.9775, 0.8785, 0.01])
+cbar_ax = plt.colorbar(mpl.cm.ScalarMappable(cmap=cmap3, norm=norm), cax=ax_cbar, orientation='horizontal', location = 'top', ticks=LinearLocator(numticks=8))
+cbar_ax.set_label(r'$\log_{10}r_c$', fontsize=16)
+cbar_ax.ax.tick_params(width=1.5, length=5, which = 'major')
+cbar_ax.ax.tick_params(width=1.1, length=4, which = 'minor')
+cbar_ax.ax.xaxis.set_minor_locator(AutoMinorLocator())
+cbar_ax.ax.xaxis.set_major_formatter(mpl.ticker.FormatStrFormatter(r'$'+'%.2g'+r'$'))
+
+
+norm = mpl.colors.Normalize(vmin=0, vmax = 1)
+ax_cbar = fig.add_axes([0.101, 0.425, 0.8785, 0.01])
+cbar_ax = plt.colorbar(mpl.cm.ScalarMappable(cmap=mpl.cm.Greys, norm=norm), cax=ax_cbar, orientation='horizontal', location = 'bottom', ticks=LinearLocator(numticks=8))
+cbar_ax.set_label(r'$K_0$', fontsize=16)
+cbar_ax.ax.tick_params(width=1.5, length=5, which = 'major')
+cbar_ax.ax.tick_params(width=1.1, length=4, which = 'minor')
+cbar_ax.ax.xaxis.set_minor_locator(AutoMinorLocator())
+cbar_ax.ax.xaxis.set_major_formatter(mpl.ticker.FormatStrFormatter(r'$'+'%.2g'+r'$'))
 
 
 
 
-plt.grid(".")
-ax_Pk.set_xlabel(r'$M_\star\;[M_\odot]$', size = '16')
-ax_Pk.set_ylabel(r'$\phi_{\star}\;[\rm Mpc^{-3}\;dex^{-1}]$', size = '16')
-legend1 = ax_Pk.legend(loc='lower left',fancybox=True, fontsize=9)
-legend1.get_frame().set_facecolor('none')
-legend1.get_frame().set_linewidth(0.0)
-ax_Pk.add_artist(legend1)
+plt.tight_layout()
+plt.subplots_adjust(wspace=0, hspace=-0.0)
+
+
 
 """ac_arr = np.linspace(0.01, 1, 15)
 par1 = 500
@@ -502,10 +624,9 @@ plt.axhline(1.688, c='tab:blue', ls=':')
 
 
 par1 = 500
-par2 = 0
-ac_arr = np.linspace(0.01, 1, 15)
+model_H = 'nDGP'
+model_SFR = 'Puebla'
 
-for ac in ac_arr:
     deltac = delta_c(ac, model, model_H, par1, par2)
     dc = deltac.delta_c_at_ac(ac, model, model_H, par1, par2)
     plt.scatter(ac, dc, c='tab:orange')
@@ -624,5 +745,4 @@ plt.grid(".")
 """
 
 
-plt.tight_layout()
-plt.savefig('delta_c.pdf', bbox_inches='tight')
+plt.savefig('SFRD_screen.pdf', bbox_inches='tight')
