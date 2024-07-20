@@ -48,7 +48,7 @@ class UVLF:
         dlineardz0 = dlineardz_interp(0)
         alpha = []
         beta = []
-        Masses = np.logspace(8, 16, 500)
+        Masses = np.logspace(4, 16, 500)
         k = kvec/h
         Pk = np.array(Pk_library.Pk(1, model, par1, par2))*h**3
         for Mh0 in Masses:
@@ -100,26 +100,79 @@ class UVLF:
         SFR = fstar*dMdt
         return SFR
 
-    def SFRD(self, a_arr, rhoM, model, model_H, model_SFR, par1, par2, Masses, k, Pk, f0):
-        if hasattr(a_arr, '__len__') and (not isinstance(a_arr, str)):
-            SFRD = []
-            for i, a in tqdm(enumerate(a_arr)):
-                SFR_fid = self.SFR(a, rhoM, model, model_H,
-                                model_SFR, par1, par2, Masses, f0)
-                HMF_library = HMF(a, model, model_H, par1, par2, Masses)
-                HMF_fid = HMF_library.ST_mass_function(
-                    rhoM, Masses, a, model_H, model, par1, par2, k, Pk[i])
 
-                SFRD.append(scipy.integrate.trapz(HMF_fid*SFR_fid, Masses))
+
+     # Taken from https://hmf.readthedocs.io/en/latest/_modules/hmf/mass_function/integrate_hmf.html
+    def sfr_integral_gtm(self, M, dndm, SFR, mass_density=False):
+
+        # Eliminate NaN's
+        m = M[np.logical_not(np.isnan(dndm))]
+        dndm = dndm[np.logical_not(np.isnan(dndm))]
+        sfr = SFR[np.logical_not(np.isnan(dndm))]
+        dndlnm = sfr * dndm
+
+        if len(m) < 4:
+            raise JWST_MG.SMD.NaNException(
+                "There are too few real numbers in dndm: len(dndm) = %s, #NaN's = %s"
+                % (len(M), len(M) - len(dndm))
+            )
+
+        # Calculate the mass function (and its integral) from the highest M up to 10**18
+        if m[-1] < m[0] * 10**18 / m[3]:
+            m_upper = np.arange(
+                np.log(m[-1]), np.log(10**18), np.log(m[1]) - np.log(m[0])
+            )
+            mf_func = spline(np.log(m), np.log(dndlnm), k=1)
+            mf = mf_func(m_upper)
+
+            if not mass_density:
+                int_upper = intg.simps(
+                    np.exp(mf), dx=m_upper[2] - m_upper[1], even="first")
+            else:
+                int_upper = intg.simps(
+                    np.exp(m_upper + mf), dx=m_upper[2] - m_upper[1], even="first"
+                )
         else:
-            a = a_arr
+            int_upper = 0
+
+        # Calculate the cumulative integral (backwards) of [m*]dndlnm
+        if not mass_density:
+            ngtm = np.concatenate(
+                (
+                    intg.cumtrapz(
+                        dndlnm[::-1], dx=np.log(m[1]) - np.log(m[0]))[::-1],
+                    np.zeros(1),
+                )
+            )
+        else:
+            ngtm = np.concatenate(
+                (
+                    intg.cumtrapz(m[::-1] * dndm[::-1] * sfr, dx=np.log(m[1]) - np.log(m[0]))[
+                        ::-1
+                    ],
+                    np.zeros(1),
+                )
+            )
+
+        return ngtm + int_upper
+
+
+    def SFRD(self, a_arr, rhoM, model, model_H, model_SFR, par1, par2, Masses_arr, k, Pk, f0):
+        if hasattr(a_arr, '__len__') and (not isinstance(a_arr, str)):
+            pass
+        else:
+            Masses = [Masses_arr]
+        
+        SFRD = []
+        for i, a in tqdm(enumerate(a_arr)):
+            Masses = Masses_arr[i]
             SFR_fid = self.SFR(a, rhoM, model, model_H,
                             model_SFR, par1, par2, Masses, f0)
             HMF_library = HMF(a, model, model_H, par1, par2, Masses)
             HMF_fid = HMF_library.ST_mass_function(
-                rhoM, Masses, a, model_H, model, par1, par2, k, Pk)
+                rhoM, Masses, a, model_H, model, par1, par2, k, Pk[i])
+            SFRD.append(self.sfr_integral_gtm(Masses, HMF_fid, SFR_fid, mass_density=True)[0])
 
-            SFRD = scipy.integrate.trapz(HMF_fid*SFR_fid, Masses)
         return SFRD
 
     # SFR to MUV confertion

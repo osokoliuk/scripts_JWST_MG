@@ -86,59 +86,6 @@ class SMD:
 
         return ngtm + int_upper
 
-     # Taken from https://hmf.readthedocs.io/en/latest/_modules/hmf/mass_function/integrate_hmf.html
-    def sfr_integral_gtm(self, M, dndm, SFR, mass_density=False):
-
-        # Eliminate NaN's
-        m = M[np.logical_not(np.isnan(dndm))]
-        dndm = dndm[np.logical_not(np.isnan(dndm))]
-        dndlnm = m * dndm
-        sfr = SFR[np.logical_not(np.isnan(dndm))]
-
-        if len(m) < 4:
-            raise JWST_MG.SMD.NaNException(
-                "There are too few real numbers in dndm: len(dndm) = %s, #NaN's = %s"
-                % (len(M), len(M) - len(dndm))
-            )
-
-        # Calculate the mass function (and its integral) from the highest M up to 10**18
-        if m[-1] < m[0] * 10**18 / m[3]:
-            m_upper = np.arange(
-                np.log(m[-1]), np.log(10**18), np.log(m[1]) - np.log(m[0])
-            )
-            mf_func = spline(np.log(m), np.log(dndlnm), k=1)
-            mf = mf_func(m_upper)
-
-            if not mass_density:
-                int_upper = intg.simps(
-                    np.exp(mf), dx=m_upper[2] - m_upper[1], even="first")
-            else:
-                int_upper = intg.simps(
-                    np.exp(m_upper + mf), dx=m_upper[2] - m_upper[1], even="first"
-                )
-        else:
-            int_upper = 0
-
-        # Calculate the cumulative integral (backwards) of [m*]dndlnm
-        if not mass_density:
-            ngtm = np.concatenate(
-                (
-                    intg.cumtrapz(
-                        dndlnm[::-1], dx=np.log(m[1]) - np.log(m[0]))[::-1],
-                    np.zeros(1),
-                )
-            )
-        else:
-            ngtm = np.concatenate(
-                (
-                    intg.cumtrapz(m[::-1] * dndm[::-1] * sfr, dx=np.log(m[1]) - np.log(m[0]))[
-                        ::-1
-                    ],
-                    np.zeros(1),
-                )
-            )
-
-        return ngtm + int_upper
 
     def SMD(self, Masses, rhoM, a, model_H, model, model_SFR, par1, par2, k, Pk, f0):
         HMF_library = HMF(a, model, model_H, par1, par2, Masses)

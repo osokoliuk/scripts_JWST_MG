@@ -23,6 +23,7 @@ from JWST_MG.cosmological_functions import cosmological_functions
 from JWST_MG.constants import *
 from JWST_MG.HMF import HMF
 from JWST_MG.SMD import SMD
+from JWST_MG.SMF import SMF
 from JWST_MG.UVLF import UVLF
 import matplotlib.colors as colorss
 
@@ -294,6 +295,8 @@ fig = plt.figure(figsize=(4.25*2*.95*0.9, 2*5*1.05*0.9))
 
 nn = 1
 z_smf_arr = [0]
+pool_cpu = Pool(8)
+
 
 for z_smf in z_smf_arr:
     ax_Pk = plt.subplot(4,2,nn)
@@ -341,7 +344,6 @@ for z_smf in z_smf_arr:
 
 
 
-    pool_cpu = Pool(8)
 
     if nn % 2 == 0:
         model_SFR = 'double_power'
@@ -378,20 +380,25 @@ for z_smf in z_smf_arr:
 
     if nn >= 3:
         for j, par1 in enumerate(pars1):
-            z_int = np.linspace(0,12,13) #np.linspace(12,5,35)
+            z_int = np.linspace(0,12,20) #np.linspace(12,5,35)
             a_arr = 1/(1+z_int)
 
             UVLF_library = UVLF(1/(1+z_int), model, model_H, model_SFR, pars1, pars2, 1e8, f0)
             Pk_arr = np.empty(shape=(len(pars2), len(z_int)), dtype='object')
+            Masses_arr = np.empty(shape=(len(pars2), len(z_int)), dtype='object')
             for j, par2 in enumerate(pars2):
                 for i, z_i in enumerate(z_int):
                     HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
                     Pk_arr[j][i] = np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3
+                    Masses = np.logspace(6,16,150)
+                    SMF_library = SMF(1/(1+z_i), model, model_H, model_SFR, par1, par2, Masses, f0)
+                    Mstar = Omegab0/Omegam0*Masses*SMF_library.epsilon(Masses, model_SFR, 1/(1+z_i), f0)
+                    idx = np.argmin(np.abs(Mstar - 1e8))
+                    Masses_arr[j][i] = Masses[idx:-1]
             k = kvec/h
-            Masses = np.logspace(6,14,150)
 
 
-            iterable = [(a_arr, rhom, model, model_H, model_SFR, par1, par2, Masses, k, Pk_arr[i], f0) for i,par2 in enumerate(pars2)]
+            iterable = [(a_arr, rhom, model, model_H, model_SFR, par1, par2, Masses_arr[i], k, Pk_arr[i], f0) for i,par2 in enumerate(pars2)]
             SFRD_obs = pool_cpu.starmap( UVLF_library.SFRD,tqdm(iterable, total=len(pars2)))
 
 
@@ -410,20 +417,27 @@ for z_smf in z_smf_arr:
         legend1.get_frame().set_linewidth(0.0)
         ax_Pk.add_artist(legend1)
     else:
-        z_int = np.linspace(0,18,15) #np.linspace(12,5,35)
+        z_int = np.linspace(5,15,10) #np.linspace(12,5,35)
         a_arr = 1/(1+z_int)
 
         UVLF_library = UVLF(1/(1+z_int), model, model_H, model_SFR, pars1, par2, 1e8, f0)
         Pk_arr = np.empty(shape=(len(pars1), len(z_int)), dtype='object')
+        Masses_arr = np.empty(shape=(len(pars1), len(z_int)), dtype='object')
         for j, par1 in enumerate(pars1):
             for i, z_i in enumerate(z_int):
                 HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
                 Pk_arr[j][i] = np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3
+                Masses = np.logspace(4,16,250)                
+                SMF_library = SMF(1/(1+z_i), model, model_H, model_SFR, par1, par2, Masses, f0)
+                Mstar = Omegab0/Omegam0*Masses*SMF_library.epsilon(Masses, model_SFR, 1/(1+z_i), f0)
+                idx = np.argmin(np.abs(Mstar - 1e8))
+                Masses_arr[j][i] = Masses[idx:-1]
         k = kvec/h
-        Masses = np.logspace(6,14,150)
 
 
-        iterable = [(a_arr, rhom, model, model_H, model_SFR, par1, par2, Masses, k, Pk_arr[i], f0) for i,par1 in enumerate(pars1)]
+        
+
+        iterable = [(a_arr, rhom, model, model_H, model_SFR, par1, par2, Masses_arr[i], k, Pk_arr[i], f0) for i,par1 in enumerate(pars1)]
         SFRD_obs = pool_cpu.starmap( UVLF_library.SFRD,tqdm(iterable, total=len(pars1)))
 
 
@@ -431,13 +445,16 @@ for z_smf in z_smf_arr:
         #Masses_star = SMF[0]
         #SMF_obs = SMF[1]
         for i in range(len(SFRD_obs)):
-            plt.plot(z_int, np.log10(SFRD_obs[i]), c = 'tab:blue', lw = 1)
+            plt.plot(z_int, np.log10(SFRD_obs[i]), c = colors[i], lw = 1)
         
         legend1 = ax_Pk.legend(loc='upper right',fancybox=True, fontsize=10)
         legend1.get_frame().set_facecolor('none')
         legend1.get_frame().set_linewidth(0.0)
         ax_Pk.add_artist(legend1)
-            
+
+        x = [5.182,6.374,7.495,8.224,9.065,9.822,10.579,11.322]
+        y = [0.023,0.016,0.009,0.005,0.003,0.002,0.001,0]    
+        ax_Pk.plot(x,np.log10(y),c = 'tab:orange', lw = 2)
     #plt.errorbar(x.get('Duncan'),y.get('Duncan'),yerr=[yerr_down.get('Duncan'),yerr_up.get('Duncan')], c = 'tab:orange', capsize = 2, ls = 'None', marker = '.', label = r'$\rm Duncan+14$')
     #plt.errorbar(x.get('Song'),y.get('Song'),yerr=[yerr_down.get('Song'),yerr_up.get('Song')], c = 'tab:orange', capsize = 2, ls = 'None', marker = 's', label = r'$\rm Song+16$')
     #plines = plt.errorbar(x.get('Duncan'),y.get('Duncan'),yerr=[yerr_down.get('Duncan'),yerr_up.get('Duncan')],capsize=0,ecolor='tab:blue',color='w',marker='o',markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor='tab:blue')
@@ -447,8 +464,7 @@ for z_smf in z_smf_arr:
     #plines = plt.errorbar(x.get('Navarro'),y.get('Navarro'),yerr=[yerr_down.get('Navarro'),yerr_up.get('Navarro')],capsize=0,ecolor='k',color='w',marker=markers[j_data+1],markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor='k', label = r'$\rm Navarro+2024$')
 
     # plt.scatter(1/a_vir-1, vir2, c = 'tab:orange')
-    plt.tight_layout()
-    plt.xlim(-1,19)
+    plt.xlim(5,15)
     plt.ylim(-4.5,0)
     if nn != 3 and nn != 4:
         if nn % 2 == 0:
@@ -478,8 +494,6 @@ for z_smf in z_smf_arr:
     
     
     nn += 1
-
-
 
 mpl.rcParams['font.family'] = 'sans-serif'
 
