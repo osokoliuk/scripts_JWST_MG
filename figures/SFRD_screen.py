@@ -294,8 +294,17 @@ fig = plt.figure(figsize=(4.25*2*.95*0.9, 2*5*1.05*0.9))
 
 
 nn = 1
-z_smf_arr = [0]
+z_smf_arr = [0,1,2,3]
 pool_cpu = Pool(8)
+
+
+def FindValueIndex(seq, val):
+    r = np.where(np.diff(np.sign(seq - val)) != 0)
+    idx = r + (val - seq[r]) / (seq[r + np.ones_like(r)] - seq[r])
+    idx = np.append(idx, np.where(seq == val))
+    idx = np.sort(idx)
+    return int(np.round(idx)[0])
+
 
 
 for z_smf in z_smf_arr:
@@ -357,15 +366,7 @@ for z_smf in z_smf_arr:
         pars1 = np.array([0.1, 0.3, 0.5])
         n = len(pars2)
         f0 = 0.21
-        cmap1 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#66c2a5"]) 
-        cmap2 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#fc8d62"]) 
-        cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
 
-        cmap = np.array([cmap1, cmap2, cmap3])
-        colors = [None]*3
-        colors[0] = cmap[0]((np.linspace(0, 1, n)))
-        colors[1] = cmap[1]((np.linspace(0, 1, n)))
-        colors[2] = cmap[2]((np.linspace(0, 1, n)))
     else:
         model = 'nDGP'
         model_H = 'nDGP'
@@ -379,8 +380,18 @@ for z_smf in z_smf_arr:
 
 
     if nn >= 3:
-        for j, par1 in enumerate(pars1):
-            z_int = np.linspace(0,12,20) #np.linspace(12,5,35)
+        cmap1 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#66c2a5"]) 
+        cmap2 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#fc8d62"]) 
+        cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
+
+        cmap = np.array([cmap1, cmap2, cmap3])
+        colors = [None]*3
+        colors[0] = cmap[0]((np.linspace(0, 1, n)))
+        colors[1] = cmap[1]((np.linspace(0, 1, n)))
+        colors[2] = cmap[2]((np.linspace(0, 1, n)))
+
+        for ll, par1 in enumerate(pars1):
+            z_int = np.linspace(0,18,19) #np.linspace(12,5,35)
             a_arr = 1/(1+z_int)
 
             UVLF_library = UVLF(1/(1+z_int), model, model_H, model_SFR, pars1, pars2, 1e8, f0)
@@ -390,10 +401,10 @@ for z_smf in z_smf_arr:
                 for i, z_i in enumerate(z_int):
                     HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
                     Pk_arr[j][i] = np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3
-                    Masses = np.logspace(5,18,250)                
+                    Masses = np.logspace(8,18,350)                
                     SMF_library = SMF(1/(1+z_i), model, model_H, model_SFR, par1, par2, Masses, f0)
                     Mstar = Omegab0/Omegam0*Masses*SMF_library.epsilon(Masses, model_SFR, 1/(1+z_i), f0)
-                    idx = np.argmin(np.abs(Mstar - 1e8))
+                    idx = FindValueIndex(Mstar,1e8)
                     Masses_arr[j][i] = Masses[idx:-1]
             k = kvec/h
 
@@ -406,7 +417,7 @@ for z_smf in z_smf_arr:
             #Masses_star = SMF[0]
             #SMF_obs = SMF[1]
             for i in range(len(SFRD_obs)):
-                plt.plot(z_int, np.log10(SFRD_obs[i]), c = colors[j][i], lw = 1)
+                plt.plot(z_int, np.log10(SFRD_obs[i]), c = colors[ll][i], lw = 1)
                 
         line3 = ax_Pk.plot([0], [0], label=r'$\beta=0.1$', color='#66c2a5')   
         line2 = ax_Pk.plot([0], [0], label=r'$\beta=0.3$', color='#fc8d62')
@@ -427,10 +438,10 @@ for z_smf in z_smf_arr:
             for i, z_i in enumerate(z_int):
                 HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
                 Pk_arr[j][i] = np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3
-                Masses = np.logspace(5,18,350)                
+                Masses = np.logspace(8,18,350)                
                 SMF_library = SMF(1/(1+z_i), model, model_H, model_SFR, par1, par2, Masses, f0)
                 Mstar = Omegab0/Omegam0*Masses*SMF_library.epsilon(Masses, model_SFR, 1/(1+z_i), f0)
-                idx = np.argmin(np.abs(Mstar - 1e8))
+                idx = FindValueIndex(Mstar,1e8)
                 Masses_arr[j][i] = Masses[idx:-1]
         k = kvec/h
 
