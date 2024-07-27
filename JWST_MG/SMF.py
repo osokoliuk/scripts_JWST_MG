@@ -91,10 +91,8 @@ class SMF:
         elif model_SFR == 'Puebla':
             epstar = self.puebla17_mh_to_ms(Mh, z)
         elif model_SFR == 'double_power':
-            Mp = 10**12.1
-            alo = -1.32
-            ahi = 0.43
-            epstar = f0/((Mh/Mp)**(alo) + (Mh/Mp)**(ahi))
+            fsfe = 1.
+            epstar = fsfe * 2 * 0.1 / ( (Mh/10**(12.0))**0.5 + (Mh/10**(12.0))**(-0.6) )
         else:
             raise Exception("Incorrect SFR model used.")
         return epstar

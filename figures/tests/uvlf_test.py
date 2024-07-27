@@ -10,12 +10,12 @@ import matplotlib.cm as cm
 ax = plt.subplot(111)
 model = 'nDGP'
 model_H = 'nDGP'
-model_SFR = 'toy'
+model_SFR = 'double_power'
 
 par1 = 1e9
 par2 = 1
 
-f0 = 0.05
+f0 = 0.21
 
 ######################################################################
 
@@ -28,17 +28,28 @@ Pk_arr = []
 HMF_library = HMF(a, model, model_H, par1, par2, 1e8)
 Pk = np.array(HMF_library.Pk(a, model, par1, par2))*h**3
 k = kvec/h
+def sigma_uv_vs_mhalo_alt2(log_mhalo, yfloor, delta, ymax=2.0):
+    y = 1.1 - 0.34 * (log_mhalo - 10) + delta
+
+    if yfloor + delta > ymax:
+        return np.ones_like(log_mhalo) * (yfloor + delta)
+
+    yfloor = max(yfloor, 0)
+    y[y<yfloor] = yfloor
+    y[y>ymax] = ymax
+    return y
+sigma_uv = sigma_uv_vs_mhalo_alt2(np.log10(Masses),0.2,0.0)
 
 
 SMD_obs = UVLF(a, model, model_H, model_SFR, par1, par2, Masses, f0)
 MUV, UVLF = SMD_obs.compute_uv_luminosity_function(
-    a, rhom, model, model_H, model_SFR, par1, par2, Masses, k, Pk, f0, dust_norm ="fixed", include_dust=False, sigma_uv=0.4)
+    a, rhom, model, model_H, model_SFR, par1, par2, Masses, k, Pk, f0, dust_norm ="fixed", include_dust=True, sigma_uv=sigma_uv)
 
 plt.plot(MUV, np.log10(UVLF))
 # print(alpha, beta)
 
 data = np.loadtxt(
-    'data.txt'
+    'data_uvlf.txt'
 )
 x = data[:, 0]
 y = data[:, 1]

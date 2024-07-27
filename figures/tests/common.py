@@ -154,3 +154,9 @@ my_mf_nu=hmf.MassFunction(Mmin=min_mval_nu_log10, Mmax=max_mval_nu_log10,
                           transfer_model=hmf.density_field.transfer_models.CAMB,
                           transfer_params={'extrapolate_with_eh':True})
 
+
+
+def reion(reion_arr, a, rhom, model, model_H, model_SFR, par1, par2, f0):
+        return reion_arr.QHII(a, rhom, model, model_H, model_SFR, par1, par2, f0)
+
+

@@ -443,6 +443,7 @@ fig = plt.figure(figsize=(4.25*2*.95*0.9, 2*5*1.05*0.9))
 
 nn = 1
 z_smf_arr = [4]
+pool_cpu = Pool(8)
 
 for z_smf in z_smf_arr:
     ax_Pk = plt.subplot(4,2,nn)
@@ -464,7 +465,7 @@ for z_smf in z_smf_arr:
 
 
 
-    obs = number_density(feature='GLF_UV', z_target=z_smf, h=h)
+    """    obs = number_density(feature='GLF_UV', z_target=z_smf, h=h)
     j_data = 0
     k_func = 0
     colors         = ['#e41a1c','#377eb8','#4daf4a','#984ea3',\
@@ -505,17 +506,16 @@ for z_smf in z_smf_arr:
         ax_Pk.errorbar(-100, 1, yerr=1,capsize=2,ecolor=color,color='w',marker='^',markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3, label = r'$\rm JWST$')
 
 
-
-    pool_cpu = Pool(8)
+    """
 
     model = 'nDGP'
     model_H = 'nDGP'
     model_SFR = 'double_power'
-    pars1 = np.logspace(2.5,4,10)
+    pars1 = np.logspace(6,4,1)
     par2 = 0
     f0 = 0.21
     n = len(pars1)
-    cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
+    cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","royalblue"])
 
     colors = cmap3(np.linspace(0, 1, n))
     
@@ -524,38 +524,34 @@ for z_smf in z_smf_arr:
         HMF_library = HMF(1/(1+z_smf), model, model_H, par1, par2, 1e8)
         Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_smf), model, par1, par2))*h**3)
     k = kvec/h
-    Masses = np.logspace(6,16,150)
+    Masses = np.logspace(6,16,250)
+    phi_halo_arr = HMF_library.ST_mass_function(
+            rhom, Masses, 1/(1+z_smf), model_H, model, par1, par2, k, Pk_arr[0])
+    #ax_Pk.plot(np.log10(Masses),np.log10(phi_halo_arr*np.log(10)*Masses))
+    x_1 = np.log10(Masses)
+    y_1 = phi_halo_arr*Masses*np.log(10)
 
+    data = np.loadtxt('test_hmf.txt')
+    x = data[:,0]
+    y = data[:,1]
+    interp = interp1d(x, y, kind='linear', fill_value='extrapolate')
+    #ax_Pk.plot(x_1, y_1)
+    ax_Pk.plot(x_1, interp(x_1)/y_1)
 
-    UVLF_library = UVLF(1/(1+z_smf), model, model_H, model_SFR, pars1, par2, Masses, f0)
+    #plt.ylim(0,5)
+    #plt.ylim(1e9,1e12)
+    plt.yscale('log')
+    plt.xlim(10,15)
+    """UVLF_library = UVLF(1/(1+z_smf), model, model_H, model_SFR, pars1, par2, Masses, f0)
 
     sigma_uv = 0.4
-    iterable = [(1/(1+z_smf), rhom, model, model_H, model_SFR, par1, par2, Masses, k, Pk_arr[i], f0, sigma_uv) for i,par1 in enumerate(pars1)]
+    #sigma_uv = None
+    variable_sigma_uv = None #-0.34-4.5*np.log10(Masses)
+    iterable = [(1/(1+z_smf), rhom, model, model_H, model_SFR, par1, par2, Masses, k, Pk_arr[i], f0, sigma_uv, variable_sigma_uv) for i,par1 in enumerate(pars1)]
     MUV, UVLF_obs = zip(*pool_cpu.starmap(UVLF_library.compute_uv_luminosity_function,tqdm(iterable, total=len(pars1))))
     for i in range(len(UVLF_obs)):
         ax_Pk.plot(MUV[i], np.log10(UVLF_obs[i]), c = colors[i], lw=  1)
-
-    pars1 = np.array([1e8])
-    Pk_arr = []
-    for par1 in pars1:
-        HMF_library = HMF(1/(1+z_smf), model, model_H, par1, par2, 1e8)
-        Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_smf), model, par1, par2))*h**3)
-    k = kvec/h
-    Masses = np.logspace(5,19,250)
-
-    UVLF_library = UVLF(1/(1+z_smf), model, model_H, model_SFR, pars1, par2, Masses, f0)
-
-    sigmas = np.array([2,4])
-    iterable = [(1/(1+z_smf), rhom, model, model_H, model_SFR, par1, par2, Masses, k, Pk_arr[0], f0, sigma_uv) for sigma_uv in sigmas]
-    MUV, UVLF_obs = zip(*pool_cpu.starmap(UVLF_library.compute_uv_luminosity_function,tqdm(iterable, total=len(sigmas))))
-    for i in range(len(UVLF_obs)):
-        line, = ax_Pk.plot(MUV[i], np.log10(UVLF_obs[i]), c = 'k', lw=4, alpha=0.2)
-        if nn == 8:
-            line_annotate(r'$\sigma_{\rm UV}=' + str(sigmas[i]) + '$',line,-22.5, c = 'tab:gray', fontsize = 9)
-        else:
-            line_annotate(r'$\sigma_{\rm UV}=' + str(sigmas[i]) + '$',line,-23, c = 'tab:gray', fontsize = 9)
-    
-
+    """
 
     #ax_Pk.fill_between(np.log10(Masses_star[2]), np.log10(SMF_obs[0]), np.log10(SMF_obs[2]), color='tab:gray', alpha=0.3)
 
@@ -568,12 +564,12 @@ for z_smf in z_smf_arr:
     #plines = plt.errorbar(x.get('Navarro'),y.get('Navarro'),yerr=[yerr_down.get('Navarro'),yerr_up.get('Navarro')],capsize=0,ecolor='k',color='w',marker=markers[j_data+1],markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor='k', label = r'$\rm Navarro+2024$')
 
     # plt.scatter(1/a_vir-1, vir2, c = 'tab:orange')
-    ax_Pk.set_xlim(-26,-11)
-    plt.ylim(-8,0)
+    #ax_Pk.set_xlim(-26,-11)
+    #plt.ylim(-8,0)
 
 
 
-    if nn != 7 and nn != 8:
+    """ if nn != 7 and nn != 8:
         if nn % 2 == 0:
             ax_Pk.set_xticklabels([])
             ax_Pk.set_yticklabels([])
@@ -595,7 +591,7 @@ for z_smf in z_smf_arr:
             ax_Pk.set_ylabel(r'$\log_{10}\phi_{\rm UV}\;[\rm Mpc^{-3}]$', size = '16')
             nbins = len(ax_Pk.get_yticklabels())
             ax_Pk.yaxis.set_major_locator(MaxNLocator(nbins=nbins,prune='upper'))
-
+    """
     plt.grid(".")
     
     ax_Pk.text(0.79,0.85,r'$z='+str(int(round(z_smf)))+r'$', size = '15', transform=ax_Pk.transAxes)
@@ -607,169 +603,6 @@ for z_smf in z_smf_arr:
     
     nn += 1
 
-
-
-
-nn = 2
-z_smf_arr = [5,6,7,8,9,10,12]
-
-for z_smf in z_smf_arr:
-    ax_Pk = plt.subplot(4,2,nn)
-
-    
-    ax_Pk.xaxis.set_minor_locator(AutoMinorLocator())
-    ax_Pk.yaxis.set_minor_locator(AutoMinorLocator())
-
-
-    plt.tick_params(axis='both', which='major', direction="in",
-                    labelsize=14, length=5, top=True, right=True, width = 1.5)
-    plt.tick_params(axis='both', which='minor', direction="in",
-                    labelsize=11, length=4, top=True, right=True, width = 1.1)
-    plt.tick_params(axis='both', which='major',
-                    direction="in", labelsize=14, length=5, width = 1.5)
-    plt.tick_params(axis='both', which='minor',
-                    direction="in", labelsize=11, length=4, width = 1.1)
-
-
-
-
-    obs = number_density(feature='GLF_UV', z_target=z_smf, h=h)
-    j_data = 0
-    k_func = 0
-    colors         = ['#e41a1c','#377eb8','#4daf4a','#984ea3',\
-                    '#ff7f00','#a65628','#f781bf','#999999']*4
-    color_maps     = ['Reds', 'Blues', 'Greens'] *4
-    markers        = ['o','s','v','^','<','>','p','*','D','.','8']*4
-    linestyles     = ['-','--','-.',':']*4
-
-    for ii in range(obs.n_target_observation):
-        data       = obs.target_observation['Data'][ii]
-        label      = obs.target_observation.index[ii]
-        datatype   = obs.target_observation['DataType'][ii]
-        color = 'tab:gray'
-        marker     = '.'
-        linestyle  = linestyles[k_func]
-        if datatype == 'data':
-            data[:,1:] = np.log10(data[:,1:])
-            if  ii == 0:
-                ind_3 = np.argwhere(np.isnan(data[:,3]))
-                ind_2 = np.argwhere(np.isnan(data[:,2]))
-                data[ind_3,3] = data[ind_3,2]
-                data[ind_2,2] = data[ind_2,3]
-                
-                ax_Pk.errorbar(data[:,0],  data[:,1],yerr = np.abs([data[:,1]-data[:,3],data[:,2]- data[:,1]]),\
-                            label=r'$\rm pre-JWST$',capsize=2,ecolor=color,color='w',marker=marker,markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3)
-            else:
-                ax_Pk.errorbar(data[:,0],  data[:,1],yerr = np.abs([data[:,1]-data[:,3],data[:,2]- data[:,1]]),\
-                        capsize=2,ecolor=color,color='w',marker=marker,markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3)
-            
-            j_data +=1
-
-
-    color = 'k'
-    marker='^'
-    plot_specz_constraints(redshift=int(z_smf), ax=ax_Pk,capsize=2,ecolor=color,color='w',marker='^',markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3)
-
-    if z_smf in [12,10,9]:
-        ax_Pk.errorbar(-100, 1, yerr=1,capsize=2,ecolor=color,color='w',marker='^',markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3, label = r'$\rm JWST$')
-
-
-    model = 'nDGP'
-    model_H = 'nDGP'
-    model_SFR = 'double_power'
-    pars1 = np.logspace(2.5,4,10)
-    par2 = 0
-    f0 = 0.21
-    n = len(pars1)
-    cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
-
-    colors = cmap3(np.linspace(0, 1, n))
-    
-    Pk_arr = []
-    for par1 in pars1:
-        HMF_library = HMF(1/(1+z_smf), model, model_H, par1, par2, 1e8)
-        Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_smf), model, par1, par2))*h**3)
-    k = kvec/h
-    Masses = np.logspace(6,16,150)
-
-
-    UVLF_library = UVLF(1/(1+z_smf), model, model_H, model_SFR, pars1, par2, Masses, f0)
-
-    sigma_uv = 0.4
-    iterable = [(1/(1+z_smf), rhom, model, model_H, model_SFR, par1, par2, Masses, k, Pk_arr[i], f0, sigma_uv) for i,par1 in enumerate(pars1)]
-    MUV, UVLF_obs = zip(*pool_cpu.starmap(UVLF_library.compute_uv_luminosity_function,tqdm(iterable, total=len(pars1))))
-    for i in range(len(UVLF_obs)):
-        ax_Pk.plot(MUV[i], np.log10(UVLF_obs[i]), c = colors[i], lw=  1)
-
-    pars1 = np.array([1e8])
-    Pk_arr = []
-    for par1 in pars1:
-        HMF_library = HMF(1/(1+z_smf), model, model_H, par1, par2, 1e8)
-        Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_smf), model, par1, par2))*h**3)
-    k = kvec/h
-    Masses = np.logspace(5,19,250)
-
-    UVLF_library = UVLF(1/(1+z_smf), model, model_H, model_SFR, pars1, par2, Masses, f0)
-
-    sigmas = np.array([2,4])
-    iterable = [(1/(1+z_smf), rhom, model, model_H, model_SFR, par1, par2, Masses, k, Pk_arr[0], f0, sigma_uv) for sigma_uv in sigmas]
-    MUV, UVLF_obs = zip(*pool_cpu.starmap(UVLF_library.compute_uv_luminosity_function,tqdm(iterable, total=len(sigmas))))
-    for i in range(len(UVLF_obs)):
-        line, = ax_Pk.plot(MUV[i], np.log10(UVLF_obs[i]), c = 'k', lw=4, alpha=0.2)
-        if nn == 8:
-            line_annotate(r'$\sigma_{\rm UV}=' + str(sigmas[i]) + '$',line,-22.5, c = 'tab:gray', fontsize = 9)
-        else:
-            line_annotate(r'$\sigma_{\rm UV}=' + str(sigmas[i]) + '$',line,-23, c = 'tab:gray', fontsize = 9)
-    
-
-    
-    #ax_Pk.fill_between(np.log10(Masses_star[2]), np.log10(SMF_obs[0]), np.log10(SMF_obs[2]), color='tab:gray', alpha=0.3)
-
-    #plt.errorbar(x.get('Duncan'),y.get('Duncan'),yerr=[yerr_down.get('Duncan'),yerr_up.get('Duncan')], c = 'tab:orange', capsize = 2, ls = 'None', marker = '.', label = r'$\rm Duncan+14$')
-    #plt.errorbar(x.get('Song'),y.get('Song'),yerr=[yerr_down.get('Song'),yerr_up.get('Song')], c = 'tab:orange', capsize = 2, ls = 'None', marker = 's', label = r'$\rm Song+16$')
-    #plines = plt.errorbar(x.get('Duncan'),y.get('Duncan'),yerr=[yerr_down.get('Duncan'),yerr_up.get('Duncan')],capsize=0,ecolor='tab:blue',color='w',marker='o',markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor='tab:blue')
-    #plines = plt.errorbar(x.get('Song'),y.get('Song'),yerr=[yerr_down.get('Song'),yerr_up.get('Song')],capsize=0,ecolor='tab:orange',color='w',marker='s',markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor='tab:orange')
-
-
-    #plines = plt.errorbar(x.get('Navarro'),y.get('Navarro'),yerr=[yerr_down.get('Navarro'),yerr_up.get('Navarro')],capsize=0,ecolor='k',color='w',marker=markers[j_data+1],markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor='k', label = r'$\rm Navarro+2024$')
-
-    # plt.scatter(1/a_vir-1, vir2, c = 'tab:orange')
-    ax_Pk.set_xlim(-26,-11)
-    plt.ylim(-8,0)
-
-    if nn != 7 and nn != 8:
-        if nn % 2 == 0:
-            ax_Pk.set_xticklabels([])
-            ax_Pk.set_yticklabels([])
-        else:
-            if nn == 1:
-                nbins = len(ax_Pk.get_yticklabels())
-                ax_Pk.yaxis.set_major_locator(MaxNLocator(nbins=nbins,prune='lower'))
-            else:
-                nbins = len(ax_Pk.get_yticklabels())
-                ax_Pk.yaxis.set_major_locator(MaxNLocator(nbins=nbins,prune='both'))
-            ax_Pk.set_xticklabels([])
-            ax_Pk.set_ylabel(r'$\log_{10}\phi_{\rm UV}\;[\rm Mpc^{-3}]$', size = '16')
-    else:
-        if nn % 2 == 0:
-            ax_Pk.set_xlabel(r'$M_{\rm UV}\;[\rm mag]$', size = '16')
-            ax_Pk.set_yticklabels([])
-        else:
-            ax_Pk.set_xlabel(r'$M_{\rm UV}\;[\rm mag]$', size = '16')
-            ax_Pk.set_ylabel(r'$\log_{10}\phi_{\rm UV}\;[\rm Mpc^{-3}]$', size = '16')
-            nbins = len(ax_Pk.get_yticklabels())
-            ax_Pk.yaxis.set_major_locator(MaxNLocator(nbins=nbins,prune='upper'))
-
-    plt.grid(".")
-    
-    ax_Pk.text(0.79,0.85,r'$z='+str(int(round(z_smf)))+r'$', size = '15', transform=ax_Pk.transAxes)
-    
-    legend1 = ax_Pk.legend(loc='upper left',fancybox=True, fontsize=10)
-    legend1.get_frame().set_facecolor('none')
-    legend1.get_frame().set_linewidth(0.0)
-    ax_Pk.add_artist(legend1)
-    
-    nn += 1
 
 
 

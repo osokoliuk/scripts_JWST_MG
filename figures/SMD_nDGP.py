@@ -313,17 +313,45 @@ for z_smf in z_smf_arr:
 
 
     if z_smf == 8:
-        data = np.loadtxt('/home/oleksii/codes/scripts_JWST_MG/observational_data/SMD/JWST_z8.txt')
+        f = np.genfromtxt("../observational_data/Desprez2024_MassiveGal.dat", names=True)
+        sel = f['type'] == 0
+        ax_Pk.errorbar(f['Mstar'][sel], f['Phi'][sel], 
+                    marker = '+', linestyle='none', color='darkcyan', mec='darkcyan', ms=12, mew=2,
+                    label=r"$\rm Desprez+24$")
+        sel = f['type'] == 1
+        ax_Pk.plot(f['Mstar'][sel], f['Phi'][sel], '-', color='darkcyan', mec='darkcyan', lw=3, alpha=0.6)
+
+        ##
+        f = np.genfromtxt("../observational_data/Labbe2023_MassiveGal.dat", names=True)
+        sel = f['z'] == 8
+        ax_Pk.errorbar(f['Mstar'][sel], f['Phi'][sel] + np.log10(factor_from_Salpeter_to_Chabrier), yerr=(f['Phi'][sel] - f['Philo'][sel], f['Phiup'][sel] - f['Phi'][sel]), 
+                    marker = 's', linestyle='none', color='k', mec='k', capthick=2, capsize=6, ms=12)
+
+        alpha = -1.82;  Phis = 10**(-4.69); Ms = 10**9.98
+        mlim = 10**np.linspace(8, 12, 101)
+        ax_Pk.plot(np.log10(mlim), np.log10(cumulative(mlim, Phis, Ms, alpha)) + np.log10(factor_from_Salpeter_to_Chabrier), 
+                '-', lw=12, color='violet', alpha=0.4, zorder=-5, label=r"$\rm Stefanon+21$")
+
+        alpha = -2.16;  Phis = 10**(-4.86); Ms = 10**10.0
+        mlim = 10**np.linspace(8, 12, 101)
+        ax_Pk.plot(np.log10(mlim), np.log10(cumulative(mlim, Phis, Ms, alpha)) + np.log10(0.63/0.67), 
+                '-', lw=12, color='orange', alpha=0.4, zorder=-5)
+
+        ##
+        ax_Pk.errorbar(10.07681, 4.54678, yerr=([4.54678 - 3.32218], [5.07004 - 4.54678]), marker='o', 
+                color='chocolate', mec='chocolate', ms=12, mew=2, lw=2, capsize=6, capthick=2, label=r"$\rm Wang+24$")
+
+        ax_Pk.errorbar(10.85853, 5.32855, yerr=([5.32855 - 4.10212], [5.84263 - 5.32855]), marker='*', 
+                color='chocolate', mec='chocolate', ms=16, mew=2, lw=2, capsize=6, capthick=2)
+
+        ##
+        f = np.genfromtxt("./observational_data/Akins2023_MassiveGal.dat", names=True)
+        ax_Pk.errorbar(f['logMstar'], f['Phi'] + np.log10(0.63/0.67), yerr=(f['Phi'] - f['lo'], f['up'] - f['Phi']), 
+                    xerr = (f['logMstar'] - f['left'], f['right'] - f['logMstar']),
+                    marker = '^', linestyle='none', color='dimgray', mec='dimgray', capthick=2, capsize=6, ms=12, label=r"$\rm Akins+23$")
     else:
         data = np.loadtxt('/home/oleksii/codes/scripts_JWST_MG/observational_data/SMD/JWST_z9.txt')
 
-    x = data[:,0]
-    y = data[:,1]
-    ye_low = data[:,2]
-    ye_upp =  data[:,3]
-
-    color = 'k'
-    ax_Pk.errorbar(np.log10(x),np.log10(y),yerr=np.abs(c_[np.log10((y-ye_low)/y), np.log10(ye_upp)-np.log10(y)].T),label=r'$\rm JWST$',capsize=2,ecolor=color,color='w',marker='^',markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3)
 
     pool_cpu = Pool(8)
 
@@ -342,7 +370,7 @@ for z_smf in z_smf_arr:
 
     colors = cmap3(np.linspace(0, 1, n))
     
-    SMD_library = SMD(1/(1+z_smf), model, model_H, model_SFR, pars1, par2, 1e8, f0)
+    """    SMD_library = SMD(1/(1+z_smf), model, model_H, model_SFR, pars1, par2, 1e8, f0)
     Pk_arr = []
     for par1 in pars1:
         HMF_library = HMF(1/(1+z_smf), model, model_H, par1, par2, 1e8)
@@ -358,7 +386,7 @@ for z_smf in z_smf_arr:
     
     for i in range(len(Masses_stars)):
         ax_Pk.plot(np.log10(Masses_stars[i]), np.log10(SMDs[i]), c = colors[i], lw=  1.5)
-    #ax_Pk.fill_between(np.log10(Masses_star[2]), np.log10(SMF_obs[0]), np.log10(SMF_obs[2]), color='tab:gray', alpha=0.3)
+    """    #ax_Pk.fill_between(np.log10(Masses_star[2]), np.log10(SMF_obs[0]), np.log10(SMF_obs[2]), color='tab:gray', alpha=0.3)
 
     #plt.errorbar(x.get('Duncan'),y.get('Duncan'),yerr=[yerr_down.get('Duncan'),yerr_up.get('Duncan')], c = 'tab:orange', capsize = 2, ls = 'None', marker = '.', label = r'$\rm Duncan+14$')
     #plt.errorbar(x.get('Song'),y.get('Song'),yerr=[yerr_down.get('Song'),yerr_up.get('Song')], c = 'tab:orange', capsize = 2, ls = 'None', marker = 's', label = r'$\rm Song+16$')

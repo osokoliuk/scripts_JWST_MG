@@ -28,7 +28,7 @@ class UVLF:
         self.Masses = Masses
         self.f0 = f0
 
-    def calculate_alphabeta(self, a, rhoM, model_H, model, par1, par2, Mass):
+    def calculate_alphabeta(self, a, rhoM, model, model_H, par1, par2, Mass):
         Pk_library = HMF(a, model, model_H, par1, par2, self.Masses)
         cosmological_library = cosmological_functions(
             a, model, model_H, par1, par2)
@@ -38,9 +38,9 @@ class UVLF:
         c_ST = 3.3
         deltac = deltac_library.delta_c_at_ac(1, model, model_H, par1, par2)
         lineardelta_z0 = deltac_library.linear(
-            1e-5, 1, model_H, model, par1, par2)[-1, 1]
-        lineardelta = scipy.interpolate.interp1d(deltac_library.linear(1e-5, 1, model_H, model, par1, par2)[
-                                                 :, 0], deltac_library.linear(1e-5, 1, model_H, model, par1, par2)[:, 1]/lineardelta_z0, fill_value='extrapolate')
+            1e-5, 1, model, model_H, par1, par2)[-1, 1]
+        lineardelta = scipy.interpolate.interp1d(deltac_library.linear(1e-5, 1, model, model_H, par1, par2)[
+                                                 :, 0], deltac_library.linear(1e-5, 1, model, model_H, par1, par2)[:, 1]/lineardelta_z0, fill_value='extrapolate')
         z_arr = np.linspace(0, 1, 50)
         dlineardz = np.gradient(lineardelta(1/(1+z_arr)))/np.gradient(z_arr)
         dlineardz_interp = scipy.interpolate.interp1d(
@@ -69,14 +69,14 @@ class UVLF:
             Masses, beta, fill_value='extrapolate')
         return alpha(Mass), beta(Mass)
 
-    def MAR(self, a, rhoM, model_H, model, par1, par2, Masses):
+    def MAR(self, a, rhoM, model, model_H, par1, par2, Masses):
         z = 1/a-1
         cosmological_library = cosmological_functions(
             a, model, model_H, par1, par2)
         deltac_library = delta_c(a, model, model_H, par1, par2)
 
         alpha, beta = self.calculate_alphabeta(
-            a, rhoM, model_H, model, par1, par2, Masses)
+            a, rhoM, model, model_H, par1, par2, Masses)
 
         if hasattr(a, '__len__') and (not isinstance(a, str)):
             dMh_EPS = []
@@ -94,7 +94,7 @@ class UVLF:
         return dMh_EPS
 
     def SFR(self, a, rhoM, model, model_H, model_SFR, par1, par2, Masses, f0):
-        dMdt = self.MAR(a, rhoM, model_H, model, par1, par2, Masses)
+        dMdt = self.MAR(a, rhoM, model, model_H, par1, par2, Masses)
         SMF_library = SMF(a, model, model_H, model_SFR, par1, par2, Masses, f0)
         fstar = SMF_library.epsilon(Masses, model_SFR, a, f0)*Omegab0/Omegam0
         SFR = fstar*dMdt
@@ -104,20 +104,24 @@ class UVLF:
 
     def SFRD(self, a_arr, rhoM, model, model_H, model_SFR, par1, par2, Masses_arr, k, Pk, f0):
         if hasattr(a_arr, '__len__') and (not isinstance(a_arr, str)):
-            pass
+            SFRD = []
+            for i, a in tqdm(enumerate(a_arr)):
+                Masses = Masses_arr[i]
+                SFR_fid = self.SFR(a, rhoM, model, model_H,
+                                model_SFR, par1, par2, Masses, f0)
+                HMF_library = HMF(a, model, model_H, par1, par2, Masses)
+                HMF_fid = HMF_library.ST_mass_function(
+                    rhoM, Masses, a, model_H, model, par1, par2, k, Pk[i])
+                SFRD.append(scipy.integrate.trapz(HMF_fid*SFR_fid, Masses))
         else:
-            Masses = [Masses_arr]
-        
-        SFRD = []
-        for i, a in tqdm(enumerate(a_arr)):
-            Masses = Masses_arr[i]
+            Masses = Masses_arr
+            a = a_arr
             SFR_fid = self.SFR(a, rhoM, model, model_H,
                             model_SFR, par1, par2, Masses, f0)
             HMF_library = HMF(a, model, model_H, par1, par2, Masses)
             HMF_fid = HMF_library.ST_mass_function(
-                rhoM, Masses, a, model_H, model, par1, par2, k, Pk[i])
-            SFRD.append(scipy.integrate.trapz(HMF_fid*SFR_fid, Masses))
-
+                rhoM, Masses, a, model_H, model, par1, par2, k, Pk)
+            SFRD = scipy.integrate.trapz(HMF_fid*SFR_fid, Masses)
         return SFRD
 
     # SFR to MUV confertion
@@ -194,25 +198,42 @@ class UVLF:
     # This takes into account scatter that may arise from different factors,
     # For example from the SMHR uncertainties and HMF choice
     # Taken from https://github.com/XuejianShen/highz-empirical-variability
-    def convolve_on_grid(self, input_grid, input_weight, sigma_uv):
-        grid_binsize = input_grid[1] - input_grid[0]
-        minimum_sigma = grid_binsize/4.  # set to the binsize divided by a constant
-        # regulate the miminum sigma to be of order the binsize (~ 0.01 dex)
-        sigma_uv = max(sigma_uv, minimum_sigma)
+
+    def convolve_on_grid(self, input_grid, input_weight, sigma_uv_input, normalization_check=False, verbose=False):
+        # convolve with a gaussian kernel
+        # over the UV luminosity function
+        grid_binsize  = np.abs(input_grid[2:] - input_grid[:-2])/2.
+        grid_binsize  = np.append(grid_binsize, grid_binsize[-1])
+        grid_binsize  = np.append(grid_binsize[0], grid_binsize)
+
+        minimum_sigma = 0.2 # set to the binsize divided by a constant
+        #print(minimum_sigma)
+        if np.isscalar(sigma_uv_input):
+            sigma_uv = max(sigma_uv_input, minimum_sigma) # regulate the miminum sigma to be of order the binsize (~ 0.01 dex)
+        else:
+            sigma_uv = sigma_uv_input.copy()
+            sigma_uv[sigma_uv < minimum_sigma] = minimum_sigma
 
         output_weight = np.zeros(len(input_grid))
         for i, mapfrom in enumerate(input_grid):
-            raw_output = np.zeros(len(input_grid))
+            raw_output    = np.zeros(len(input_grid))
             for j, mapto in enumerate(input_grid):
-                raw_output[j] += 1./np.sqrt(2*np.pi*sigma_uv**2) * \
-                    np.exp(-0.5 * (mapto - mapfrom)**2 / sigma_uv**2)
-            sum_raw_output = np.sum(raw_output)
-            if sum_raw_output > 0:
-                raw_output = raw_output/sum_raw_output
-            else:
-                raw_output = np.zeros(len(input_grid))
-            output_weight += input_weight[i] * raw_output
-        return output_weight
+                if np.isscalar(sigma_uv):
+                    raw_output[j] += 1./np.sqrt(2*np.pi*sigma_uv**2) * np.exp( -0.5 * (mapto - mapfrom)**2 / sigma_uv**2 ) * grid_binsize[j]
+                else:
+                    raw_output[j] += 1./np.sqrt(2*np.pi*sigma_uv[i]**2) * np.exp( -0.5 * (mapto - mapfrom)**2 / sigma_uv[i]**2 ) * grid_binsize[j]
+            
+            if normalization_check: # redundant normalization
+                sum_raw_output = np.sum(raw_output)
+                if np.abs(sum_raw_output - 1) > 1e-2:
+                    if verbose: print("Warning: the convolution is not perfectly normalized", sum_raw_output, 'at', input_grid[i])
+                if sum_raw_output > 0:
+                    raw_output = raw_output/sum_raw_output
+                else:
+                    raw_output = np.zeros(len(input_grid))
+
+            output_weight += raw_output * (input_weight[i] * grid_binsize[i])
+        return output_weight/grid_binsize
 
     # Finally compute UVLF by using all of the previously defined functions in this class
     # Taken from https://github.com/XuejianShen/highz-empirical-variability
@@ -224,10 +245,25 @@ class UVLF:
             a, rhoM, model, model_H, model_SFR, par1, par2, Masses, f0, dust_norm, include_dust)
         dmuv_dlogm = self.mapfunc_jacobian_numeric(
             a, rhoM, model, model_H, model_SFR, par1, par2, Masses, f0, dust_norm, include_dust)
-        if sigma_uv > 0:
-            phi_uv_arr = self.convolve_on_grid(
-                muv_arr, phi_halo_arr/dmuv_dlogm, sigma_uv=sigma_uv)
+        if np.isscalar(sigma_uv):
+            if sigma_uv > 0: phi_uv_arr = self.convolve_on_grid(muv_arr, phi_halo_arr/dmuv_dlogm , sigma_uv)
+            else:            phi_uv_arr = phi_halo_arr/dmuv_dlogm
         else:
-            phi_uv_arr = phi_halo_arr/dmuv_dlogm
-        # print(phi_uv_arr)
+            phi_uv_arr = self.convolve_on_grid(muv_arr, phi_halo_arr/dmuv_dlogm, sigma_uv)
+
         return muv_arr, phi_uv_arr
+
+
+    # Taken from https://github.com/XuejianShen/highz-empirical-variability
+    def rho_uv(self, muv_arr, phi_uv_arr, mlim_lum = -29):
+        """
+        Compute the cumulative UV luminosity
+        assuming the Muv grid is uniform
+        """
+        dmuv = np.abs(muv_arr[1] - muv_arr[0]) # a constant
+        Luv = 10**((muv_arr + 48.6)/(-2.5)) * 4*np.pi* (10*con.pc.value*100)**2  # erg/s/Hz
+        cum_rho_uv_arr = np.zeros(len(phi_uv_arr))
+        for i in range(len(phi_uv_arr)):
+            select = (muv_arr[i:] > mlim_lum)
+            cum_rho_uv_arr[i] = np.sum( (phi_uv_arr[i:] * Luv[i:])[select]  ) * dmuv
+        return cum_rho_uv_arr # [#erg/s/Hz/Mpc^3]

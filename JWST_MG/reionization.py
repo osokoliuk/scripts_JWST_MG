@@ -210,6 +210,7 @@ class reionization:
         *np.exp(-alpha_B*nH*CHII*xe*scipy.integrate.quad(lambda zp: (1+zp)**2/(H(1/(1+zp))*km_Mpc), z0, z)[0]), z0, 50)[0]
 
     def QHII(self, a0, rhoM, model, model_H, model_SFR, par1, par2, f0=None):
+        pool_cpu = Pool(8)
         z0 = 1/a0-1
         a_int = np.linspace(1/51,1,1000)
         z_int = np.linspace(50, 0, 50)
