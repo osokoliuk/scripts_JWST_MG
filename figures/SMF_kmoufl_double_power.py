@@ -390,7 +390,8 @@ for z_smf in z_smf_arr:
         iterable = [(Masses, rhom, 1/(1+z_smf), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,par2 in enumerate(pars2)]
         Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(pars2))))
         #for i in range(len(SMF_obs)):
-        
+        data = np.savez('./data_folder/SMF_kmoufl_double_power_z'+str(z_smf)+'_'+str(par1)+'.npz', name1 = Masses_star, name2 = SMF_obs)
+
         for i in range(len(SMF_obs)):
             ax_Pk.plot(np.log10(Masses_star[i]), np.log10(SMF_obs[i]), c = colors[j][i], lw=  1)
     #ax_Pk.fill_between(np.log10(Masses_star[2]), np.log10(SMF_obs[0]), np.log10(SMF_obs[2]), color='tab:gray', alpha=0.3)
@@ -438,7 +439,6 @@ for z_smf in z_smf_arr:
             nbins = len(ax_Pk.get_yticklabels())
             ax_Pk.yaxis.set_major_locator(MaxNLocator(nbins=nbins,prune='upper'))
 
-    plt.grid(".")
     
     ax_Pk.text(0.8,0.85,r'$z='+str(int(round(z_smf)))+r'$', size = '15', transform=ax_Pk.transAxes)
     

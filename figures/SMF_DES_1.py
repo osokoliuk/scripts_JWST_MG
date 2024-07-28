@@ -377,7 +377,7 @@ for z_smf in z_smf_arr:
     colors[2] = cmap[2]((np.linspace(0, 1, n)))
 
     for j, par1 in enumerate(pars1):
-        SMF_library = SMF(1/(1+z_smf), model, model_H, model_SFR, par1, pars2, 1e8, f0)
+        """  SMF_library = SMF(1/(1+z_smf), model, model_H, model_SFR, par1, pars2, 1e8, f0)
         Pk_arr = []
         for par2 in pars2:
             HMF_library = HMF(1/(1+z_smf), model, model_H, par1, par2, 1e8)
@@ -388,18 +388,16 @@ for z_smf in z_smf_arr:
 
         iterable = [(Masses, rhom, 1/(1+z_smf), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,par2 in enumerate(pars2)]
         Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(pars2))))
-        #for i in range(len(SMF_obs)):
-        
-        x = Masses_star[0]
-        y = pars2 
-        xx, yy = np.meshgrid(x, y)
-        z = SMF_obs
-        f = interpolate.interp2d(x, y, z, kind='linear')
-        pars_span = np.linspace(0,1,25)
-        znew = f(Masses_star[0], pars_span)
-        colorss = cmap[j](np.linspace(0, 1, 25))
-        for i in range(len(pars_span)):
-            ax_Pk.plot(np.log10(Masses_star[0]), np.log10(znew[i]), c = colorss[i], lw=  1.5, alpha = 0.3)
+        """        #for i in range(len(SMF_obs)):
+        data = np.load('./data_folder/SMF_DES_'+str(model_SFR)+'_z'+str(z_smf)+'_'+str(par1)+'.npz')
+        Masses_star = data['name1']
+        SMF_obs = data['name2']
+        if par1 == -1:
+            Masses_star = Masses_star[2:-1]
+            SMF_obs = SMF_obs[2:-1]
+            colors[j] = colors[j][2:-1]
+        for i in range(len(Masses_star)):
+            ax_Pk.plot(np.log10(Masses_star[i]), np.log10(SMF_obs[i]), c = colors[j][i], lw=  1.5)
     #ax_Pk.fill_between(np.log10(Masses_star[2]), np.log10(SMF_obs[0]), np.log10(SMF_obs[2]), color='tab:gray', alpha=0.3)
 
     #plt.errorbar(x.get('Duncan'),y.get('Duncan'),yerr=[yerr_down.get('Duncan'),yerr_up.get('Duncan')], c = 'tab:blue', capsize = 2, ls = 'None', marker = '.', label = r'$\rm Duncan+14$')
@@ -412,7 +410,7 @@ for z_smf in z_smf_arr:
 
     # plt.scatter(1/a_vir-1, vir2, c = 'tab:blue')
     plt.tight_layout()
-    plt.ylim(-8,0)
+    plt.ylim(-6,0)
     plt.xlim(6,12.5)
     if nn != len(z_smf_arr) and nn != len(z_smf_arr)-1:
         if nn % 2 == 0:
@@ -445,7 +443,6 @@ for z_smf in z_smf_arr:
             nbins = len(ax_Pk.get_yticklabels())
             ax_Pk.yaxis.set_major_locator(MaxNLocator(nbins=nbins,prune='upper'))
 
-    plt.grid(".")
     
     ax_Pk.text(0.8,0.85,r'$z='+str(int(round(z_smf)))+r'$', size = '15', transform=ax_Pk.transAxes)
     
@@ -466,7 +463,7 @@ mpl.rcParams['font.family'] = 'sans-serif'
 
 #norm = colorss.Norm(pars1.min(), pars1.max())
 norm = mpl.colors.Normalize(vmin=pars2.min(), vmax=pars2.max())
-ax_cbar = fig.add_axes([0.101, 0.9775, 0.8785, 0.01])
+ax_cbar = fig.add_axes([0.121, 0.9775, 0.8585, 0.01])
 cbar_ax = plt.colorbar(mpl.cm.ScalarMappable(cmap=mpl.cm.Greys, norm=norm), cax=ax_cbar, orientation='horizontal', location = 'top', ticks=LinearLocator(numticks=8))
 cbar_ax.set_label(r'$T_{2}$', fontsize=16)
 cbar_ax.ax.tick_params(width=1.5, length=5, which = 'major')

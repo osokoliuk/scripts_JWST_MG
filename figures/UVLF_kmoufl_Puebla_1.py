@@ -492,16 +492,16 @@ for z_smf in z_smf_arr:
     pars2 = np.linspace(0.0, 1, 10)
     pars1 = np.array([0.1, 0.3, 0.5])
     n = len(pars2)
-    cmap1 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","royalblue"]) 
-    cmap2 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","crimson"]) 
-    cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","seagreen"])
-
+    cmap1 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#66c2a5"]) 
+    cmap2 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#fc8d62"]) 
+    cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
+    
     colors = np.array([cmap1(np.linspace(0, 1, n)), cmap2(np.linspace(0, 1, n)), cmap3(np.linspace(0, 1, n))])
  
     f0 = 0.21
     
     for j, par1 in enumerate(pars1):
-        Pk_arr = []
+        """Pk_arr = []
         for par2 in pars2:
             HMF_library = HMF(1/(1+z_smf), model, model_H, par1, par2, 1e8)
             Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_smf), model, par1, par2))*h**3)
@@ -529,7 +529,10 @@ for z_smf in z_smf_arr:
         iterable = [(1/(1+z_smf), rhom, model, model_H, model_SFR, par1, par2, Masses, k, Pk_arr[i], f0, sigma_uv) for i,par2 in enumerate(pars2)]
 
         MUV, UVLF_obs = zip(*pool_cpu.starmap(UVLF_library.compute_uv_luminosity_function,tqdm(iterable, total=len(pars2))))
-        np.savez('./data_folder/UVLF_kmoufl_double_power_z'+str(z_smf)+'_'+str(par1)+'.npz', name1=MUV, name2=UVLF_obs)
+        """
+        data = np.load('./data_folder/UVLF_kmoufl_double_power_z'+str(z_smf)+'_'+str(par1)+'.npz')
+        MUV = data['name1']
+        UVLF_obs = data['name2']
 
         for i in range(len(UVLF_obs)):
             ax_Pk.plot(MUV[i], np.log10(UVLF_obs[i]),c=colors[j][i], lw = 1)
@@ -546,9 +549,9 @@ for z_smf in z_smf_arr:
 
 
     #plines = plt.errorbar(x.get('Navarro'),y.get('Navarro'),yerr=[yerr_down.get('Navarro'),yerr_up.get('Navarro')],capsize=0,ecolor='k',color='w',marker=markers[j_data+1],markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor='k', label = r'$\rm Navarro+2024$')
-    ax_Pk.plot(0,0,c = 'royalblue', label = r'$\beta = 0.1$')
-    ax_Pk.plot(0,0,c = 'crimson', label = r'$\beta = 0.3$')
-    ax_Pk.plot(0,0,c = 'seagreen', label = r'$\beta = 0.5$')
+    ax_Pk.plot(0,0,c = '#66c2a5', label = r'$\beta = 0.1$')
+    ax_Pk.plot(0,0,c = '#fc8d62', label = r'$\beta = 0.3$')
+    ax_Pk.plot(0,0,c = '#8da0cb', label = r'$\beta = 0.5$')
 
     # plt.scatter(1/a_vir-1, vir2, c = 'tab:orange')
     plt.xlim(-24.5, -15)
@@ -651,11 +654,7 @@ par2 = 0
 deltac = delta_c(ac_arr, model, model_H, par1, par2)
 
 
-di = deltac.binary_search_di(1, model, model_H, par1, par2,
-                             0, len(delta_ini)-1, abs_err)
-print(di)
-delta_nl = deltac.collapse(di, model, model_H, par1, par2)
-delta = delta_nl[:, 1]
+di = deltac.binary_searcchocolate
 a = delta_nl[:, 0]
 cosmological_library = cosmological_functions(
     a, model, model_H, par1, par2)

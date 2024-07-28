@@ -311,47 +311,46 @@ for z_smf in z_smf_arr:
     plt.tick_params(axis='both', which='minor',
                     direction="in", labelsize=11, length=4, width = 1.1)
 
-
+ 
+    factor_from_Salpeter_to_Chabrier = 0.63
     if z_smf == 8:
-        f = np.genfromtxt("../observational_data/Desprez2024_MassiveGal.dat", names=True)
-        sel = f['type'] == 0
-        ax_Pk.errorbar(f['Mstar'][sel], f['Phi'][sel], 
-                    marker = '+', linestyle='none', color='darkcyan', mec='darkcyan', ms=12, mew=2,
-                    label=r"$\rm Desprez+24$")
-        sel = f['type'] == 1
-        ax_Pk.plot(f['Mstar'][sel], f['Phi'][sel], '-', color='darkcyan', mec='darkcyan', lw=3, alpha=0.6)
 
         ##
         f = np.genfromtxt("../observational_data/Labbe2023_MassiveGal.dat", names=True)
         sel = f['z'] == 8
-        ax_Pk.errorbar(f['Mstar'][sel], f['Phi'][sel] + np.log10(factor_from_Salpeter_to_Chabrier), yerr=(f['Phi'][sel] - f['Philo'][sel], f['Phiup'][sel] - f['Phi'][sel]), 
-                    marker = 's', linestyle='none', color='k', mec='k', capthick=2, capsize=6, ms=12)
+        plt.errorbar(f['Mstar'][sel], f['Phi'][sel] + np.log10(factor_from_Salpeter_to_Chabrier), yerr=(f['Phi'][sel] - f['Philo'][sel], f['Phiup'][sel] - f['Phi'][sel]), 
+                    marker = 's', linestyle='none', color='w', mec='k',ecolor='k', capthick=1.5, capsize=3, ms=6,mew=1.5,label=r"$\rm Labbe+23$")
 
-        alpha = -1.82;  Phis = 10**(-4.69); Ms = 10**9.98
-        mlim = 10**np.linspace(8, 12, 101)
-        ax_Pk.plot(np.log10(mlim), np.log10(cumulative(mlim, Phis, Ms, alpha)) + np.log10(factor_from_Salpeter_to_Chabrier), 
-                '-', lw=12, color='violet', alpha=0.4, zorder=-5, label=r"$\rm Stefanon+21$")
 
-        alpha = -2.16;  Phis = 10**(-4.86); Ms = 10**10.0
-        mlim = 10**np.linspace(8, 12, 101)
-        ax_Pk.plot(np.log10(mlim), np.log10(cumulative(mlim, Phis, Ms, alpha)) + np.log10(0.63/0.67), 
-                '-', lw=12, color='orange', alpha=0.4, zorder=-5)
 
         ##
-        ax_Pk.errorbar(10.07681, 4.54678, yerr=([4.54678 - 3.32218], [5.07004 - 4.54678]), marker='o', 
-                color='chocolate', mec='chocolate', ms=12, mew=2, lw=2, capsize=6, capthick=2, label=r"$\rm Wang+24$")
+        plt.errorbar(10.07681, 4.54678, yerr=([4.54678 - 3.32218], [5.07004 - 4.54678]),ls='None', marker='o', 
+                color='w', mec='crimson', ms=6, lw=2, capsize=3, capthick=1.5,mew=1.5,ecolor='crimson', label=r"$\rm Wang+24$")
 
-        ax_Pk.errorbar(10.85853, 5.32855, yerr=([5.32855 - 4.10212], [5.84263 - 5.32855]), marker='*', 
-                color='chocolate', mec='chocolate', ms=16, mew=2, lw=2, capsize=6, capthick=2)
+        plt.errorbar(10.85853, 5.32855, yerr=([5.32855 - 4.10212], [5.84263 - 5.32855]), marker='o', 
+                color='w', mec='crimson', ms=6, mew=1.5, lw=2, capsize=3, capthick=1.5,ecolor='crimson')
 
         ##
-        f = np.genfromtxt("./observational_data/Akins2023_MassiveGal.dat", names=True)
-        ax_Pk.errorbar(f['logMstar'], f['Phi'] + np.log10(0.63/0.67), yerr=(f['Phi'] - f['lo'], f['up'] - f['Phi']), 
-                    xerr = (f['logMstar'] - f['left'], f['right'] - f['logMstar']),
-                    marker = '^', linestyle='none', color='dimgray', mec='dimgray', capthick=2, capsize=6, ms=12, label=r"$\rm Akins+23$")
+        f = np.genfromtxt("../observational_data/Akins2023_MassiveGal.dat", names=True)
+        plt.errorbar(f['logMstar'], f['Phi'] + np.log10(0.63/0.67), yerr=(f['Phi'] - f['lo'], f['up'] - f['Phi']), 
+                    marker = '^', linestyle='none', color='w', mec='darkorchid', capthick=1.5, capsize=3, ms=6,mew=1.5,ecolor='darkorchid', label=r"$\rm Akins+23$")
     else:
         data = np.loadtxt('/home/oleksii/codes/scripts_JWST_MG/observational_data/SMD/JWST_z9.txt')
+        
+        x = data[:,0]
+        y = data[:,1]
+        ye_low = data[:,2]
+        ye_upp =  data[:,3]
 
+        color = 'k'
+        ax_Pk.errorbar(np.log10(x),np.log10(y),yerr=np.abs(c_[np.log10((y-ye_low)/y), np.log10(ye_upp)-np.log10(y)].T),marker = 's', linestyle='none', color='w', mec='k', capthick=1.5, capsize=3, ms=6,mew=1.5,ecolor='k',label=r"$\rm Labbe+23$")
+
+        f = np.genfromtxt("../observational_data/Casey2024_MassiveGal_sum.dat", names=True)
+        sel = f['z'] == 10
+        plt.errorbar(f['Mstar'][sel], f['Phi'][sel], xerr=(f['Mstar'][sel] - f['left'][sel], f['right'][sel] - f['Mstar'][sel]),
+                    yerr=(f['Phi'][sel] - f['lo'][sel], f['up'][sel] - f['Phi'][sel]), 
+                    marker = '^', linestyle='none', color='w', mec='tab:gray', capthick=1.5, capsize=3, ms=6,mew=1.5,ecolor='tab:gray',
+                    label=r"$\rm Casey+24$")
 
     pool_cpu = Pool(8)
 
@@ -362,7 +361,7 @@ for z_smf in z_smf_arr:
     else:
         model_SFR = 'Puebla'
 
-    pars1 = np.logspace(2.5,4,10)
+    """    pars1 = np.logspace(2.5,4,10)
     par2 = 0
     f0 = 0.21
     n = len(pars1)
@@ -370,7 +369,7 @@ for z_smf in z_smf_arr:
 
     colors = cmap3(np.linspace(0, 1, n))
     
-    """    SMD_library = SMD(1/(1+z_smf), model, model_H, model_SFR, pars1, par2, 1e8, f0)
+    SMD_library = SMD(1/(1+z_smf), model, model_H, model_SFR, pars1, par2, 1e8, f0)
     Pk_arr = []
     for par1 in pars1:
         HMF_library = HMF(1/(1+z_smf), model, model_H, par1, par2, 1e8)
@@ -381,12 +380,19 @@ for z_smf in z_smf_arr:
 
     iterable = [(Masses, rhom, 1/(1+z_smf), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,par1 in enumerate(pars1)]
     Masses_stars, SMDs = zip(*pool_cpu.starmap(SMD_library.SMD,tqdm(iterable, total=len(pars1))))
-
+    """
    #for i in range(len(SMF_obs)):
-    
+    data = np.load('./data_folder/SMD_nDGP_'+str(model_SFR) +'_z'+str(z_smf)+'.npz')
+    Masses_stars = data['name1']
+    SMDs = data['name2']
+    n = 10
+    cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
+
+    colors = cmap3(np.linspace(0, 1, n))
+
     for i in range(len(Masses_stars)):
-        ax_Pk.plot(np.log10(Masses_stars[i]), np.log10(SMDs[i]), c = colors[i], lw=  1.5)
-    """    #ax_Pk.fill_between(np.log10(Masses_star[2]), np.log10(SMF_obs[0]), np.log10(SMF_obs[2]), color='tab:gray', alpha=0.3)
+        ax_Pk.plot(np.log10(Masses_stars[i]), np.log10(SMDs[i]), c = colors[i], zorder = -5)
+    #ax_Pk.fill_between(np.log10(Masses_star[2]), np.log10(SMF_obs[0]), np.log10(SMF_obs[2]), color='tab:gray', alpha=0.3)
 
     #plt.errorbar(x.get('Duncan'),y.get('Duncan'),yerr=[yerr_down.get('Duncan'),yerr_up.get('Duncan')], c = 'tab:orange', capsize = 2, ls = 'None', marker = '.', label = r'$\rm Duncan+14$')
     #plt.errorbar(x.get('Song'),y.get('Song'),yerr=[yerr_down.get('Song'),yerr_up.get('Song')], c = 'tab:orange', capsize = 2, ls = 'None', marker = 's', label = r'$\rm Song+16$')
@@ -423,7 +429,6 @@ for z_smf in z_smf_arr:
             ax_Pk.set_xlabel(r'$ \log_{10}M_\star\;[M_\odot]$', size = '16')
             ax_Pk.set_ylabel(r'$\log_{10}\rho_\star\;[M_\odot\;\rm Mpc^{-3}]$', size='16')
 
-    plt.grid(".")
     
     ax_Pk.text(0.8,0.85,r'$z='+str(int(round(z_smf)))+r'$', size = '15', transform=ax_Pk.transAxes)
     
@@ -439,9 +444,9 @@ for z_smf in z_smf_arr:
 mpl.rcParams['font.family'] = 'sans-serif'
 
 #norm = colorss.Norm(pars1.min(), pars1.max())
-norm = mpl.colors.Normalize(vmin=np.log10(pars1.min()), vmax=np.log10(pars1.max()))
+norm = mpl.colors.Normalize(vmin=2.5, vmax=4)
 ax_cbar = fig.add_axes([0.0805, 0.9835, 0.899, 0.01])
-cbar_ax = plt.colorbar(mpl.cm.ScalarMappable(cmap=cmap3, norm=norm), cax=ax_cbar, orientation='horizontal', location = 'top', ticks=LinearLocator(numticks=8))
+cbar_ax = plt.colorbar(mpl.cm.ScalarMappable(cmap=mpl.cm.Greys, norm=norm), cax=ax_cbar, orientation='horizontal', location = 'top', ticks=LinearLocator(numticks=8))
 cbar_ax.set_label(r'$\log_{10}r_c$', fontsize=16)
 cbar_ax.ax.tick_params(width=1.5, length=5, which = 'major')
 cbar_ax.ax.tick_params(width=1.1, length=4, which = 'minor')

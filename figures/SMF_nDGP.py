@@ -331,7 +331,7 @@ for z_smf in z_smf_arr:
         label      = obs.target_observation.index[ii]
         datatype   = obs.target_observation['DataType'][ii]
         color = 'tab:gray'
-        marker     = 'o'
+        marker     = '.'
         linestyle  = linestyles[k_func]
         if datatype == 'data':
             data[:,1:] = np.log10(data[:,1:])
@@ -341,10 +341,10 @@ for z_smf in z_smf_arr:
                 data[ind_3,3] = data[ind_3,2]
                 data[ind_2,2] = data[ind_2,3]
                 ax_Pk.errorbar(data[:,0],  data[:,1],yerr = np.abs([data[:,1]-data[:,3],data[:,2]- data[:,1]]),\
-                        label=r'$\rm pre-JWST$',capsize=2,ecolor=color,color='w',marker=marker,markersize=4.5,markeredgewidth=1.5, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3)
+                        label=r'$\rm pre-JWST$',capsize=2,ecolor=color,color='w',marker=marker,markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3)
             else:
                 ax_Pk.errorbar(data[:,0],  data[:,1],yerr = np.abs([data[:,1]-data[:,3],data[:,2]- data[:,1]]),\
-                        capsize=2,ecolor=color,color='w',marker=marker,markersize=4.5,markeredgewidth=1.5, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3)
+                        capsize=2,ecolor=color,color='w',marker=marker,markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3)
             
             j_data +=1
 
@@ -360,7 +360,7 @@ for z_smf in z_smf_arr:
     
     pool_cpu = Pool(8)
 
-    model = 'nDGP'
+    """    model = 'nDGP'
     model_H = 'nDGP'
     model_SFR = 'Puebla'
     pars1 = np.logspace(2.5,4,10)
@@ -382,13 +382,21 @@ for z_smf in z_smf_arr:
 
     iterable = [(Masses, rhom, 1/(1+z_smf), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,par1 in enumerate(pars1)]
     Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(pars1))))
-    #for i in range(len(SMF_obs)):
+    """    #for i in range(len(SMF_obs)):
+
+    data = np.load('./data_folder/SMF_nDGP_Puebla_z'+str(z_smf)+'.npz')
+    Masses_star = data['name1']
+    SMF_obs = data['name2']
+    n = 10
+    cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#fc8d62"])
+
+    colors = cmap3(np.linspace(0, 1, n))
     
     for i in range(len(Masses_star)):
         ax_Pk.plot(np.log10(Masses_star[i]), np.log10(SMF_obs[i]), c = colors[i], lw=  1.5)
 
 
-    model = 'nDGP'
+    """    model = 'nDGP'
     model_H = 'nDGP'
     model_SFR = 'double_power'
     pars1 = np.logspace(2.5,4,10)
@@ -410,8 +418,15 @@ for z_smf in z_smf_arr:
 
     iterable = [(Masses, rhom, 1/(1+z_smf), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,par1 in enumerate(pars1)]
     Masses_star, SMF_obs = zip(*pool_cpu.starmap(SMF_library.SMF_obs,tqdm(iterable, total=len(pars1))))
-    #for i in range(len(SMF_obs)):
-    
+    """    #for i in range(len(SMF_obs)):
+    data = np.load('./data_folder/SMF_nDGP_double_power_z'+str(z_smf)+'.npz')
+    Masses_star = data['name1']
+    SMF_obs = data['name2']
+
+    cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
+
+    colors = cmap3(np.linspace(0, 1, n))
+
     for i in range(len(Masses_star)):
         ax_Pk.plot(np.log10(Masses_star[i]), np.log10(SMF_obs[i]), c = colors[i], lw=  1.5)
 
@@ -426,8 +441,8 @@ for z_smf in z_smf_arr:
 
 
     #plines = plt.errorbar(x.get('Navarro'),y.get('Navarro'),yerr=[yerr_down.get('Navarro'),yerr_up.get('Navarro')],capsize=0,ecolor='k',color='w',marker=markers[j_data+1],markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor='k', label = r'$\rm Navarro+2024$')
-    ax_Pk.plot(0,0,c = 'royalblue', label = r'$\rm Rodriguez-Puebla$')
-    ax_Pk.plot(0,0,c = 'crimson', label = r'$\rm Double\;power-law$')
+    ax_Pk.plot(0,0,c = '#fc8d62', label = r'$\rm Rodriguez-Puebla$')
+    ax_Pk.plot(0,0,c = '#8da0cb', label = r'$\rm Double\;power-law$')
     # plt.scatter(1/a_vir-1, vir2, c = 'tab:orange')
     plt.tight_layout()
     plt.ylim(-8,0)
@@ -478,7 +493,7 @@ for z_smf in z_smf_arr:
 mpl.rcParams['font.family'] = 'sans-serif'
 
 #norm = colorss.Norm(pars1.min(), pars1.max())
-norm = mpl.colors.Normalize(vmin=np.log10(pars1.min()), vmax=np.log10(pars1.max()))
+norm = mpl.colors.Normalize(vmin=2.5, vmax=4)
 ax_cbar = fig.add_axes([0.101, 0.9775, 0.8785, 0.01])
 cbar_ax = plt.colorbar(mpl.cm.ScalarMappable(cmap=mpl.cm.Greys, norm=norm), cax=ax_cbar, orientation='horizontal', location = 'top', ticks=LinearLocator(numticks=8))
 cbar_ax.set_label(r'$\log_{10}r_c$', fontsize=16)
@@ -724,4 +739,4 @@ plt.grid(".")
 
 
 #plt.tight_layout()
-plt.savefig('SMF_nDGP_Puebla.pdf', bbox_inches='tight')
+plt.savefig('SMF_nDGP.pdf', bbox_inches='tight')

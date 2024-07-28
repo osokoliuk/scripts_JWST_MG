@@ -312,19 +312,46 @@ for z_smf in z_smf_arr:
                     direction="in", labelsize=11, length=4, width = 1.1)
 
 
+    factor_from_Salpeter_to_Chabrier = 0.63
     if z_smf == 8:
-        data = np.loadtxt('/home/oleksii/codes/scripts_JWST_MG/observational_data/SMD/JWST_z8.txt')
+
+        ##
+        f = np.genfromtxt("../observational_data/Labbe2023_MassiveGal.dat", names=True)
+        sel = f['z'] == 8
+        plt.errorbar(f['Mstar'][sel], f['Phi'][sel] + np.log10(factor_from_Salpeter_to_Chabrier), yerr=(f['Phi'][sel] - f['Philo'][sel], f['Phiup'][sel] - f['Phi'][sel]), 
+                    marker = 's', linestyle='none', color='w', mec='k',ecolor='k', capthick=1.5, capsize=3, ms=6,mew=1.5,label=r"$\rm Labbe+23$")
+
+
+
+        ##
+        plt.errorbar(10.07681, 4.54678, yerr=([4.54678 - 3.32218], [5.07004 - 4.54678]),ls='None', marker='o', 
+                color='w', mec='crimson', ms=6, lw=2, capsize=3, capthick=1.5,mew=1.5,ecolor='crimson', label=r"$\rm Wang+24$")
+
+        plt.errorbar(10.85853, 5.32855, yerr=([5.32855 - 4.10212], [5.84263 - 5.32855]), marker='o', 
+                color='w', mec='crimson', ms=6, mew=1.5, lw=2, capsize=3, capthick=1.5,ecolor='crimson')
+
+        ##
+        f = np.genfromtxt("../observational_data/Akins2023_MassiveGal.dat", names=True)
+        plt.errorbar(f['logMstar'], f['Phi'] + np.log10(0.63/0.67), yerr=(f['Phi'] - f['lo'], f['up'] - f['Phi']), 
+                    marker = '^', linestyle='none', color='w', mec='darkorchid', capthick=1.5, capsize=3, ms=6,mew=1.5,ecolor='darkorchid', label=r"$\rm Akins+23$")
     else:
         data = np.loadtxt('/home/oleksii/codes/scripts_JWST_MG/observational_data/SMD/JWST_z9.txt')
+        
+        x = data[:,0]
+        y = data[:,1]
+        ye_low = data[:,2]
+        ye_upp =  data[:,3]
 
-    x = data[:,0]
-    y = data[:,1]
-    ye_low = data[:,2]
-    ye_upp =  data[:,3]
+        color = 'k'
+        ax_Pk.errorbar(np.log10(x),np.log10(y),yerr=np.abs(c_[np.log10((y-ye_low)/y), np.log10(ye_upp)-np.log10(y)].T),marker = 's', linestyle='none', color='w', mec='k', capthick=1.5, capsize=3, ms=6,mew=1.5,ecolor='k',label=r"$\rm Labbe+23$")
 
-    color = 'k'
-    ax_Pk.errorbar(np.log10(x),np.log10(y),yerr=np.abs(c_[np.log10((y-ye_low)/y), np.log10(ye_upp)-np.log10(y)].T),label=r'$\rm JWST$',capsize=2,ecolor=color,color='w',marker='^',markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3)
-
+        f = np.genfromtxt("../observational_data/Casey2024_MassiveGal_sum.dat", names=True)
+        sel = f['z'] == 10
+        plt.errorbar(f['Mstar'][sel], f['Phi'][sel], xerr=(f['Mstar'][sel] - f['left'][sel], f['right'][sel] - f['Mstar'][sel]),
+                    yerr=(f['Phi'][sel] - f['lo'][sel], f['up'][sel] - f['Phi'][sel]), 
+                    marker = '^', linestyle='none', color='w', mec='tab:gray', capthick=1.5, capsize=3, ms=6,mew=1.5,ecolor='tab:gray',
+                    label=r"$\rm Casey+24$")
+                    
     pool_cpu = Pool(8)
 
     model = 'kmoufl'
@@ -334,7 +361,7 @@ for z_smf in z_smf_arr:
     else:
         model_SFR = 'Puebla'
 
-    pars2 = np.linspace(0,1,10)
+    """    pars2 = np.linspace(0,1,10)
     pars1 = np.array([0.1, 0.3, 0.5])
     n = len(pars2)
     f0 = 0.21
@@ -359,11 +386,30 @@ for z_smf in z_smf_arr:
 
         iterable = [(Masses, rhom, 1/(1+z_smf), model_H, model, model_SFR, par1, par2, k, Pk_arr[i], f0) for i,par2 in enumerate(pars2)]
         Masses_stars, SMDs = zip(*pool_cpu.starmap(SMD_library.SMD,tqdm(iterable, total=len(pars2))))
-
+    """
     #for i in range(len(SMF_obs)):
+    pars1 = np.array([0.1, 0.3, 0.5])
+
+    for j, par1 in enumerate(pars1):
+        data = np.load('./data_folder/SMD_kmoufl_' +str(model_SFR)+'_z'+str(z_smf)+'_'+str(par1)+'.npz')
         
+        Masses_stars  = data['name1']
+        SMDs  = data['name2']
+
+        n = 10
+        f0 = 0.21
+        cmap1 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#66c2a5"]) 
+        cmap2 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#fc8d62"]) 
+        cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
+
+        cmap = np.array([cmap1, cmap2, cmap3])
+        colors = [None]*3
+        colors[0] = cmap[0]((np.linspace(0, 1, n)))
+        colors[1] = cmap[1]((np.linspace(0, 1, n)))
+        colors[2] = cmap[2]((np.linspace(0, 1, n)))
+
         for i in range(len(Masses_stars)):
-            ax_Pk.plot(np.log10(Masses_stars[i]), np.log10(SMDs[i]), c = colors[j][i], lw=  1.5)
+            ax_Pk.plot(np.log10(Masses_stars[i]), np.log10(SMDs[i]), c = colors[j][i], zorder = -15)
     #ax_Pk.fill_between(np.log10(Masses_star[2]), np.log10(SMF_obs[0]), np.log10(SMF_obs[2]), color='tab:gray', alpha=0.3)
 
     #plt.errorbar(x.get('Duncan'),y.get('Duncan'),yerr=[yerr_down.get('Duncan'),yerr_up.get('Duncan')], c = 'tab:orange', capsize = 2, ls = 'None', marker = '.', label = r'$\rm Duncan+14$')
@@ -401,7 +447,6 @@ for z_smf in z_smf_arr:
             ax_Pk.set_xlabel(r'$ \log_{10}M_\star\;[M_\odot]$', size = '16')
             ax_Pk.set_ylabel(r'$\log_{10}\rho_\star\;[M_\odot\;\rm Mpc^{-3}]$', size='16')
 
-    plt.grid(".")
     
     ax_Pk.text(0.8,0.85,r'$z='+str(int(round(z_smf)))+r'$', size = '15', transform=ax_Pk.transAxes)
     
@@ -422,7 +467,7 @@ for z_smf in z_smf_arr:
 mpl.rcParams['font.family'] = 'sans-serif'
 
 #norm = colorss.Norm(pars1.min(), pars1.max())
-norm = mpl.colors.Normalize(vmin=pars2.min(), vmax=pars2.max())
+norm = mpl.colors.Normalize(vmin=0, vmax = 1)
 ax_cbar = fig.add_axes([0.0805, 0.9835, 0.899, 0.01])
 cbar_ax = plt.colorbar(mpl.cm.ScalarMappable(cmap=cmap3, norm=norm), cax=ax_cbar, orientation='horizontal', location = 'top', ticks=LinearLocator(numticks=8))
 cbar_ax.set_label(r'$K_0$', fontsize=16)

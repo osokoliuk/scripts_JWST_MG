@@ -535,7 +535,6 @@ for z_smf in z_smf_arr:
     plt.xlim(1e6,10**12.5)
     ax_Pk.set_xlabel(r'$M_\star\;[M_\odot]$', size = '16')
     ax_Pk.set_ylabel(r'$\phi_{\star}\;[\rm Mpc^{-3}\;dex^{-1}]$', size = '16')
-    plt.grid(".")
     
     ax_Pk.text(10**11,0.065,r'$z='+str(int(round(z_smf)))+r'$', size = '15')
     
