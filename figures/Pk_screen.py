@@ -25,6 +25,7 @@ mpl.rcParams['axes.linewidth'] = 1.5
 
 cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
 
+
 plt.figure()
 plt.rcParams.update({"text.usetex":True})
 fig = plt.figure(figsize=(4.25*2*.95*0.9, 2*5*1.05*0.9))
@@ -220,7 +221,6 @@ ax_Pk.set_yscale('log')
 #plt.ylim(10**1.6,10**4.75)
 #plt.xlim(10**(-3),1)
 #plt.legend(loc='best')
-ax_Pk.grid(".")
 
 
 ax_Pk.set_xscale('log')
@@ -230,7 +230,6 @@ ax_Pk.set_xlim(10**(-4),4*10**0)
 ax_Pk.set_ylim(10**(0),5*10**6)
 
 #plt.legend(loc='best')
-plt.grid(".")
 
 
 pl.rcParams['font.family'] = 'sans-serif'
@@ -252,6 +251,7 @@ n = 10
 cmap1 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#66c2a5"]) 
 cmap2 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#fc8d62"]) 
 cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
+
 
 cmap = np.array([cmap1, cmap2, cmap3])
 colors = [None]*3
@@ -478,7 +478,6 @@ ax_Pk.set_yscale('log')
 #plt.ylim(10**1.6,10**4.75)
 #plt.xlim(10**(-3),1)
 #plt.legend(loc='best')
-ax_Pk.grid(".")
 """
 h, l = ax_Pk.get_legend_handles_labels()
 kw = dict(ncol=2, loc="lower center",fancybox=True, fontsize=11,frameon=False)    
@@ -492,7 +491,6 @@ ax_Pk.set_ylim(10**(0),5*10**6)
 ax_Pk.yaxis.set_ticklabels([])
 
 #plt.legend(loc='best')
-plt.grid(".")
 line3 = ax_Pk.plot([0], [0], label=r'$\beta=0.1$', color='#66c2a5')   
 line2 = ax_Pk.plot([0], [0], label=r'$\beta=0.3$', color='#fc8d62')
 line1 = ax_Pk.plot([0], [0], label=r'$\beta=0.5$', color='#8da0cb')

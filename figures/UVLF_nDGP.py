@@ -464,7 +464,7 @@ for z_smf in z_smf_arr:
 
 
 
-    model = 'nDGP'
+    """model = 'nDGP'
     model_H = 'nDGP'
     model_SFR = 'Puebla'
     pars1 = np.logspace(2.5, 4, 10)
@@ -502,7 +502,17 @@ for z_smf in z_smf_arr:
     sigma_uv = sigma_uv_vs_mhalo_alt2(np.log10(Masses),0.2, A_z(z_smf))
     iterable = [(1/(1+z_smf), rhom, model, model_H, model_SFR, par1, par2, Masses, k, Pk_arr[i], f0, sigma_uv) for i,par1 in enumerate(pars1)]
     MUV, UVLF_obs = zip(*pool_cpu.starmap(UVLF_library.compute_uv_luminosity_function,tqdm(iterable, total=len(pars1))))
-    np.savez('./data_folder/UVLF_nDGP_Puebla_z'+str(z_smf)+'.npz', name1=MUV, name2=UVLF_obs)
+    """   
+    n = 10
+
+    cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#fc8d62"])
+
+    colors = cmap3(np.linspace(0, 1, n))
+    
+    data = np.load('./data_folder/UVLF_nDGP_Puebla_z'+str(z_smf)+'.npz')
+    MUV = data['name1']
+    UVLF_obs = data['name2']
+    
     for i in range(len(UVLF_obs)):
         ax_Pk.plot(MUV[i], np.log10(UVLF_obs[i]), c = colors[i], lw=  1, zorder = 3)
     
@@ -510,14 +520,14 @@ for z_smf in z_smf_arr:
 
 
 
-    model = 'nDGP'
+    """model = 'nDGP'
     model_H = 'nDGP'
     model_SFR = 'double_power'
     pars1 = np.logspace(2.5, 4, 10)
     par2 = 0
     f0 = 0.21
     n = len(pars1)
-    cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","crimson"])
+    cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
 
     colors = cmap3(np.linspace(0, 1, n))
     
@@ -548,8 +558,15 @@ for z_smf in z_smf_arr:
     sigma_uv = sigma_uv_vs_mhalo_alt2(np.log10(Masses),0.2, A_z(z_smf))
     iterable = [(1/(1+z_smf), rhom, model, model_H, model_SFR, par1, par2, Masses, k, Pk_arr[i], f0, sigma_uv) for i,par1 in enumerate(pars1)]
     MUV, UVLF_obs = zip(*pool_cpu.starmap(UVLF_library.compute_uv_luminosity_function,tqdm(iterable, total=len(pars1))))
-    np.savez('./data_folder/UVLF_nDGP_double_power_z'+str(z_smf)+'.npz', name1=MUV, name2=UVLF_obs)
+    """
+    
+    cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
+    colors = cmap3(np.linspace(0, 1, n))
 
+    data = np.load('./data_folder/UVLF_nDGP_double_power_z'+str(z_smf)+'.npz')
+    MUV = data['name1']
+    UVLF_obs = data['name2']
+    
     for i in range(len(UVLF_obs)):
         ax_Pk.plot(MUV[i], np.log10(UVLF_obs[i]), c = colors[i], lw=  1, zorder = 3)
     
@@ -563,8 +580,8 @@ for z_smf in z_smf_arr:
 
 
     #plines = plt.errorbar(x.get('Navarro'),y.get('Navarro'),yerr=[yerr_down.get('Navarro'),yerr_up.get('Navarro')],capsize=0,ecolor='k',color='w',marker=markers[j_data+1],markersize=4,markeredgewidth=1, elinewidth=1.2,ls='None',markeredgecolor='k', label = r'$\rm Navarro+2024$')
-    ax_Pk.plot(0,0,c = 'royalblue', label = r'$\rm Rodriguez-Puebla$')
-    ax_Pk.plot(0,0,c = 'crimson', label = r'$\rm Double\;power-law$')
+    ax_Pk.plot(0,0,c = '#fc8d62', label = r'$\rm Rodriguez-Puebla$')
+    ax_Pk.plot(0,0,c = '#8da0cb', label = r'$\rm Double\;power-law$')
     # plt.scatter(1/a_vir-1, vir2, c = 'tab:orange')
     plt.xlim(-24.5, -15)
     if z_smf >= 7:

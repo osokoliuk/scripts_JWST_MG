@@ -488,7 +488,7 @@ for z_smf in z_smf_arr:
     
     model = 'kmoufl'
     model_H = 'kmoufl'
-    model_SFR = 'Puebla'
+    model_SFR = 'double_power'
     pars2 = np.linspace(0.0, 1, 10)
     pars1 = np.array([0.1, 0.3, 0.5])
     n = len(pars2)
@@ -529,7 +529,7 @@ for z_smf in z_smf_arr:
         iterable = [(1/(1+z_smf), rhom, model, model_H, model_SFR, par1, par2, Masses, k, Pk_arr[i], f0, sigma_uv) for i,par2 in enumerate(pars2)]
 
         MUV, UVLF_obs = zip(*pool_cpu.starmap(UVLF_library.compute_uv_luminosity_function,tqdm(iterable, total=len(pars2))))
-        np.savez('./data_folder/UVLF_kmoufl_Puebla_z'+str(z_smf)+'_'+str(par1)+'.npz', name1=MUV, name2=UVLF_obs)
+        np.savez('./data_folder/UVLF_kmoufl_double_power_z'+str(z_smf)+'_'+str(par1)+'.npz', name1=MUV, name2=UVLF_obs)
 
         for i in range(len(UVLF_obs)):
             ax_Pk.plot(MUV[i], np.log10(UVLF_obs[i]),c=colors[j][i], lw = 1)
@@ -853,4 +853,4 @@ plt.grid(".")
 
 
 #plt.tight_layout()
-plt.savefig('UVLF_kmoufl_Puebla.pdf', bbox_inches='tight')
+plt.savefig('UVLF_kmoufl_double_power.pdf', bbox_inches='tight')
