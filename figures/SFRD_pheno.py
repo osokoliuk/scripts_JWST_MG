@@ -422,6 +422,7 @@ for z_smf in z_smf_arr:
 
         iterable = [(a_arr, rhom, model, model_H, model_SFR, par1, par2, Masses_arr[i], k, Pk_arr[i], f0) for i,par2 in enumerate(pars2)]
         SFRD_obs = pool_cpu.starmap( UVLF_library.SFRD,tqdm(iterable, total=len(pars2)))
+        data = np.savez('./data_folder/SFRD_'+str(model)+'_'+str(model_SFR) +'_'+str(par1)+'.npz', name1 = z_int, name2 = SFRD_obs)
 
 
         #print(SMF)

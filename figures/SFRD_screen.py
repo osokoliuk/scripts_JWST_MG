@@ -391,7 +391,7 @@ for z_smf in z_smf_arr:
         colors[2] = cmap[2]((np.linspace(0, 1, n)))
 
         for ll, par1 in enumerate(pars1):
-            z_int = np.linspace(0,18,19) #np.linspace(12,5,35)
+            """            z_int = np.linspace(0,18,19) #np.linspace(12,5,35)
             a_arr = 1/(1+z_int)
 
             UVLF_library = UVLF(1/(1+z_int), model, model_H, model_SFR, pars1, pars2, 1e8, f0)
@@ -411,6 +411,10 @@ for z_smf in z_smf_arr:
 
             iterable = [(a_arr, rhom, model, model_H, model_SFR, par1, par2, Masses_arr[i], k, Pk_arr[i], f0) for i,par2 in enumerate(pars2)]
             SFRD_obs = pool_cpu.starmap( UVLF_library.SFRD,tqdm(iterable, total=len(pars2)))
+            """
+            data = np.load('./data_folder/SFRD_'+str(model)+'_'+str(model_SFR) +'_'+str(par1)+'.npz')
+            z_int = data['name1']
+            SFRD_obs = data['name2']
 
 
             #print(SMF)
@@ -428,7 +432,7 @@ for z_smf in z_smf_arr:
         legend1.get_frame().set_linewidth(0.0)
         ax_Pk.add_artist(legend1)
     else:
-        z_int = np.linspace(0,18,19) #np.linspace(12,5,35)
+        """ z_int = np.linspace(0,18,19) #np.linspace(12,5,35)
         a_arr = 1/(1+z_int)
 
         UVLF_library = UVLF(1/(1+z_int), model, model_H, model_SFR, pars1, par2, 1e8, f0)
@@ -450,7 +454,10 @@ for z_smf in z_smf_arr:
 
         iterable = [(a_arr, rhom, model, model_H, model_SFR, par1, par2, Masses_arr[i], k, Pk_arr[i], f0) for i,par1 in enumerate(pars1)]
         SFRD_obs = pool_cpu.starmap( UVLF_library.SFRD,tqdm(iterable, total=len(pars1)))
-
+        """
+        data = np.load('./data_folder/SFRD_'+str(model)+'_'+str(model_SFR) +'.npz')
+        z_int = data['name1']
+        SFRD_obs = data['name2']
 
         #print(SMF)
         #Masses_star = SMF[0]
@@ -498,7 +505,6 @@ for z_smf in z_smf_arr:
             ax_Pk.set_xlabel(r'$ \mathrm{Redshift}\;z$', size = '16')
             ax_Pk.set_ylabel(r'$\log_{10}\rho_{\rm SFR}\;[M_\odot\;\rm Mpc^{-3}]$', size='16')
 
-    plt.grid(".")
     
     
     
