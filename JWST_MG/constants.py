@@ -96,5 +96,5 @@ dH_int_kmoufl = np.zeros(shape=(15, 15), dtype=object)
 
 M = {}
 path = os.path.dirname(os.path.realpath(__file__))
-#kmoufl_H = np.load(path  + "/kmoufl_H.npy", allow_pickle=True)
-#kmoufl_dH = np.load(path + "/kmoufl_dH.npy", allow_pickle=True)
+kmoufl_H = np.load(path  + "/kmoufl_H.npy", allow_pickle=True)
+kmoufl_dH = np.load(path + "/kmoufl_dH.npy", allow_pickle=True)
