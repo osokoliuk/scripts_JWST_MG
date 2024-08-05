@@ -331,7 +331,7 @@ for z_smf in z_smf_arr:
     #y = data[:,2]
     #yerr = data[:,3]
     
-    data = np.loadtxt('/home/oleksii/codes/scripts_JWST_MG/observational_data/SFRD/csfrs_new.dat')
+    data = np.loadtxt('../observational_data/SFRD/csfrs_new.dat')
     x = data[:,0]
     y = data[:,1]
     yerr = [data[:,2], data[:,3]]
@@ -341,7 +341,7 @@ for z_smf in z_smf_arr:
     plt.errorbar(x,y,yerr=yerr,xerr=xerr, capsize=2,ecolor=color,color='w',marker=marker,markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3, label = r'$\rm pre-JWST$')
 
 
-    data = np.loadtxt('/home/oleksii/codes/scripts_JWST_MG/observational_data/SFRD/sfrd_jwst.txt')
+    data = np.loadtxt('../observational_data/SFRD/sfrd_jwst.txt')
     x = data[:,0]
     y = data[:,1]
     yerr = [data[:,3], data[:,2]]
@@ -402,7 +402,7 @@ for z_smf in z_smf_arr:
     colors[2] = cmap[2]((np.linspace(0, 1, n)))
 
     for ll, par1 in enumerate(pars1):
-        z_int = np.linspace(0,18,19) #np.linspace(12,5,35)
+        """z_int = np.linspace(0,18,19) #np.linspace(12,5,35)
         a_arr = 1/(1+z_int)
 
         UVLF_library = UVLF(1/(1+z_int), model, model_H, model_SFR, pars1, pars2, 1e8, f0)
@@ -421,15 +421,16 @@ for z_smf in z_smf_arr:
 
 
         iterable = [(a_arr, rhom, model, model_H, model_SFR, par1, par2, Masses_arr[i], k, Pk_arr[i], f0) for i,par2 in enumerate(pars2)]
-        SFRD_obs = pool_cpu.starmap( UVLF_library.SFRD,tqdm(iterable, total=len(pars2)))
-        data = np.savez('./data_folder/SFRD_'+str(model)+'_'+str(model_SFR) +'_'+str(par1)+'.npz', name1 = z_int, name2 = SFRD_obs)
-
+        SFRD_obs = pool_cpu.starmap( UVLF_library.SFRD,tqdm(iterable, total=len(pars2)))"""
+        data = np.load('./data_folder/SFRD_'+str(model)+'_'+str(model_SFR) +'_'+str(par1)+'.npz')
+        z_int = data['name1']
+        SFRD_obs = data['name2']
 
         #print(SMF)
         #Masses_star = SMF[0]
         #SMF_obs = SMF[1]
         for i in range(len(SFRD_obs)):
-            plt.plot(z_int, np.log10(SFRD_obs[i]), c = colors[ll][i], lw = 1)
+            plt.plot(z_int, np.log10(SFRD_obs[i]), c = colors[ll][i], lw = 1.5)
     
 
     if nn >= 1 and nn <= 2:
@@ -489,7 +490,6 @@ for z_smf in z_smf_arr:
             ax_Pk.set_xlabel(r'$ \mathrm{Redshift}\;z$', size = '16')
             ax_Pk.set_ylabel(r'$\log_{10}\rho_{\rm SFR}\;[M_\odot\;\rm Mpc^{-3}]$', size='16')
 
-    plt.grid(".")
     
     
     

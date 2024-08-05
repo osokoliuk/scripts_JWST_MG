@@ -331,7 +331,7 @@ for z_smf in z_smf_arr:
     #y = data[:,2]
     #yerr = data[:,3]
     
-    data = np.loadtxt('/home/oleksii/codes/scripts_JWST_MG/observational_data/SFRD/csfrs_new.dat')
+    data = np.loadtxt('../observational_data/SFRD/csfrs_new.dat')
     x = data[:,0]
     y = data[:,1]
     yerr = [data[:,2], data[:,3]]
@@ -341,7 +341,7 @@ for z_smf in z_smf_arr:
     plt.errorbar(x,y,yerr=yerr,xerr=xerr, capsize=2,ecolor=color,color='w',marker=marker,markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3, label = r'$\rm pre-JWST$')
 
 
-    data = np.loadtxt('/home/oleksii/codes/scripts_JWST_MG/observational_data/SFRD/sfrd_jwst.txt')
+    data = np.loadtxt('../observational_data/SFRD/sfrd_jwst.txt')
     x = data[:,0]
     y = data[:,1]
     yerr = [data[:,3], data[:,2]]
@@ -421,7 +421,7 @@ for z_smf in z_smf_arr:
             #Masses_star = SMF[0]
             #SMF_obs = SMF[1]
             for i in range(len(SFRD_obs)):
-                plt.plot(z_int, np.log10(SFRD_obs[i]), c = colors[ll][i], lw = 1)
+                plt.plot(z_int, np.log10(SFRD_obs[i]), c = colors[ll][i], lw = 1.5)
                 
         line3 = ax_Pk.plot([0], [0], label=r'$\beta=0.1$', color='#66c2a5')   
         line2 = ax_Pk.plot([0], [0], label=r'$\beta=0.3$', color='#fc8d62')
@@ -463,7 +463,7 @@ for z_smf in z_smf_arr:
         #Masses_star = SMF[0]
         #SMF_obs = SMF[1]
         for i in range(len(SFRD_obs)):
-            plt.plot(z_int, np.log10(SFRD_obs[i]), c = colors[i], lw = 1)
+            plt.plot(z_int, np.log10(SFRD_obs[i]), c = colors[i], lw = 1.5)
         
         legend1 = ax_Pk.legend(loc='upper right',fancybox=True, fontsize=10)
         legend1.get_frame().set_facecolor('none')

@@ -318,10 +318,10 @@ ax_Pk.tick_params(axis='both', which='major',direction="in", labelsize=14, lengt
 ax_Pk.tick_params(axis='both', which='minor',direction="in", labelsize=12, length = 4)
 
 
-pool_cpu = Pool(8)
+pool_cpu = Pool(4)
 
-
-data = np.loadtxt('/home/oleksii/codes/scripts_JWST_MG/observational_data/EoR/QHII.txt')
+"""
+data = np.loadtxt('../../observational_data/EoR/QHII.txt')
 x = data[:,0]
 y = data[:,1]
 yerr = data[:,2]
@@ -329,7 +329,7 @@ lims_switch = data[:,3]
 marker = '.'
 color = 'tab:gray'
 #plt.errorbar(x,1-y,yerr=yerr, lolims=lims_switch,capsize=2,ecolor=color,color='w',marker=marker,markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3)
-
+"""
 
 
 
