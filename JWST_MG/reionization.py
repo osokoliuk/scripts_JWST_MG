@@ -34,7 +34,7 @@ class reionization:
             self.ac, self.model, self.model_H, self.par1, self.par2, 0, len(delta_ini), abs_err)
         self.delta_nl = deltac_library.non_linear(
             self.deltai, self.a_arr, self.model, self.model_H, self.par1, self.par2)
-
+	
     def delta_nl_a(self, x):
         func = scipy.interpolate.interp1d(
             self.a_arr, self.delta_nl, fill_value="extrapolate")
@@ -205,55 +205,61 @@ class reionization:
 
         return nion
 
-    def QHII_integral(self, z0, nion, nH, fesc, alpha_B, CHII, xe, H):
-        return 1/nH*scipy.integrate.quad(lambda z: fesc*nion(z)*cm_Mpc**3/((1+z)*H(1/(1+z))*km_Mpc) \
-        *np.exp(-alpha_B*nH*CHII*xe*scipy.integrate.quad(lambda zp: (1+zp)**2/(H(1/(1+zp))*km_Mpc), z0, z)[0]), z0, 50)[0]
+    def QHII_dz(self, y, z, nion, nH, fesc, alpha_B, CHII,H):
+        #return 1/nH*scipy.integrate.quad(lambda z: fesc*nion(z)*cm_Mpc**3/((1+z)*H(1/(1+z))*km_Mpc) \
+        #*np.exp(-alpha_B*nH*CHII*xe*scipy.integrate.quad(lambda zp: (1+zp)**2/(H(1/(1+zp))*km_Mpc), z0, z)[0]), z0, 50)[0]
+        # function that returns dy/dt
+        xe = y*(1+YHe/4)
+        QHIIdt = fesc*nion/2.938e+73/nH - CHII*alpha_B*nH*(1+z)**3*xe
+        QHIIdz = QHIIdt*(-(1+z)*H*km_Mpc)**(-1)
+        return QHIIdz
 
-    def QHII(self, a0, rhoM, model, model_H, model_SFR, par1, par2, f0=None):
-        pool_cpu = Pool(8)
-        z0 = 1/a0-1
-        a_int = np.linspace(1/51,1,1000)
-        z_int = np.linspace(50, 0, 50)
+
+    def QHII(self, rhoM, model, model_H, model_SFR, par1, par2, pool_cpu, f0=None):
+        nH = (1-YHe)*Omegab0*(H0/100)**2*1.88e-29/(mP*1000)
+        z_int = np.linspace(20, 0, 24)
         cosmological_library = cosmological_functions(
-            a_int, model, model_H, par1, par2)
-        H = cosmological_library.H_f(a_int, model_H, par1, par2)
-        H = scipy.interpolate.interp1d(a_int, H, fill_value='extrapolate')
+            1/(1+z_int), model, model_H, par1, par2)
+        H = cosmological_library.H_f(1/(1+z_int), model_H, par1, par2)
+        H = scipy.interpolate.interp1d(z_int, H, fill_value='extrapolate')
         
         Pk_arr = []
         for i, z_i in enumerate(z_int):
             HMF_library = HMF(1/(1+z_i), model, model_H, par1, par2, 1e8)
             Pk_arr.append(np.array(HMF_library.Pk(1/(1+z_i), model, par1, par2))*h**3)
         k = kvec/h
-
+        print('finished Pk')
         iterable = [(1/(1+z), rhoM, model, model_H,
                           model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
         nion = pool_cpu.starmap(self.n_ion,tqdm(iterable, total=len(z_int)))
-        
+        print('finished nion')
         nion = scipy.interpolate.interp1d(
             z_int, nion, fill_value='extrapolate')
-
-        xe = (1+YHe/4)
-        nH = (1-YHe)*Omegab0*(H0/100)**2*1.88e-29/(mP*1000)
+        #QHIIdz = self.QHII_dz(z_int, nion(z_int), nH, fesc, alpha_B, CHII,H(z_int))
+        def model(y,t):
+            return self.QHII_dz(y,t,nion(t), nH, fesc, alpha_B, CHII,H(t))
         
-        if hasattr(a0, '__len__') and (not isinstance(a0, str)):
-            iterable = [(z1, nion, nH, fesc, alpha_B, CHII, xe, H) for z1 in z0]
-            QHII = pool_cpu.starmap(self.QHII_integral,iterable)
-        else:
-            QHII = self.QHII_integral(z0,nion, nH, fesc, alpha_B, CHII, xe, H)
-        
-        return QHII
+        QHII = odeint(model,1e-13,z_int)
+        return z_int, QHII
 
 
     def tau_reio(self, rhoM, model, model_H, model_SFR, par1, par2, f0=None):
-        z_span = np.linspace(0,50,50)
-        a_int = np.linspace(1/51,1,1000)
+        z_span, qhii = self.QHII(rhoM, model, model_H, model_SFR, par1, par2, f0=f0)
+        z_span = z_span[::-1]
+        qhii = qhii[::-1][:,0]
+        a_int = 1/(1+z_span)
+        print(np.shape(z_span))
+        print(np.shape(qhii))
+        
+        #z_span = np.linspace(0,50,50)
+        #a_int = np.linspace(1/51,1,1000)
         cosmological_library = cosmological_functions(
             a_int, model, model_H, par1, par2)
         H = cosmological_library.H_f(a_int, model_H, par1, par2)
         H = scipy.interpolate.interp1d(a_int, H, fill_value='extrapolate')
-        QHII = np.array(self.QHII(1/(1+z_span), rhoM, model, model_H, model_SFR, par1, par2, f0))
-        QHII[QHII > 1] = 1
-        xe = (1+YHe/4)*QHII
+        #QHII = np.array(self.QHII(1/(1+z_span), rhoM, model, model_H, model_SFR, par1, par2, f0))
+        qhii[qhii > 1] = 1
+        xe = scipy.interpolate.interp1d(z_span, (1+YHe/4)*qhii, fill_value='extrapolate')
         nH = (1-YHe)*Omegab0*(H0/100)**2*1.88e-29/(mP*1000)
-        tau_reio = nH*sigma_T*scipy.integrate.trapz(c*1e5*xe*(1+z_span)**2/(H(1/(1+z_span))*km_Mpc),z_span)
+        tau_reio = nH*sigma_T*scipy.integrate.quad(lambda z_span: c*1e5*xe(z_span)*(1+z_span)**2/(H(1/(1+z_span))*km_Mpc),0, 20)[0]
         return tau_reio

@@ -29,6 +29,10 @@ import emcee
 from parallelbar import progress_map, progress_starmap
 from scipy.stats import qmc
 from numpy import log, log10, sqrt, exp, pi, arange, logspace, linspace, r_, c_
+import matplotlib as mpl
+from matplotlib import rc
+rc('font',**{'family':'serif','serif':['Palatino']})
+mpl.rcParams["axes.axisbelow"] = False
 
 os.environ["OMP_NUM_THREADS"] = "1"
 
@@ -75,7 +79,7 @@ rhocr = 2.77536627e11
 rhom = rhocr*Omegam0
 CHII = 3
 THII = 2*1e4
-fesc = 0.1
+fesc = 0.25
 cm_Mpc = 3.24078e-25
 km_Mpc = 3.24078e-20
 MsolMpc3_to_gcm3 = 6.77e-23
