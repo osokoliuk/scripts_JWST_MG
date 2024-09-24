@@ -191,7 +191,7 @@ class reionization:
         return a_vir, Mhalo_min
 
     def n_ion(self, a, rhoM, model, model_H, model_SFR, par1, par2, k, Pk, f0=None):
-        Nion = 10**53.14
+        #Nion = 10**53.14
         a_arr = np.linspace(ai, a, 1000)
         a_vir, Mhalo_min = self.minimum_Mhalo(
             model, model_H, par1, par2, a_arr)
@@ -201,10 +201,51 @@ class reionization:
                             par1, par2, Masses, f0)
         SFRD_fid = UVLF_library.SFRD(
             a, rhoM, model, model_H, model_SFR, par1, par2, Masses, k, Pk, f0)
-        nion = Nion*SFRD_fid
+        
+        nion = SFRD_fid
 
         return nion
 
+    # This takes into account scatter that may arise from different factors,
+    # For example from the SMHR uncertainties and HMF choice
+    # Taken from https://github.com/XuejianShen/highz-empirical-variability
+
+    def convolve_on_grid(self, input_grid, input_weight, sigma_uv_input, normalization_check=False, verbose=False):
+        # convolve with a gaussian kernel
+        # over the UV luminosity function
+        grid_binsize  = np.abs(input_grid[2:] - input_grid[:-2])/2.
+        grid_binsize  = np.append(grid_binsize, grid_binsize[-1])
+        grid_binsize  = np.append(grid_binsize[0], grid_binsize)
+
+        minimum_sigma = 0.2 # set to the binsize divided by a constant
+        #print(minimum_sigma)
+        if np.isscalar(sigma_uv_input):
+            sigma_uv = max(sigma_uv_input, minimum_sigma) # regulate the miminum sigma to be of order the binsize (~ 0.01 dex)
+        else:
+            sigma_uv = sigma_uv_input.copy()
+            sigma_uv[sigma_uv < minimum_sigma] = minimum_sigma
+
+        output_weight = np.zeros(len(input_grid))
+        for i, mapfrom in enumerate(input_grid):
+            raw_output    = np.zeros(len(input_grid))
+            for j, mapto in enumerate(input_grid):
+                if np.isscalar(sigma_uv):
+                    raw_output[j] += 1./np.sqrt(2*np.pi*sigma_uv**2) * np.exp( -0.5 * (mapto - mapfrom)**2 / sigma_uv**2 ) * grid_binsize[j]
+                else:
+                    raw_output[j] += 1./np.sqrt(2*np.pi*sigma_uv[i]**2) * np.exp( -0.5 * (mapto - mapfrom)**2 / sigma_uv[i]**2 ) * grid_binsize[j]
+            
+            if normalization_check: # redundant normalization
+                sum_raw_output = np.sum(raw_output)
+                if np.abs(sum_raw_output - 1) > 1e-2:
+                    if verbose: print("Warning: the convolution is not perfectly normalized", sum_raw_output, 'at', input_grid[i])
+                if sum_raw_output > 0:
+                    raw_output = raw_output/sum_raw_output
+                else:
+                    raw_output = np.zeros(len(input_grid))
+
+            output_weight += raw_output * (input_weight[i] * grid_binsize[i])
+        return output_weight/grid_binsize
+        
     def QHII_dz(self, y, z, nion, nH, fesc, alpha_B, CHII,H):
         #return 1/nH*scipy.integrate.quad(lambda z: fesc*nion(z)*cm_Mpc**3/((1+z)*H(1/(1+z))*km_Mpc) \
         #*np.exp(-alpha_B*nH*CHII*xe*scipy.integrate.quad(lambda zp: (1+zp)**2/(H(1/(1+zp))*km_Mpc), z0, z)[0]), z0, 50)[0]
@@ -216,8 +257,10 @@ class reionization:
 
 
     def QHII(self, rhoM, model, model_H, model_SFR, par1, par2, pool_cpu, f0=None):
+        Nion = 10**53.14
         nH = (1-YHe)*Omegab0*(H0/100)**2*1.88e-29/(mP*1000)
-        z_int = np.linspace(20, 0, 24)
+        z_int = np.linspace(20, 0, 64)
+        #z_int = np.hstack(([20,15],z_int))
         cosmological_library = cosmological_functions(
             1/(1+z_int), model, model_H, par1, par2)
         H = cosmological_library.H_f(1/(1+z_int), model_H, par1, par2)
@@ -232,6 +275,14 @@ class reionization:
         iterable = [(1/(1+z), rhoM, model, model_H,
                           model_SFR, par1, par2, k, Pk_arr[i], f0) for i,z in enumerate(z_int)]
         nion = pool_cpu.starmap(self.n_ion,tqdm(iterable, total=len(z_int)))
+        
+        if model_SFR == 'double_power':
+            sigma_SFRD = 0.1
+        elif model_SFR == 'Puebla':
+            sigma_SFRD = 0.2
+        
+        nion = self.convolve_on_grid(z_int,nion,sigma_SFRD)
+        nion = Nion*nion
         print('finished nion')
         nion = scipy.interpolate.interp1d(
             z_int, nion, fill_value='extrapolate')
@@ -243,14 +294,10 @@ class reionization:
         return z_int, QHII
 
 
-    def tau_reio(self, rhoM, model, model_H, model_SFR, par1, par2, f0=None):
-        z_span, qhii = self.QHII(rhoM, model, model_H, model_SFR, par1, par2, f0=f0)
-        z_span = z_span[::-1]
-        qhii = qhii[::-1][:,0]
+    def tau_reio(self, z_span, qhii, model, model_H, par1, par2):
+        #z_span, qhii = self.QHII(rhoM, model, model_H, model_SFR, par1, par2, f0=f0)
         a_int = 1/(1+z_span)
-        print(np.shape(z_span))
-        print(np.shape(qhii))
-        
+
         #z_span = np.linspace(0,50,50)
         #a_int = np.linspace(1/51,1,1000)
         cosmological_library = cosmological_functions(
@@ -261,5 +308,5 @@ class reionization:
         qhii[qhii > 1] = 1
         xe = scipy.interpolate.interp1d(z_span, (1+YHe/4)*qhii, fill_value='extrapolate')
         nH = (1-YHe)*Omegab0*(H0/100)**2*1.88e-29/(mP*1000)
-        tau_reio = nH*sigma_T*scipy.integrate.quad(lambda z_span: c*1e5*xe(z_span)*(1+z_span)**2/(H(1/(1+z_span))*km_Mpc),0, 20)[0]
+        tau_reio = nH*sigma_T*scipy.integrate.quad(lambda z_span: c*1e5*xe(z_span)*(1+z_span)**2/(H(1/(1+z_span))*km_Mpc),min(z_span), max(z_span))[0]
         return tau_reio
