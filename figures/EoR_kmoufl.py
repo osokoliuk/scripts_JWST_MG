@@ -257,9 +257,7 @@ line1 = Line2D([0], [0], label=r'$T_2=0$', color='tab:blue')
 line2 = Line2D([0], [0], label=r'$T_2=5$', color='tab:red')
 line3 = Line2D([0], [0], label=r'$T_2=-5$', color='tab:purple')
 h.extend([line1, line2, line3])
-kw = dict(ncol=1,
-          fancybox=True, fontsize=10, frameon=False)
-# leg1 = ax.legend(h[:], l[:], bbox_to_anchor=[0.5, 1.08], **kw)
+kw = dict(ncol=1,source ../../py38/bin/activatebox_to_anchor=[0.5, 1.08], **kw)
 ax.legend(handles=h, loc='lower right', **kw)
 
 plt.axhline(1.675, c='tab:gray', lw=0.8)
@@ -289,6 +287,17 @@ from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
 import matplotlib.pylab as pl
 from matplotlib.text import Annotation
 from matplotlib.transforms import Affine2D
+
+def reion_func(ac, model, model_H, par1, par2):
+    a_arr = np.linspace(ai,ac,1000)
+    reion = reionization(a_arr, model, model_H, par1, par2)
+    a_vir, Mhalo_min = reion.minimum_Mhalo(model, model_H, par1, par2, a_arr)
+    return a_vir, Mhalo_min
+
+def n_ion_func(i, ac_arr, rhoM, model, model_H,
+                            model_SFR, par1, par2, k, Pk_arr, f0, reion_arr):   
+    return reion_arr[i].n_ion(ac_arr[i], rhoM, model, model_H,
+                            model_SFR, par1, par2, k, Pk_arr[i], f0)
 
 class LineAnnotation(Annotation):
     """A sloped annotation to *line* at position *x* with *text*
@@ -459,8 +468,8 @@ for z_smf in z_smf_arr:
     model = 'kmoufl'
     model_H = 'kmoufl'
     model_SFR = 'Puebla'
-    pars2 = np.linspace(0,1,10)
-    pars1 = np.array([0.1, 0.3, 0.5])
+    pars2 = np.linspace(0,1,10) #np.array([0.1])
+    pars1 = np.array([0.1, 0.3, 0.5]) #np.array([0.1])
     f0 = 0.21
     n = len(pars1)
 
@@ -474,14 +483,32 @@ for z_smf in z_smf_arr:
     colors[1] = cmap[1]((np.linspace(0, 1, n)))
     colors[2] = cmap[2]((np.linspace(0, 1, n)))
     
-    pool_cpu = Pool(8)
+    pool_cpu = Pool(20)
     
     for i, par1 in enumerate(pars1):
         for j,par2 in enumerate(pars2):
             colors = cmap3(np.linspace(0, 1, n))
-            ac_arr = np.linspace(1/21, 1, 64)
-            reion = reionization(ac_arr, model, model_H, par1, par2)
-            z_int, qhii = reion.QHII(rhom, model, model_H, model_SFR, par1, par2, pool_cpu, f0=f0)
+            ac_arr = np.linspace(1/21, 1, 120)
+            #iterable = [(ac, model, model_H, par1, par2) for ac in ac_arr]
+            #a_vir, Mhalo_min = zip(*pool_cpu.starmap(reion_func,tqdm(iterable, total=len(ac_arr))))
+            reion_arr = [reionization(np.linspace(ai, ac, 10000), model, model_H, par1, par2) for ac in ac_arr]
+            #z_int, qhii = reion.QHII(rhom, model, model_H, model_SFR, par1, par2, pool_cpu, f0=f0)
+            z_int = 1/ac_arr - 1            
+
+            Pk_arr = []
+            for i, ac in enumerate(ac_arr):
+                HMF_library = HMF(ac, model, model_H, par1, par2, 1e8)
+                Pk_arr.append(np.array(HMF_library.Pk(ac, model, par1, par2))*h**3)
+            
+            k = kvec/h
+            print('finished Pk')
+            
+            iterable = [(i, ac_arr, rhom, model, model_H,
+                            model_SFR, par1, par2, k, Pk_arr, f0, reion_arr) for i,ac in enumerate(ac_arr)]
+            
+            nion = pool_cpu.starmap(n_ion_func,tqdm(iterable, total=len(ac_arr)))
+            z_int, qhii = reion_arr[0].QHII(ac_arr, nion, rhom, model, model_H, model_SFR, par1, par2, pool_cpu, f0=f0)
+
             data = np.savez('./data_folder/QHII_'+str(model) +'_'+ str(model_SFR) + '_' +str(par1) + '_' +str(par2) +'.npz', name1 = z_int, name2 = qhii)
             #data = np.load('./data_folder/QHII_'+str(model) +'_'+ str(model_SFR) + '_' +str(par1)+'.npz')
             #z_int = data['name1']
@@ -489,5 +516,9 @@ for z_smf in z_smf_arr:
             #print(reion.tau_reio(rhom, model, model_H, model_SFR, par1, par2, f0=f0))
             #tau = reion.tau_reio(rhom, model, model_H, model_SFR, par1, par2, f0=f0)
             #print(tau)
-            ax_Pk.plot(z_int,qhii, c = 'tab:blue', lw=  1.5, zorder = 3)
+            ax_Pk.plot(z_int, qhii, c = 'tab:blue', lw=  1.5, zorder = 3)
             #pool_cpu.terminate()
+            
+plt.xlim(4,12)
+plt.ylim(0,1)
+plt.savefig('test.pdf')

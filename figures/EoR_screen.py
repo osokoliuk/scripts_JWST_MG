@@ -424,7 +424,8 @@ fig = plt.figure(figsize=(4.25*2*.95*0.9, 2*5*1.05*0.9))
 
 
 nn = 1
-z_smf_arr = [4,5,6]
+z_smf_arr = [4,5,6,7,8,9]
+turn_tau = False
 
 for z_smf in z_smf_arr:
     ax_Pk = plt.subplot(4,2,nn)
@@ -444,7 +445,10 @@ for z_smf in z_smf_arr:
                     direction="in", labelsize=11, length=4, width = 1.1)
 
 
-
+    ax_Pk.spines['top'].set_zorder(5)
+    ax_Pk.spines['right'].set_zorder(5)
+    ax_Pk.spines['left'].set_zorder(5)
+    ax_Pk.spines['bottom'].set_zorder(5)
 
 
     if nn % 2 != 0:
@@ -455,7 +459,7 @@ for z_smf in z_smf_arr:
         lims_switch = data[:,3]
         marker = '.'
         color = 'tab:gray'
-        #plt.errorbar(x,1-y,yerr=yerr, lolims=lims_switch,capsize=2,ecolor=color,color='w',marker=marker,markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3)
+        plt.errorbar(x,1-y,yerr=yerr, lolims=lims_switch,capsize=2,ecolor=color,color='w',marker=marker,markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 4)
 
 
         if nn < 3:
@@ -470,7 +474,7 @@ for z_smf in z_smf_arr:
             cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#fc8d62"])
 
             colors = cmap3(np.linspace(0, 1, n))
-            pool_cpu = Pool(8)
+            
             
             for i, par1 in enumerate(pars1):
                 colors = cmap3(np.linspace(0, 1, n))
@@ -499,7 +503,7 @@ for z_smf in z_smf_arr:
             cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#48639e"])
 
             colors = cmap3(np.linspace(0, 1, n))
-            pool_cpu = Pool(8)
+            
             
             for i, par1 in enumerate(pars1):
                 colors = cmap3(np.linspace(0, 1, n))
@@ -522,7 +526,7 @@ for z_smf in z_smf_arr:
             # plt.scatter(1/a_vir-1, vir2, c = 'tab:orange')
             plt.xlim(4,12)
             plt.ylim(0,1)
-        if nn >= 3:
+        if nn == 3:
             data = np.loadtxt('../observational_data/EoR/QHII.txt')
             x = data[:,0]
             y = data[:,1]
@@ -535,8 +539,8 @@ for z_smf in z_smf_arr:
             model = 'kmoufl'
             model_H = 'kmoufl'
             model_SFR = 'Puebla'
-            pars2 = np.linspace(0,1,10)
-            pars1 = np.array([0.1, 0.3, 0.5])
+            pars2 = np.linspace(0,1,10) #np.array([0.1])
+            pars1 = np.array([0.1, 0.3, 0.5]) #np.array([0.1])
             f0 = 0.21
             n = len(pars2)
 
@@ -549,105 +553,274 @@ for z_smf in z_smf_arr:
             colors[0] = cmap[0]((np.linspace(0, 1, n)))
             colors[1] = cmap[1]((np.linspace(0, 1, n)))
             colors[2] = cmap[2]((np.linspace(0, 1, n)))
-            
-            pool_cpu = Pool(8)
-            
+                        
             for i, par1 in enumerate(pars1):
                 for j, par2 in enumerate(pars2):
                     #ac_arr = np.linspace(1/21, 1, 64)
                     #reion = reionization(ac_arr, model, model_H, par1, par2)
                     #z_int, qhii = reion.QHII(rhom, model, model_H, model_SFR, par1, par2, pool_cpu, f0=f0)
                     #data = np.savez('./data_folder/QHII_'+str(model) +'_'+ str(model_SFR) + '_' +str(par1)+'.npz', name1 = z_int, name2 = qhii)
-                    data = np.load('./data_folder/QHII_'+str(model) +'_'+ str(model_SFR) + '_' +str(par1)+ '_' +str(par2)+'.npz')
+                    try:
+                        data = np.load('./data_folder/QHII_'+str(model) +'_'+ str(model_SFR) + '_' +str(par1)+ '_' +str(par2)+'.npz')
+                        z_int = data['name1']
+                        qhii = data['name2']
+                        #print(reion.tau_reio(rhom, model, model_H, model_SFR, par1, par2, f0=f0))
+                        #tau = reion.tau_reio(rhom, model, model_H, model_SFR, par1, par2, f0=f0)
+                        #print(tau)
+                        ax_Pk.plot(z_int,qhii, c = colors[i][j], lw=  1.5, zorder = 3)
+                        #pool_cpu.terminate()
+                    except:
+                        print('failed')
+            ax_Pk.plot(0,0, lw=  1.5, zorder = 3, c = colors[0][-1],label = r"$\beta = 0.1$")
+            ax_Pk.plot(0,0, lw=  1.5, zorder = 3, c = colors[1][-1],label = r"$\beta = 0.3$")
+            ax_Pk.plot(0,0, lw=  1.5, zorder = 3, c = colors[2][-1],label = r"$\beta = 0.5$")
+
+            plt.xlim(4,12)
+            plt.ylim(0,1)
+        elif nn == 5:
+            data = np.loadtxt('../observational_data/EoR/QHII.txt')
+            x = data[:,0]
+            y = data[:,1]
+            yerr = data[:,2]
+            lims_switch = data[:,3]
+            marker = '.'
+            color = 'tab:gray'
+            #plt.errorbar(x,1-y,yerr=yerr, lolims=lims_switch,capsize=2,ecolor=color,color='w',marker=marker,markersize=6,markeredgewidth=1.3, elinewidth=1,ls='None',markeredgecolor=color, zorder= 3)
+            
+            model = 'kmoufl'
+            model_H = 'kmoufl'
+            model_SFR = 'double_power'
+            pars2 = np.linspace(0,1,10) #np.array([0.1])
+            pars1 = np.array([0.1, 0.3, 0.5]) #np.array([0.1])
+            f0 = 0.21
+            n = len(pars2)
+
+            cmap1 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#66c2a5"]) 
+            cmap2 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#fc8d62"]) 
+            cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
+
+            cmap = np.array([cmap1, cmap2, cmap3])
+            colors = [None]*3
+            colors[0] = cmap[0]((np.linspace(0, 1, n)))
+            colors[1] = cmap[1]((np.linspace(0, 1, n)))
+            colors[2] = cmap[2]((np.linspace(0, 1, n)))
+                        
+            for i, par1 in enumerate(pars1):
+                for j, par2 in enumerate(pars2):
+                    #ac_arr = np.linspace(1/21, 1, 64)
+                    #reion = reionization(ac_arr, model, model_H, par1, par2)
+                    #z_int, qhii = reion.QHII(rhom, model, model_H, model_SFR, par1, par2, pool_cpu, f0=f0)
+                    #data = np.savez('./data_folder/QHII_'+str(model) +'_'+ str(model_SFR) + '_' +str(par1)+'.npz', name1 = z_int, name2 = qhii)
+                    try:
+                        data = np.load('./data_folder/QHII_'+str(model) +'_'+ str(model_SFR) + '_' +str(par1)+ '_' +str(par2)+'.npz')
+                        z_int = data['name1']
+                        qhii = data['name2']
+                        #print(reion.tau_reio(rhom, model, model_H, model_SFR, par1, par2, f0=f0))
+                        #tau = reion.tau_reio(rhom, model, model_H, model_SFR, par1, par2, f0=f0)
+                        #print(tau)
+                        ax_Pk.plot(z_int,qhii, c = colors[i][j], lw=  1.5, zorder = 3)
+                        #pool_cpu.terminate()
+                    except:
+                        print('failed')
+            ax_Pk.plot(0,0, lw=  1.5, zorder = 3, c = colors[0][-1],label = r"$\beta = 0.1$")
+            ax_Pk.plot(0,0, lw=  1.5, zorder = 3, c = colors[1][-1],label = r"$\beta = 0.3$")
+            ax_Pk.plot(0,0, lw=  1.5, zorder = 3, c = colors[2][-1],label = r"$\beta = 0.5$")
+
+            plt.xlim(4,12)
+            plt.ylim(0,1)
+    else:
+        if nn < 3:
+            if turn_tau == True:
+                model = 'nDGP'
+                model_H = 'nDGP'
+                model_SFR = 'Puebla'
+                pars1 = np.logspace(2.5,6,10)
+                #pars1 = np.hstack((pars1,[10**4.5,10**5]))
+                par2 = 0
+                f0 = 0.21
+                n = len(pars1)
+                cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#fc8d62"])
+
+                colors = cmap3(np.linspace(0, 1, n))
+                
+                
+                for i, par1 in enumerate(pars1):
+                    colors = cmap3(np.linspace(0, 1, n))
+                    ac_arr = np.linspace(1/21, 1, 64)
+                    reion = reionization(ac_arr, model, model_H, par1, par2)
+                    #z_int, qhii = reion.QHII(rhom, model, model_H, model_SFR, par1, par2, pool_cpu, f0=f0)
+                    #data = np.savez('./data_folder/QHII_'+str(model) +'_'+ str(model_SFR) + '_' +str(par1)+'.npz', name1 = z_int, name2 = qhii)
+                    data = np.load('./data_folder/QHII_'+str(model) +'_'+ str(model_SFR) + '_' +str(par1)+'.npz')
                     z_int = data['name1']
-                    qhii = data['name2']
+                    qhii = data['name2'][:,0]
+                    qhii_int = scipy.interpolate.interp1d(z_int,qhii,fill_value='extrapolate')
+                    tau = []
+                    for j, z_end in enumerate(z_int):
+                        z_span = np.linspace(z_end,0,100)
+                        tau.append(reion.tau_reio(z_span, qhii_int(z_span), model, model_H, par1, par2))
                     #print(reion.tau_reio(rhom, model, model_H, model_SFR, par1, par2, f0=f0))
                     #tau = reion.tau_reio(rhom, model, model_H, model_SFR, par1, par2, f0=f0)
                     #print(tau)
-                    ax_Pk.plot(z_int,qhii, c = colors[i][j], lw=  1.5, zorder = 3)
+                    ax_Pk.plot(z_int,tau, c = colors[i], lw=  1.5, zorder = 3)
                     #pool_cpu.terminate()
-    else:
-        """model = 'nDGP'
-        model_H = 'nDGP'
-        model_SFR = 'Puebla'
-        pars1 = np.logspace(2.5,6,10)
-        #pars1 = np.hstack((pars1,[10**4.5,10**5]))
-        par2 = 0
-        f0 = 0.21
-        n = len(pars1)
-        cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#fc8d62"])
+                
+                model = 'nDGP'
+                model_H = 'nDGP'
+                model_SFR = 'double_power'
+                pars1 = np.logspace(2.5,6,10)
+                #pars1 = np.hstack((pars1,[10**4.5,10**5]))
+                par2 = 0
+                f0 = 0.21
+                n = len(pars1)
+                cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#48639e"])
 
-        colors = cmap3(np.linspace(0, 1, n))
-        pool_cpu = Pool(8)
-        
-        for i, par1 in enumerate(pars1):
-            colors = cmap3(np.linspace(0, 1, n))
-            ac_arr = np.linspace(1/21, 1, 64)
-            reion = reionization(ac_arr, model, model_H, par1, par2)
-            #z_int, qhii = reion.QHII(rhom, model, model_H, model_SFR, par1, par2, pool_cpu, f0=f0)
-            #data = np.savez('./data_folder/QHII_'+str(model) +'_'+ str(model_SFR) + '_' +str(par1)+'.npz', name1 = z_int, name2 = qhii)
-            data = np.load('./data_folder/QHII_'+str(model) +'_'+ str(model_SFR) + '_' +str(par1)+'.npz')
-            z_int = data['name1']
-            qhii = data['name2'][:,0]
-            qhii_int = scipy.interpolate.interp1d(z_int,qhii,fill_value='extrapolate')
-            tau = []
-            for j, z_end in enumerate(z_int):
-                z_span = np.linspace(z_end,0,100)
-                tau.append(reion.tau_reio(z_span, qhii_int(z_span), model, model_H, par1, par2))
-            #print(reion.tau_reio(rhom, model, model_H, model_SFR, par1, par2, f0=f0))
-            #tau = reion.tau_reio(rhom, model, model_H, model_SFR, par1, par2, f0=f0)
-            #print(tau)
-            ax_Pk.plot(z_int,tau, c = colors[i], lw=  1.5, zorder = 3)
-            #pool_cpu.terminate()
-        
-        model = 'nDGP'
-        model_H = 'nDGP'
-        model_SFR = 'double_power'
-        pars1 = np.logspace(2.5,6,10)
-        #pars1 = np.hstack((pars1,[10**4.5,10**5]))
-        par2 = 0
-        f0 = 0.21
-        n = len(pars1)
-        cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#48639e"])
+                colors = cmap3(np.linspace(0, 1, n))
+                
+                
+                for i, par1 in enumerate(pars1):
+                    colors = cmap3(np.linspace(0, 1, n))
+                    ac_arr = np.linspace(1/21, 1, 64)
+                    reion = reionization(ac_arr, model, model_H, par1, par2)
+                    #z_int, qhii = reion.QHII(rhom, model, model_H, model_SFR, par1, par2, pool_cpu, f0=f0)
+                    #data = np.savez('./data_folder/QHII_'+str(model) +'_'+ str(model_SFR) + '_' +str(par1)+'.npz', name1 = z_int, name2 = qhii)
+                    data = np.load('./data_folder/QHII_'+str(model) +'_'+ str(model_SFR) + '_' +str(par1)+'.npz')
+                    z_int = data['name1']
+                    qhii = data['name2'][:,0]
+                    qhii_int = scipy.interpolate.interp1d(z_int,qhii,fill_value='extrapolate')
+                    tau = []
+                    for j, z_end in enumerate(z_int):
+                        z_span = np.linspace(z_end,0,100)
+                        tau.append(reion.tau_reio(z_span, qhii_int(z_span), model, model_H, par1, par2))
+                    #print(reion.tau_reio(rhom, model, model_H, model_SFR, par1, par2, f0=f0))
+                    #tau = reion.tau_reio(rhom, model, model_H, model_SFR, par1, par2, f0=f0)
+                    #print(tau)
+                    ax_Pk.plot(z_int,tau, c = colors[i], lw=  1.5, zorder = 3)
+                    #pool_cpu.terminate()"""
+            
+                        
+            plt.axhline(0.054, c='tab:gray', lw=0.8)
+            plt.text(2, 0.054-0.007-0.005, r'$\rm Planck\; 2018$',
+            fontsize=11, c='tab:grey')
+            ax_Pk.fill_between([0,12], 0.054-0.007, 0.054 +
+                    0.007, alpha=0.25, color='tab:gray')
 
-        colors = cmap3(np.linspace(0, 1, n))
-        pool_cpu = Pool(8)
-        
-        for i, par1 in enumerate(pars1):
-            colors = cmap3(np.linspace(0, 1, n))
-            ac_arr = np.linspace(1/21, 1, 64)
-            reion = reionization(ac_arr, model, model_H, par1, par2)
-            #z_int, qhii = reion.QHII(rhom, model, model_H, model_SFR, par1, par2, pool_cpu, f0=f0)
-            #data = np.savez('./data_folder/QHII_'+str(model) +'_'+ str(model_SFR) + '_' +str(par1)+'.npz', name1 = z_int, name2 = qhii)
-            data = np.load('./data_folder/QHII_'+str(model) +'_'+ str(model_SFR) + '_' +str(par1)+'.npz')
-            z_int = data['name1']
-            qhii = data['name2'][:,0]
-            qhii_int = scipy.interpolate.interp1d(z_int,qhii,fill_value='extrapolate')
-            tau = []
-            for j, z_end in enumerate(z_int):
-                z_span = np.linspace(z_end,0,100)
-                tau.append(reion.tau_reio(z_span, qhii_int(z_span), model, model_H, par1, par2))
-            #print(reion.tau_reio(rhom, model, model_H, model_SFR, par1, par2, f0=f0))
-            #tau = reion.tau_reio(rhom, model, model_H, model_SFR, par1, par2, f0=f0)
-            #print(tau)
-            ax_Pk.plot(z_int,tau, c = colors[i], lw=  1.5, zorder = 3)
-            #pool_cpu.terminate()"""
-        
-                    
-        plt.axhline(0.054, c='tab:gray', lw=0.8)
-        plt.text(2, 0.054-0.007-0.005, r'$\rm Planck\; 2018$',
-         fontsize=11, c='tab:grey')
-        ax_Pk.fill_between([0,12], 0.054-0.007, 0.054 +
-                0.007, alpha=0.25, color='tab:gray')
+            ax_Pk.plot(0,0,c = '#fc8d62', label = r'$\rm Rodriguez-Puebla$')
+            ax_Pk.plot(0,0,c = '#8da0cb', label = r'$\rm Double\;power-law$')
+            ax_Pk.yaxis.tick_right()
+            ax_Pk.yaxis.set_label_position("right")
+            plt.xlim(0,12)
+            plt.ylim(0,0.07)
+        elif nn == 4:
+            if turn_tau == True:
+                model = 'kmoufl'
+                model_H = 'kmoufl'
+                model_SFR = 'double_power'
+                pars2 = np.linspace(0,1,10) #np.array([0.1])
+                pars1 = np.array([0.1, 0.3, 0.5]) #np.array([0.1])
+                f0 = 0.21
+                n = len(pars2)
 
-        ax_Pk.plot(0,0,c = '#fc8d62', label = r'$\rm Rodriguez-Puebla$')
-        ax_Pk.plot(0,0,c = '#8da0cb', label = r'$\rm Double\;power-law$')
-        ax_Pk.yaxis.tick_right()
-        ax_Pk.yaxis.set_label_position("right")
-        plt.xlim(0,12)
-        plt.ylim(0,0.07)
+                cmap1 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#66c2a5"]) 
+                cmap2 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#fc8d62"]) 
+                cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
 
-    if nn != 7 and nn != 8:
+                cmap = np.array([cmap1, cmap2, cmap3])
+                colors = [None]*3
+                colors[0] = cmap[0]((np.linspace(0, 1, n)))
+                colors[1] = cmap[1]((np.linspace(0, 1, n)))
+                colors[2] = cmap[2]((np.linspace(0, 1, n)))
+                            
+                for i, par1 in enumerate(pars1):
+                    for j, par2 in enumerate(pars2):
+                        ac_arr = np.linspace(1/21, 1, 120)
+                        reion = reionization(ac_arr, model, model_H, par1, par2)
+                        #z_int, qhii = reion.QHII(rhom, model, model_H, model_SFR, par1, par2, pool_cpu, f0=f0)
+                        #data = np.savez('./data_folder/QHII_'+str(model) +'_'+ str(model_SFR) + '_' +str(par1)+'.npz', name1 = z_int, name2 = qhii)
+                        data = np.load('./data_folder/QHII_'+str(model) +'_'+ str(model_SFR) + '_' +str(par1)+ '_' +str(par2)+'.npz')
+                        z_int = data['name1']
+                        qhii = data['name2'][:,0]
+                        qhii_int = scipy.interpolate.interp1d(z_int,qhii,fill_value='extrapolate')
+                        tau = []
+                        for l, z_end in enumerate(z_int):
+                            z_span = np.linspace(z_end,0,300)
+                            tau.append(reion.tau_reio(z_span, qhii_int(z_span), model, model_H, par1, par2))
+                        #print(reion.tau_reio(rhom, model, model_H, model_SFR, par1, par2, f0=f0))
+                        #tau = reion.tau_reio(rhom, model, model_H, model_SFR, par1, par2, f0=f0)
+                        #print(tau)
+                        ax_Pk.plot(z_int,tau, c = colors[i][j], lw=  1.5, zorder = 3)
+                        #pool_cpu.terminate()"""
+            
+                        
+            plt.axhline(0.054, c='tab:gray', lw=0.8)
+            plt.text(2, 0.054-0.007-0.005, r'$\rm Planck\; 2018$',
+            fontsize=11, c='tab:grey')
+            ax_Pk.fill_between([0,12], 0.054-0.007, 0.054 +
+                    0.007, alpha=0.25, color='tab:gray')
+
+            ax_Pk.plot(0,0, lw=  1.5, zorder = 3, c = colors[0][-1],label = r"$\beta = 0.1$")
+            ax_Pk.plot(0,0, lw=  1.5, zorder = 3, c = colors[1][-1],label = r"$\beta = 0.3$")
+            ax_Pk.plot(0,0, lw=  1.5, zorder = 3, c = colors[2][-1],label = r"$\beta = 0.5$")
+
+            ax_Pk.yaxis.tick_right()
+            ax_Pk.yaxis.set_label_position("right")
+            plt.xlim(0,12)
+            plt.ylim(0,0.07)
+        elif nn == 6:
+            if turn_tau == True:
+                model = 'kmoufl'
+                model_H = 'kmoufl'
+                model_SFR = 'double_power'
+                pars2 = np.linspace(0,1,10) #np.array([0.1])
+                pars1 = np.array([0.1, 0.3, 0.5]) #np.array([0.1])
+                f0 = 0.21
+                n = len(pars2)
+
+                cmap1 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#66c2a5"]) 
+                cmap2 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#fc8d62"]) 
+                cmap3 = matplotlib.colors.LinearSegmentedColormap.from_list("", ["white","#8da0cb"])
+
+                cmap = np.array([cmap1, cmap2, cmap3])
+                colors = [None]*3
+                colors[0] = cmap[0]((np.linspace(0, 1, n)))
+                colors[1] = cmap[1]((np.linspace(0, 1, n)))
+                colors[2] = cmap[2]((np.linspace(0, 1, n)))
+                            
+                for i, par1 in enumerate(pars1):
+                    for j, par2 in enumerate(pars2):
+                        ac_arr = np.linspace(1/21, 1, 120)
+                        reion = reionization(ac_arr, model, model_H, par1, par2)
+                        #z_int, qhii = reion.QHII(rhom, model, model_H, model_SFR, par1, par2, pool_cpu, f0=f0)
+                        #data = np.savez('./data_folder/QHII_'+str(model) +'_'+ str(model_SFR) + '_' +str(par1)+'.npz', name1 = z_int, name2 = qhii)
+                        data = np.load('./data_folder/QHII_'+str(model) +'_'+ str(model_SFR) + '_' +str(par1)+ '_' +str(par2)+'.npz')
+                        z_int = data['name1']
+                        qhii = data['name2'][:,0]
+                        qhii_int = scipy.interpolate.interp1d(z_int,qhii,fill_value='extrapolate')
+                        tau = []
+                        for l, z_end in enumerate(z_int):
+                            z_span = np.linspace(z_end,0,300)
+                            tau.append(reion.tau_reio(z_span, qhii_int(z_span), model, model_H, par1, par2))
+                        #print(reion.tau_reio(rhom, model, model_H, model_SFR, par1, par2, f0=f0))
+                        #tau = reion.tau_reio(rhom, model, model_H, model_SFR, par1, par2, f0=f0)
+                        #print(tau)
+                        ax_Pk.plot(z_int,tau, c = colors[i][j], lw=  1.5, zorder = 3)
+                        #pool_cpu.terminate()"""
+            
+                        
+            plt.axhline(0.054, c='tab:gray', lw=0.8)
+            plt.text(2, 0.054-0.007-0.005, r'$\rm Planck\; 2018$',
+            fontsize=11, c='tab:grey')
+            ax_Pk.fill_between([0,12], 0.054-0.007, 0.054 +
+                    0.007, alpha=0.25, color='tab:gray')
+
+            ax_Pk.plot(0,0, lw=  1.5, zorder = 3, c = colors[0][-1],label = r"$\beta = 0.1$")
+            ax_Pk.plot(0,0, lw=  1.5, zorder = 3, c = colors[1][-1],label = r"$\beta = 0.3$")
+            ax_Pk.plot(0,0, lw=  1.5, zorder = 3, c = colors[2][-1],label = r"$\beta = 0.5$")
+
+            ax_Pk.yaxis.tick_right()
+            ax_Pk.yaxis.set_label_position("right")
+            plt.xlim(0,12)
+            plt.ylim(0,0.07)
+    if nn != 5 and nn != 6:
         if nn % 2 == 0:
             nbins = len(ax_Pk.get_yticklabels())
             ax_Pk.yaxis.set_major_locator(MaxNLocator(nbins=nbins,prune='lower'))
@@ -667,15 +840,19 @@ for z_smf in z_smf_arr:
     else:
         if nn % 2 == 0:
             ax_Pk.set_xlabel(r'$\mathrm{Redshift}\;z$', size = '16')
-            ax_Pk.set_yticklabels([])
             nbins = len(ax_Pk.get_yticklabels())
             ax_Pk.yaxis.set_major_locator(MaxNLocator(nbins=nbins,prune='upper'))
+            nbins = len(ax_Pk.get_yticklabels())
+            ax_Pk.yaxis.set_major_locator(MaxNLocator(nbins=nbins,prune='lower'))
+            #ax_Pk.set_yticklabels([])
+            ax_Pk.set_ylabel(r'$\tau_{\rm reion}(z)$', size = '16')
+
         else:
             ax_Pk.set_xlabel(r'$\mathrm{Redshift}\;z$', size = '16')
             ax_Pk.set_ylabel(r'$Q_{\rm HII}(z)$', size = '16')
             nbins = len(ax_Pk.get_yticklabels())
             ax_Pk.yaxis.set_major_locator(MaxNLocator(nbins=nbins,prune='upper'))
-
+            ax_Pk.xaxis.set_major_locator(MaxNLocator(nbins=nbins,prune='upper'))
     #plt.grid(".")
     
     
