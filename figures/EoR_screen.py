@@ -425,7 +425,7 @@ fig = plt.figure(figsize=(4.25*2*.95*0.9, 2*5*1.05*0.9))
 
 nn = 1
 z_smf_arr = [4,5,6,7,8,9]
-turn_tau = False
+turn_tau = True
 
 for z_smf in z_smf_arr:
     ax_Pk = plt.subplot(4,2,nn)
@@ -466,7 +466,7 @@ for z_smf in z_smf_arr:
             model = 'nDGP'
             model_H = 'nDGP'
             model_SFR = 'Puebla'
-            pars1 = np.logspace(2.5,6,10)
+            pars1 = np.logspace(2.5,4,10)
             #pars1 = np.hstack((pars1,[10**4.5,10**5]))
             par2 = 0
             f0 = 0.21
@@ -482,7 +482,7 @@ for z_smf in z_smf_arr:
                 #reion = reionization(ac_arr, model, model_H, par1, par2)
                 #z_int, qhii = reion.QHII(rhom, model, model_H, model_SFR, par1, par2, pool_cpu, f0=f0)
                 #data = np.savez('./data_folder/QHII_'+str(model) +'_'+ str(model_SFR) + '_' +str(par1)+'.npz', name1 = z_int, name2 = qhii)
-                data = np.load('./data_folder/QHII_'+str(model) +'_'+ str(model_SFR) + '_' +str(par1)+'.npz')
+                data = np.load('./data_folder/QHII_'+str(model) +'_'+ str(model_SFR) + '_' +str(par1) +'.npz')
                 z_int = data['name1']
                 qhii = data['name2']
                 #print(reion.tau_reio(rhom, model, model_H, model_SFR, par1, par2, f0=f0))
@@ -495,7 +495,7 @@ for z_smf in z_smf_arr:
             model = 'nDGP'
             model_H = 'nDGP'
             model_SFR = 'double_power'
-            pars1 = np.logspace(2.5,6,10)
+            pars1 = np.logspace(2.5,4,10)
             #pars1 = np.hstack((pars1,[10**4.5,10**5]))
             par2 = 0
             f0 = 0.21
@@ -634,7 +634,7 @@ for z_smf in z_smf_arr:
                 model = 'nDGP'
                 model_H = 'nDGP'
                 model_SFR = 'Puebla'
-                pars1 = np.logspace(2.5,6,10)
+                pars1 = np.logspace(2.5,4,10)
                 #pars1 = np.hstack((pars1,[10**4.5,10**5]))
                 par2 = 0
                 f0 = 0.21
@@ -667,7 +667,7 @@ for z_smf in z_smf_arr:
                 model = 'nDGP'
                 model_H = 'nDGP'
                 model_SFR = 'double_power'
-                pars1 = np.logspace(2.5,6,10)
+                pars1 = np.logspace(2.5,4,10)
                 #pars1 = np.hstack((pars1,[10**4.5,10**5]))
                 par2 = 0
                 f0 = 0.21
@@ -699,7 +699,7 @@ for z_smf in z_smf_arr:
             
                         
             plt.axhline(0.054, c='tab:gray', lw=0.8)
-            plt.text(2, 0.054-0.007-0.005, r'$\rm Planck\; 2018$',
+            plt.text(0.5, 0.054-0.007-0.005, r'$\rm Planck\; 2018$',
             fontsize=11, c='tab:grey')
             ax_Pk.fill_between([0,12], 0.054-0.007, 0.054 +
                     0.007, alpha=0.25, color='tab:gray')
@@ -714,7 +714,7 @@ for z_smf in z_smf_arr:
             if turn_tau == True:
                 model = 'kmoufl'
                 model_H = 'kmoufl'
-                model_SFR = 'double_power'
+                model_SFR = 'Puebla'
                 pars2 = np.linspace(0,1,10) #np.array([0.1])
                 pars1 = np.array([0.1, 0.3, 0.5]) #np.array([0.1])
                 f0 = 0.21
@@ -752,7 +752,7 @@ for z_smf in z_smf_arr:
             
                         
             plt.axhline(0.054, c='tab:gray', lw=0.8)
-            plt.text(2, 0.054-0.007-0.005, r'$\rm Planck\; 2018$',
+            plt.text(0.5, 0.054-0.007-0.005, r'$\rm Planck\; 2018$',
             fontsize=11, c='tab:grey')
             ax_Pk.fill_between([0,12], 0.054-0.007, 0.054 +
                     0.007, alpha=0.25, color='tab:gray')
@@ -807,7 +807,7 @@ for z_smf in z_smf_arr:
             
                         
             plt.axhline(0.054, c='tab:gray', lw=0.8)
-            plt.text(2, 0.054-0.007-0.005, r'$\rm Planck\; 2018$',
+            plt.text(0.5, 0.054-0.007-0.005, r'$\rm Planck\; 2018$',
             fontsize=11, c='tab:grey')
             ax_Pk.fill_between([0,12], 0.054-0.007, 0.054 +
                     0.007, alpha=0.25, color='tab:gray')
@@ -873,9 +873,18 @@ mpl.rcParams['font.family'] = 'sans-serif'
 
 #norm = colorss.Norm(pars1.min(), pars1.max())
 norm = mpl.colors.Normalize(vmin=2.5, vmax=4)
-ax_cbar = fig.add_axes([0.1275, 0.985, 0.8175, 0.01])
+ax_cbar = fig.add_axes([0.10, 0.978, 0.774, 0.01])
 cbar_ax = plt.colorbar(mpl.cm.ScalarMappable(cmap=mpl.cm.Greys, norm=norm), cax=ax_cbar, orientation='horizontal', location = 'top', ticks=LinearLocator(numticks=8))
 cbar_ax.set_label(r'$\log_{10}r_c$', fontsize=16)
+cbar_ax.ax.tick_params(width=1.5, length=5, which = 'major')
+cbar_ax.ax.tick_params(width=1.1, length=4, which = 'minor')
+cbar_ax.ax.xaxis.set_minor_locator(AutoMinorLocator())
+cbar_ax.ax.xaxis.set_major_formatter(mpl.ticker.FormatStrFormatter(r'$'+'%.2g'+r'$'))
+
+norm = mpl.colors.Normalize(vmin=0, vmax=1)
+ax_cbar = fig.add_axes([0.10, 0.185, 0.774, 0.01])
+cbar_ax = plt.colorbar(mpl.cm.ScalarMappable(cmap=mpl.cm.Greys, norm=norm), cax=ax_cbar, orientation='horizontal', location = 'bottom', ticks=LinearLocator(numticks=8))
+cbar_ax.set_label(r'$K_0$', fontsize=16)
 cbar_ax.ax.tick_params(width=1.5, length=5, which = 'major')
 cbar_ax.ax.tick_params(width=1.1, length=4, which = 'minor')
 cbar_ax.ax.xaxis.set_minor_locator(AutoMinorLocator())
